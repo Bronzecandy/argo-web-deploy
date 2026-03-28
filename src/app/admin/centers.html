@@ -1,0 +1,483 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Support Centers - RaiseChild Admin</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
+      rel="stylesheet"
+    />
+    <style>
+      @import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap");
+      body {
+        font-family: "Inter", sans-serif;
+      }
+      .scrollbar-hide::-webkit-scrollbar {
+        display: none;
+      }
+    </style>
+  </head>
+  <body class="bg-slate-50 text-slate-800">
+    <div class="flex h-screen overflow-hidden">
+      <!-- Sidebar -->
+      <aside
+        class="w-64 bg-white border-r border-slate-200 flex flex-col justify-between"
+      >
+        <div>
+          <div class="h-16 flex items-center px-6 border-b border-slate-100">
+            <div
+              class="flex items-center gap-2 text-blue-800 font-bold text-xl"
+            >
+              <i class="fa-solid fa-hands-holding-child text-orange-500"></i>
+              <span>RaiseChild</span>
+            </div>
+          </div>
+
+          <nav class="p-4 space-y-1">
+            <a
+              href="index.html"
+              class="flex items-center gap-3 px-4 py-3 text-slate-600 hover:bg-slate-50 rounded-xl font-medium transition"
+            >
+              <i class="fa-solid fa-table-cells-large"></i> Dashboard
+            </a>
+            <a
+              href="#"
+              class="flex items-center gap-3 px-4 py-3 bg-blue-50 text-blue-900 rounded-xl font-medium border border-blue-100"
+            >
+              <i class="fa-solid fa-building"></i> Support Centers
+            </a>
+            <a
+              href="child_profiles.html"
+              class="flex items-center gap-3 px-4 py-3 text-slate-600 hover:bg-slate-50 rounded-xl font-medium transition"
+            >
+              <i class="fa-solid fa-child"></i> Child Profiles
+            </a>
+            <a
+              href="proposals.html"
+              class="flex items-center gap-3 px-4 py-3 text-slate-600 hover:bg-slate-50 rounded-xl font-medium transition"
+            >
+              <i class="fa-solid fa-wallet"></i> Treasury & Proposals
+            </a>
+            <a
+              href="analytics.html"
+              class="flex items-center gap-3 px-4 py-3 text-slate-600 hover:bg-slate-50 rounded-xl font-medium transition"
+            >
+              <i class="fa-solid fa-chart-pie"></i> Analytics
+            </a>
+            <a
+              href="account.html"
+              class="flex items-center gap-3 px-4 py-3 text-slate-600 hover:bg-slate-50 rounded-xl font-medium transition"
+            >
+              <i class="fa-solid fa-user-gear"></i> Account Management
+            </a>
+          </nav>
+        </div>
+
+        <div class="p-4 border-t border-slate-100">
+          <div class="flex items-center gap-3">
+            <img
+              src="https://ui-avatars.com/api/?name=Admin+User&background=eff6ff&color=2563eb"
+              class="w-10 h-10 rounded-full border border-blue-100"
+            />
+            <div>
+              <p class="text-sm font-semibold text-slate-900">Super Admin</p>
+              <p class="text-xs text-slate-500">admin@raisechild.org</p>
+            </div>
+          </div>
+        </div>
+      </aside>
+
+      <main class="flex-1 flex flex-col overflow-y-auto">
+        <header
+          class="h-16 bg-white border-b border-slate-200 flex items-center justify-between px-8 sticky top-0 z-10"
+        >
+          <h1 class="text-xl font-bold text-slate-800">
+            Support Center Management
+          </h1>
+          <div class="flex items-center gap-4">
+            <button class="p-2 text-slate-400 hover:text-blue-800 transition">
+              <i class="fa-regular fa-bell"></i>
+            </button>
+            <button
+              class="bg-blue-800 hover:bg-blue-900 text-white px-4 py-2 rounded-lg text-sm font-medium transition shadow-sm shadow-blue-200"
+            >
+              <i class="fa-solid fa-link mr-1"></i> Smart Contract Status:
+              Connected
+            </button>
+          </div>
+        </header>
+
+        <div class="p-8 space-y-8">
+          <!-- Center Creation Proposals -->
+          <section
+            class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden"
+          >
+            <div
+              class="p-6 border-b border-slate-100 flex justify-between items-center"
+            >
+              <div>
+                <h2 class="text-lg font-bold text-slate-800">
+                  New Center Proposals
+                </h2>
+                <p class="text-sm text-slate-500">
+                  Review requests to open new support centers.
+                </p>
+              </div>
+            </div>
+            <div class="overflow-x-auto">
+              <table class="w-full text-left border-collapse">
+                <thead
+                  class="bg-slate-50 text-slate-500 text-xs uppercase font-medium"
+                >
+                  <tr>
+                    <th class="px-6 py-4">Center Name</th>
+                    <th class="px-6 py-4">Proposer</th>
+                    <th class="px-6 py-4">Location</th>
+                    <th class="px-6 py-4">Required Staff</th>
+                    <th class="px-6 py-4">Description</th>
+                    <th class="px-6 py-4 text-right">Actions</th>
+                  </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100">
+                  <tr class="hover:bg-slate-50 transition">
+                    <td class="px-6 py-4 font-semibold text-slate-900">
+                      Sunshine Highlands Center
+                    </td>
+                    <td class="px-6 py-4 text-sm text-slate-600">
+                      <div class="flex items-center gap-2">
+                        <img
+                          src="https://ui-avatars.com/api/?name=Sarah+M&background=random"
+                          class="w-6 h-6 rounded-full"
+                        />
+                        Sarah Mitchell
+                      </div>
+                    </td>
+                    <td class="px-6 py-4 text-sm text-slate-600">
+                      Ha Giang, VN
+                    </td>
+                    <td class="px-6 py-4">
+                      <span
+                        class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800"
+                      >
+                        12 Staff
+                      </span>
+                    </td>
+                    <td
+                      class="px-6 py-4 text-sm text-slate-500 max-w-xs truncate"
+                    >
+                      Community center focused on primary education support...
+                    </td>
+                    <td class="px-6 py-4 text-right space-x-2">
+                      <button
+                        class="px-3 py-1.5 rounded-lg text-slate-500 hover:bg-slate-100 text-sm font-medium transition"
+                      >
+                        Details
+                      </button>
+                      <button
+                        class="px-3 py-1.5 rounded-lg bg-blue-800 text-white hover:bg-blue-900 text-sm font-medium shadow-sm transition"
+                      >
+                        Approve
+                      </button>
+                    </td>
+                  </tr>
+                  <tr class="hover:bg-slate-50 transition">
+                    <td class="px-6 py-4 font-semibold text-slate-900">
+                      River Delta Care Home
+                    </td>
+                    <td class="px-6 py-4 text-sm text-slate-600">
+                      <div class="flex items-center gap-2">
+                        <img
+                          src="https://ui-avatars.com/api/?name=Tuan+P&background=random"
+                          class="w-6 h-6 rounded-full"
+                        />
+                        Tuan Pham
+                      </div>
+                    </td>
+                    <td class="px-6 py-4 text-sm text-slate-600">
+                      Can Tho, VN
+                    </td>
+                    <td class="px-6 py-4">
+                      <span
+                        class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800"
+                      >
+                        8 Staff
+                      </span>
+                    </td>
+                    <td
+                      class="px-6 py-4 text-sm text-slate-500 max-w-xs truncate"
+                    >
+                      Shelter for homeless youth in the delta region...
+                    </td>
+                    <td class="px-6 py-4 text-right space-x-2">
+                      <button
+                        class="px-3 py-1.5 rounded-lg text-slate-500 hover:bg-slate-100 text-sm font-medium transition"
+                      >
+                        Details
+                      </button>
+                      <button
+                        class="px-3 py-1.5 rounded-lg bg-blue-800 text-white hover:bg-blue-900 text-sm font-medium shadow-sm transition"
+                      >
+                        Approve
+                      </button>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </section>
+
+          <!-- Approved Centers & Staff Management -->
+          <section>
+            <div class="flex items-center justify-between mb-6">
+              <h2 class="text-lg font-bold text-slate-800">
+                Approved Centers & Staffing
+              </h2>
+              <div class="flex gap-2">
+                <span
+                  class="text-sm text-slate-500 bg-white border border-slate-200 px-3 py-1 rounded-lg"
+                  >Total Centers: 4</span
+                >
+              </div>
+            </div>
+
+            <div class="grid grid-cols-1 xl:grid-cols-2 gap-6">
+              <!-- Center Card 1 -->
+              <div
+                class="bg-white rounded-2xl border border-slate-200 shadow-sm p-6"
+              >
+                <div class="flex justify-between items-start mb-6">
+                  <div>
+                    <h3 class="text-lg font-bold text-slate-900">
+                      Hope Village Central
+                    </h3>
+                    <p class="text-sm text-slate-500">
+                      <i class="fa-solid fa-location-dot mr-1"></i> Da Nang, VN
+                    </p>
+                  </div>
+                  <span
+                    class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-amber-100 text-amber-700 border border-amber-200"
+                  >
+                    <i class="fa-solid fa-triangle-exclamation"></i>
+                    Understaffed
+                  </span>
+                </div>
+
+                <div class="mb-6">
+                  <div class="flex justify-between text-sm mb-2">
+                    <span class="font-medium text-slate-700"
+                      >Staffing Progress</span
+                    >
+                    <span class="text-slate-500">6 / 15 Required</span>
+                  </div>
+                  <div class="w-full bg-slate-100 rounded-full h-2.5">
+                    <div
+                      class="bg-amber-500 h-2.5 rounded-full transition-all duration-500"
+                      style="width: 40%"
+                    ></div>
+                  </div>
+                  <p class="text-xs text-slate-500 mt-2">
+                    Needs 9 more confirmed staff to be fully operational.
+                  </p>
+                </div>
+
+                <div class="border-t border-slate-100 pt-4">
+                  <h4 class="text-sm font-bold text-slate-800 mb-3">
+                    Approved Staff (6)
+                  </h4>
+                  <div class="flex flex-wrap gap-2 mb-4">
+                    <span
+                      class="inline-flex items-center gap-1.5 px-2 py-1 rounded-full text-xs font-medium bg-slate-100 text-slate-700"
+                    >
+                      <img
+                        src="https://ui-avatars.com/api/?name=Director&background=random"
+                        class="w-4 h-4 rounded-full"
+                      />
+                      Director
+                    </span>
+                    <span
+                      class="inline-flex items-center gap-1.5 px-2 py-1 rounded-full text-xs font-medium bg-slate-100 text-slate-700"
+                    >
+                      <img
+                        src="https://ui-avatars.com/api/?name=Nurse+1&background=random"
+                        class="w-4 h-4 rounded-full"
+                      />
+                      Head Nurse
+                    </span>
+                    <span
+                      class="inline-flex items-center gap-1.5 px-2 py-1 rounded-full text-xs font-medium bg-slate-100 text-slate-700"
+                    >
+                      <img
+                        src="https://ui-avatars.com/api/?name=Staff+A&background=random"
+                        class="w-4 h-4 rounded-full"
+                      />
+                      Teacher A
+                    </span>
+                    <button
+                      class="text-xs text-blue-600 font-medium hover:underline"
+                    >
+                      +3 more
+                    </button>
+                  </div>
+
+                  <h4 class="text-sm font-bold text-slate-800 mb-3">
+                    Pending Role Requests (3)
+                  </h4>
+                  <div class="space-y-3">
+                    <!-- Request Item -->
+                    <div
+                      class="flex items-center justify-between p-3 bg-slate-50 rounded-lg border border-slate-100"
+                    >
+                      <div class="flex items-center gap-3">
+                        <img
+                          src="https://ui-avatars.com/api/?name=Le+H&background=random"
+                          class="w-8 h-8 rounded-full"
+                        />
+                        <div>
+                          <p class="text-sm font-semibold text-slate-900">
+                            Le Hoang
+                          </p>
+                          <p class="text-xs text-slate-500">Teacher</p>
+                        </div>
+                      </div>
+                      <div class="flex gap-2">
+                        <button
+                          class="p-1.5 text-red-500 hover:bg-red-50 rounded transition"
+                        >
+                          <i class="fa-solid fa-xmark"></i>
+                        </button>
+                        <button
+                          class="p-1.5 text-green-600 hover:bg-green-50 rounded transition"
+                        >
+                          <i class="fa-solid fa-check"></i>
+                        </button>
+                      </div>
+                    </div>
+                    <!-- Request Item -->
+                    <div
+                      class="flex items-center justify-between p-3 bg-slate-50 rounded-lg border border-slate-100"
+                    >
+                      <div class="flex items-center gap-3">
+                        <img
+                          src="https://ui-avatars.com/api/?name=Mai+A&background=random"
+                          class="w-8 h-8 rounded-full"
+                        />
+                        <div>
+                          <p class="text-sm font-semibold text-slate-900">
+                            Mai Anh
+                          </p>
+                          <p class="text-xs text-slate-500">Nurse</p>
+                        </div>
+                      </div>
+                      <div class="flex gap-2">
+                        <button
+                          class="p-1.5 text-red-500 hover:bg-red-50 rounded transition"
+                        >
+                          <i class="fa-solid fa-xmark"></i>
+                        </button>
+                        <button
+                          class="p-1.5 text-green-600 hover:bg-green-50 rounded transition"
+                        >
+                          <i class="fa-solid fa-check"></i>
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Center Card 2 -->
+              <div
+                class="bg-white rounded-2xl border border-slate-200 shadow-sm p-6"
+              >
+                <div class="flex justify-between items-start mb-6">
+                  <div>
+                    <h3 class="text-lg font-bold text-slate-900">
+                      Blue Sky Education
+                    </h3>
+                    <p class="text-sm text-slate-500">
+                      <i class="fa-solid fa-location-dot mr-1"></i> Hanoi, VN
+                    </p>
+                  </div>
+                  <span
+                    class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-emerald-100 text-emerald-700 border border-emerald-200"
+                  >
+                    <i class="fa-solid fa-check-circle"></i> Operational
+                  </span>
+                </div>
+
+                <div class="mb-6">
+                  <div class="flex justify-between text-sm mb-2">
+                    <span class="font-medium text-slate-700"
+                      >Staffing Progress</span
+                    >
+                    <span class="text-slate-500">12 / 10 Required</span>
+                  </div>
+                  <div class="w-full bg-slate-100 rounded-full h-2.5">
+                    <div
+                      class="bg-emerald-500 h-2.5 rounded-full transition-all duration-500"
+                      style="width: 100%"
+                    ></div>
+                  </div>
+                  <p class="text-xs text-slate-500 mt-2">
+                    Fully staffed. Meets minimum requirements.
+                  </p>
+                </div>
+
+                <div class="border-t border-slate-100 pt-4">
+                  <h4 class="text-sm font-bold text-slate-800 mb-3">
+                    Approved Staff (12)
+                  </h4>
+                  <div class="flex flex-wrap gap-2 mb-4">
+                    <span
+                      class="inline-flex items-center gap-1.5 px-2 py-1 rounded-full text-xs font-medium bg-slate-100 text-slate-700"
+                    >
+                      <img
+                        src="https://ui-avatars.com/api/?name=Director+B&background=random"
+                        class="w-4 h-4 rounded-full"
+                      />
+                      Director
+                    </span>
+                    <span
+                      class="inline-flex items-center gap-1.5 px-2 py-1 rounded-full text-xs font-medium bg-slate-100 text-slate-700"
+                    >
+                      <img
+                        src="https://ui-avatars.com/api/?name=Nurse+2&background=random"
+                        class="w-4 h-4 rounded-full"
+                      />
+                      Head Nurse
+                    </span>
+                    <span
+                      class="inline-flex items-center gap-1.5 px-2 py-1 rounded-full text-xs font-medium bg-slate-100 text-slate-700"
+                    >
+                      <img
+                        src="https://ui-avatars.com/api/?name=Staff+C&background=random"
+                        class="w-4 h-4 rounded-full"
+                      />
+                      Coordinator
+                    </span>
+                    <button
+                      class="text-xs text-blue-600 font-medium hover:underline"
+                    >
+                      +9 more
+                    </button>
+                  </div>
+
+                  <h4 class="text-sm font-bold text-slate-800 mb-3">
+                    Pending Role Requests (0)
+                  </h4>
+                  <div
+                    class="py-4 text-center text-slate-400 text-sm bg-slate-50 rounded-lg border border-slate-100 border-dashed"
+                  >
+                    No pending requests
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
+        </div>
+      </main>
+    </div>
+  </body>
+</html>
