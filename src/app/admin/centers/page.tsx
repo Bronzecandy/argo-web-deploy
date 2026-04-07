@@ -1,71 +1,270 @@
-"use client";
-import React from "react";
-import Script from "next/script";
-import AdminLayout from "@/src/components/AdminLayout";
+'use client';
 
-export default function CentersPage() {
+import { useCallback, useEffect, useState } from 'react';
+import { Building2, Check, MapPin, ShieldCheck, ThumbsDown, ThumbsUp, X } from 'lucide-react';
+import { toast } from 'sonner';
+import PageHeader from '@/src/components/ui/PageHeader';
+import DataTable from '@/src/components/ui/DataTable';
+import StatusBadge from '@/src/components/ui/StatusBadge';
+import { formatDate, formatVND, truncateAddress } from '@/src/lib/formatters';
+import { centerService } from '@/src/services/center.service';
+import type { CenterRequest } from '@/src/types/api.types';
+
+const PAGE_SIZE = 10;
+
+const STATUS_OPTIONS = [
+  { value: '', label: 'All statuses' },
+  { value: 'pending', label: 'Pending' },
+  { value: 'pending_review', label: 'Pending review' },
+  { value: 'approved', label: 'Approved' },
+  { value: 'refused', label: 'Refused' },
+];
+
+export default function AdminCentersPage() {
+  const [loading, setLoading] = useState(true);
+  const [centers, setCenters] = useState<CenterRequest[]>([]);
+  const [page, setPage] = useState(0);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalAmount, setTotalAmount] = useState(0);
+  const [status, setStatus] = useState('');
+
+  const [voteBusyId, setVoteBusyId] = useState<string | null>(null);
+  const [confirmBusyId, setConfirmBusyId] = useState<string | null>(null);
+  const [refuseModal, setRefuseModal] = useState<{ id: string } | null>(null);
+  const [refuseReason, setRefuseReason] = useState('');
+
+  const loadCenters = useCallback(async () => {
+    setLoading(true);
+    try {
+      const res = await centerService.list({
+        page,
+        page_size: PAGE_SIZE,
+        status: status || undefined,
+      });
+      const body = res.data;
+      setCenters(Array.isArray(body.data) ? body.data : []);
+      setTotalAmount(typeof body.amount === 'number' ? body.amount : 0);
+      setTotalPages(Math.max(1, body.total_pages ?? 1));
+    } catch (e: unknown) {
+      const msg =
+        e && typeof e === 'object' && 'response' in e
+          ? String((e as { response?: { data?: { message?: string } } }).response?.data?.message ?? '')
+          : '';
+      toast.error(msg || 'Failed to load centers');
+      setCenters([]);
+    } finally {
+      setLoading(false);
+    }
+  }, [page, status]);
+
+  useEffect(() => {
+    void loadCenters();
+  }, [loadCenters]);
+
+  async function handleVote(id: string, isYes: boolean) {
+    if (!isYes) {
+      setRefuseModal({ id });
+      setRefuseReason('');
+      return;
+    }
+    setVoteBusyId(id);
+    try {
+      await centerService.vote(id, { is_vote_yes: true });
+      toast.success('Vote recorded');
+      await loadCenters();
+    } catch (e: unknown) {
+      const msg =
+        e && typeof e === 'object' && 'response' in e
+          ? String((e as { response?: { data?: { message?: string } } }).response?.data?.message ?? '')
+          : '';
+      toast.error(msg || 'Vote failed');
+    } finally {
+      setVoteBusyId(null);
+    }
+  }
+
+  async function submitRefuseVote() {
+    if (!refuseModal) return;
+    const id = refuseModal.id;
+    setVoteBusyId(id);
+    try {
+      await centerService.vote(id, { is_vote_yes: false, refuse_reason: refuseReason || undefined });
+      toast.success('Refusal recorded');
+      setRefuseModal(null);
+      await loadCenters();
+    } catch (e: unknown) {
+      const msg =
+        e && typeof e === 'object' && 'response' in e
+          ? String((e as { response?: { data?: { message?: string } } }).response?.data?.message ?? '')
+          : '';
+      toast.error(msg || 'Vote failed');
+    } finally {
+      setVoteBusyId(null);
+    }
+  }
+
+  async function handleConfirm(id: string) {
+    setConfirmBusyId(id);
+    try {
+      await centerService.confirm(id);
+      toast.success('Confirmation step completed');
+      await loadCenters();
+    } catch (e: unknown) {
+      const msg =
+        e && typeof e === 'object' && 'response' in e
+          ? String((e as { response?: { data?: { message?: string } } }).response?.data?.message ?? '')
+          : '';
+      toast.error(msg || 'Confirm failed');
+    } finally {
+      setConfirmBusyId(null);
+    }
+  }
+
   return (
-    <>
-      <Script src="https://cdn.tailwindcss.com" />
-      <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet" />
-
-      <AdminLayout
-        title="Support Center Management"
-        headerRight={
-          <div className="flex items-center gap-4">
-            <button className="p-2 text-slate-400 hover:text-blue-800 transition"><i className="fa-regular fa-bell" /></button>
-            <button className="bg-blue-800 hover:bg-blue-900 text-white px-4 py-2 rounded-lg text-sm font-medium transition shadow-sm shadow-blue-200"><i className="fa-solid fa-link mr-1" /> Smart Contract Status: Connected</button>
-          </div>
+    <div className="p-6">
+      <PageHeader
+        title="Support centers"
+        description="Review and confirm regional support centers"
+        actions={
+          <span className="inline-flex items-center gap-1.5 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-1.5 text-xs font-medium text-emerald-800">
+            <Building2 className="h-3.5 w-3.5" />
+            {totalAmount.toLocaleString('vi-VN')} total
+          </span>
         }
-      >
-        <div className="p-8 space-y-8">
-          <section className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
-            <div className="p-6 border-b border-slate-100 flex justify-between items-center">
-              <div>
-                <h2 className="text-lg font-bold text-slate-800">New Center Proposals</h2>
-                <p className="text-sm text-slate-500">Review requests to open new support centers.</p>
-              </div>
-              <div className="flex gap-2">
-                <button className="px-4 py-2 bg-slate-100 rounded">Filter</button>
-              </div>
-            </div>
+      />
 
-            <div className="overflow-x-auto">
-              <table className="w-full text-left border-collapse">
-                <thead className="bg-slate-50 text-slate-500 text-xs uppercase font-medium">
-                  <tr>
-                    <th className="px-6 py-4">Center Name</th>
-                    <th className="px-6 py-4">Proposer</th>
-                    <th className="px-6 py-4">Location</th>
-                    <th className="px-6 py-4">Required Staff</th>
-                    <th className="px-6 py-4">Description</th>
-                    <th className="px-6 py-4 text-right">Actions</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100">
-                  <tr className="hover:bg-slate-50 transition">
-                    <td className="px-6 py-4 font-semibold text-slate-900">Sunshine Highlands Center</td>
-                    <td className="px-6 py-4 text-sm text-slate-600">Sarah Mitchell</td>
-                    <td className="px-6 py-4 text-sm text-slate-600">Ha Giang, VN</td>
-                    <td className="px-6 py-4"><span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">12 Staff</span></td>
-                    <td className="px-6 py-4 text-sm text-slate-500">Community center focused on primary education support...</td>
-                    <td className="px-6 py-4 text-right space-x-2"><button className="px-3 py-1.5 rounded-lg text-slate-500 hover:bg-slate-100">Details</button><button className="px-3 py-1.5 rounded-lg bg-blue-800 text-white">Approve</button></td>
-                  </tr>
-
-                  <tr className="hover:bg-slate-50 transition">
-                    <td className="px-6 py-4 font-semibold text-slate-900">River Delta Care Home</td>
-                    <td className="px-6 py-4 text-sm text-slate-600">Tuan Pham</td>
-                    <td className="px-6 py-4 text-sm text-slate-600">Can Tho, VN</td>
-                    <td className="px-6 py-4"><span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">8 Staff</span></td>
-                    <td className="px-6 py-4 text-sm text-slate-500">Shelter for homeless youth in the delta region...</td>
-                    <td className="px-6 py-4 text-right space-x-2"><button className="px-3 py-1.5 rounded-lg text-slate-500 hover:bg-slate-100">Details</button><button className="px-3 py-1.5 rounded-lg bg-blue-800 text-white">Approve</button></td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-          </section>
+      <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex flex-wrap items-center gap-2">
+          <MapPin className="h-4 w-4 text-slate-400" />
+          <label htmlFor="center-status" className="text-sm text-slate-600">
+            Status
+          </label>
+          <select
+            id="center-status"
+            value={status}
+            onChange={(e) => {
+              setStatus(e.target.value);
+              setPage(0);
+            }}
+            className="rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none ring-emerald-600/20 focus:ring-2"
+          >
+            {STATUS_OPTIONS.map((o) => (
+              <option key={o.value || 'all'} value={o.value}>
+                {o.label}
+              </option>
+            ))}
+          </select>
         </div>
-      </AdminLayout>
-    </>
+      </div>
+
+      <DataTable<CenterRequest>
+        columns={[
+          { key: 'id', label: 'ID', render: (c) => <span className="font-mono text-xs">{truncateAddress(c.id, 8)}</span> },
+          { key: 'region', label: 'Region' },
+          {
+            key: 'address',
+            label: 'Address',
+            render: (c) => (
+              <span className="max-w-[220px] truncate text-slate-700" title={c.address}>
+                {truncateAddress(c.address, 14)}
+              </span>
+            ),
+          },
+          { key: 'phone_number', label: 'Phone' },
+          { key: 'status', label: 'Status', render: (c) => <StatusBadge status={c.status} /> },
+          { key: 'created_at', label: 'Created', render: (c) => formatDate(c.created_at) },
+          {
+            key: 'actions',
+            label: 'Actions',
+            className: 'whitespace-nowrap',
+            render: (c) => (
+              <div className="flex flex-wrap gap-1" onClick={(e) => e.stopPropagation()}>
+                <button
+                  type="button"
+                  disabled={voteBusyId === c.id}
+                  onClick={() => handleVote(c.id, true)}
+                  className="inline-flex items-center gap-1 rounded-md border border-emerald-200 bg-emerald-50 px-2 py-1 text-xs font-medium text-emerald-800 hover:bg-emerald-100 disabled:opacity-50"
+                  title="Approve vote"
+                >
+                  <ThumbsUp className="h-3.5 w-3.5" />
+                </button>
+                <button
+                  type="button"
+                  disabled={voteBusyId === c.id}
+                  onClick={() => handleVote(c.id, false)}
+                  className="inline-flex items-center gap-1 rounded-md border border-red-200 bg-red-50 px-2 py-1 text-xs font-medium text-red-800 hover:bg-red-100 disabled:opacity-50"
+                  title="Refuse vote"
+                >
+                  <ThumbsDown className="h-3.5 w-3.5" />
+                </button>
+                {c.isAvailableToConfirm && (
+                  <button
+                    type="button"
+                    disabled={confirmBusyId === c.id}
+                    onClick={() => handleConfirm(c.id)}
+                    className="inline-flex items-center gap-1 rounded-md border border-slate-200 bg-white px-2 py-1 text-xs font-medium text-slate-800 hover:bg-slate-50 disabled:opacity-50"
+                  >
+                    <ShieldCheck className="h-3.5 w-3.5" />
+                    Confirm
+                  </button>
+                )}
+              </div>
+            ),
+          },
+        ]}
+        data={centers}
+        loading={loading}
+        page={page}
+        totalPages={totalPages}
+        onPageChange={(p) => setPage(p)}
+        emptyMessage="No centers match the selected status."
+      />
+
+      {refuseModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 p-4">
+          <div className="w-full max-w-md rounded-xl border border-slate-200 bg-white p-5 shadow-xl">
+            <div className="mb-3 flex items-center justify-between">
+              <h3 className="text-lg font-semibold text-slate-900">Refuse center request</h3>
+              <button
+                type="button"
+                onClick={() => setRefuseModal(null)}
+                className="rounded-lg p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-700"
+                aria-label="Close"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+            <p className="mb-2 text-sm text-slate-600">Optional reason for refusal.</p>
+            <textarea
+              value={refuseReason}
+              onChange={(e) => setRefuseReason(e.target.value)}
+              rows={3}
+              className="mb-4 w-full rounded-lg border border-slate-200 p-2 text-sm outline-none ring-emerald-600/20 focus:ring-2"
+              placeholder="Reason…"
+            />
+            <div className="flex justify-end gap-2">
+              <button
+                type="button"
+                onClick={() => setRefuseModal(null)}
+                className="rounded-lg border border-slate-200 px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                disabled={voteBusyId === refuseModal.id}
+                onClick={() => void submitRefuseVote()}
+                className="inline-flex items-center gap-1 rounded-lg bg-red-600 px-3 py-2 text-sm font-medium text-white hover:bg-red-700 disabled:opacity-50"
+              >
+                <Check className="h-4 w-4" />
+                Submit refusal
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      <span className="sr-only">{formatVND(0)}</span>
+    </div>
   );
 }

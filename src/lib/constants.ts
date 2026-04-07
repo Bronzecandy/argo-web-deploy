@@ -1,0 +1,20 @@
+export const API_BASE_URL =
+  process.env.NEXT_PUBLIC_API_URL || 'https://agrotrust-server-production.onrender.com';
+
+export const GOOGLE_CLIENT_ID = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || '';
+
+export const STORAGE_KEYS = {
+  ACCESS_TOKEN: 'accessToken',
+  REFRESH_TOKEN: 'refreshToken',
+} as const;
+
+export const BLOB_URL = (blobId: string) => `${API_BASE_URL}/blobs/${blobId}`;
+
+export const ROLES = {
+  ADMIN: 'Admin',
+  LOCAL_LEADER: 'LocalLeader',
+  VOLUNTEER: 'Volunteer',
+  DONOR: 'Donor',
+} as const;
+
+export type UserRole = (typeof ROLES)[keyof typeof ROLES];

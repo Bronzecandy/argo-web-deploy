@@ -1,34 +1,44 @@
-// src/components/ProtectedRoute.tsx
 'use client';
 
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { useSelector } from 'react-redux';
-import { RootState } from '../store';
+import { useAppSelector } from '@/src/store/hooks';
+import type { UserRole } from '@/src/lib/constants';
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
+  allowedRoles?: UserRole[];
 }
 
-export default function ProtectedRoute({ children }: ProtectedRouteProps) {
+export default function ProtectedRoute({ children, allowedRoles }: ProtectedRouteProps) {
   const router = useRouter();
-  const { isAuthenticated, isLoading } = useSelector((state: RootState) => state.auth);
+  const { isAuthenticated, isLoading, user } = useAppSelector((state) => state.auth);
 
   useEffect(() => {
     if (!isLoading && !isAuthenticated) {
-      router.push('/login');
+      router.replace('/login');
     }
-  }, [isAuthenticated, isLoading, router]);
+  }, [isLoading, isAuthenticated, router]);
+
+  useEffect(() => {
+    if (!isLoading && isAuthenticated && allowedRoles && user) {
+      if (!allowedRoles.includes(user.role as UserRole)) {
+        router.replace('/unauthorized');
+      }
+    }
+  }, [isLoading, isAuthenticated, user, allowedRoles, router]);
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900"></div>
+      <div className="flex h-screen items-center justify-center">
+        <div className="h-10 w-10 animate-spin rounded-full border-4 border-emerald-600 border-t-transparent" />
       </div>
     );
   }
 
-  if (!isAuthenticated) {
+  if (!isAuthenticated) return null;
+
+  if (allowedRoles && user && !allowedRoles.includes(user.role as UserRole)) {
     return null;
   }
 

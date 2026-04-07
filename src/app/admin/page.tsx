@@ -1,116 +1,119 @@
-"use client";
-import React from "react";
-import Script from "next/script";
-import AdminLayout from "@/src/components/AdminLayout";
+'use client';
+
+import { useEffect, useState } from 'react';
+import {
+  Users, Baby, Building2, Wallet, BarChart3, ClipboardCheck,
+  TrendingUp, ArrowUpRight,
+} from 'lucide-react';
+import StatsCard from '@/src/components/ui/StatsCard';
+import PageHeader from '@/src/components/ui/PageHeader';
+import { registrationService } from '@/src/services/registration.service';
+import { childrenService } from '@/src/services/children.service';
+import { centerService } from '@/src/services/center.service';
+import { withdrawService } from '@/src/services/withdraw.service';
+import { staffService } from '@/src/services/staff.service';
+import { transactionService } from '@/src/services/transaction.service';
+import { formatVND, formatDate } from '@/src/lib/formatters';
+import type { TransactionRecord } from '@/src/types/api.types';
+
+interface DashboardStats {
+  registrations: number;
+  children: number;
+  centers: number;
+  withdrawals: number;
+  staff: number;
+}
 
 export default function AdminDashboard() {
-  return (
-    <>
-      <Script src="https://cdn.tailwindcss.com" />
-      <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet" />
+  const [stats, setStats] = useState<DashboardStats>({
+    registrations: 0, children: 0, centers: 0, withdrawals: 0, staff: 0,
+  });
+  const [recentTx, setRecentTx] = useState<TransactionRecord[]>([]);
+  const [loading, setLoading] = useState(true);
 
-      <AdminLayout
-        title="System Overview"
-        headerRight={
-          <>
-            <button className="p-2 text-slate-400 hover:text-blue-800 transition"><i className="fa-regular fa-bell" /></button>
-            <button className="bg-blue-800 hover:bg-blue-900 text-white px-4 py-2 rounded-lg text-sm font-medium transition shadow-sm shadow-blue-200"><i className="fa-solid fa-link mr-1" /> Smart Contract Status: Connected</button>
-          </>
+  useEffect(() => {
+    async function loadDashboard() {
+      try {
+        const [regRes, childRes, centerRes, withdrawRes, staffRes, txRes] = await Promise.allSettled([
+          registrationService.list({ page: 0, page_size: 1 }),
+          childrenService.list({ page: 0, page_size: 1 }),
+          centerService.list({ page: 0, page_size: 1 }),
+          withdrawService.list({ page: 0, page_size: 1 }),
+          staffService.list({ page: 0, page_size: 1 }),
+          transactionService.list({ page: 0, page_size: 5, sort_order: 'desc' }),
+        ]);
+
+        setStats({
+          registrations: regRes.status === 'fulfilled' ? regRes.value.data.amount || 0 : 0,
+          children: childRes.status === 'fulfilled' ? childRes.value.data.amount || 0 : 0,
+          centers: centerRes.status === 'fulfilled' ? centerRes.value.data.amount || 0 : 0,
+          withdrawals: withdrawRes.status === 'fulfilled' ? withdrawRes.value.data.amount || 0 : 0,
+          staff: staffRes.status === 'fulfilled' ? staffRes.value.data.amount || 0 : 0,
+        });
+
+        if (txRes.status === 'fulfilled') {
+          setRecentTx(txRes.value.data.data || []);
         }
-      >
-        <div className="p-8 space-y-8">
-          <section>
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-semibold text-slate-800">Platform Analytics</h2>
-              <span className="text-sm text-slate-500">Updated: Just now</span>
-            </div>
+      } catch {
+        // Silently fail - stats show 0
+      } finally {
+        setLoading(false);
+      }
+    }
+    loadDashboard();
+  }, []);
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-              <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm">
-                <p className="text-sm font-medium text-slate-500">Total Donation Pool</p>
-                <h3 className="text-2xl font-bold text-slate-900 mt-1">1,240,500 VND</h3>
-                <div className="mt-4 text-sm text-green-600"><i className="fa-solid fa-arrow-trend-up mr-1" /> +12.5% this month</div>
-              </div>
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center p-12">
+        <div className="h-8 w-8 animate-spin rounded-full border-4 border-emerald-600 border-t-transparent" />
+      </div>
+    );
+  }
 
-              <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm">
-                <p className="text-sm font-medium text-slate-500">Children Supported</p>
-                <h3 className="text-2xl font-bold text-slate-900 mt-1">8,450</h3>
-                <div className="mt-4 text-sm text-slate-500">Active across 12 provinces</div>
-              </div>
+  return (
+    <div>
+      <PageHeader
+        title="Dashboard"
+        description="Overview of AgroTrust platform activity"
+      />
 
-              <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm">
-                <p className="text-sm font-medium text-slate-500">Pending Approvals</p>
-                <h3 className="text-2xl font-bold text-slate-900 mt-1">18</h3>
-                <div className="mt-4 text-sm text-orange-600">Needs immediate attention</div>
-              </div>
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
+        <StatsCard label="Registration Requests" value={stats.registrations} icon={Users} />
+        <StatsCard label="Children" value={stats.children} icon={Baby} />
+        <StatsCard label="Center Requests" value={stats.centers} icon={Building2} />
+        <StatsCard label="Withdrawal Proposals" value={stats.withdrawals} icon={Wallet} />
+        <StatsCard label="Staff Members" value={stats.staff} icon={Users} />
+      </div>
 
-              <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm">
-                <p className="text-sm font-medium text-slate-500">Active Volunteers</p>
-                <h3 className="text-2xl font-bold text-slate-900 mt-1">1,204</h3>
-                <div className="mt-4 text-sm text-green-600">+12 this week</div>
-              </div>
-            </div>
-          </section>
-
-          <section>
-            <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
-              <div className="p-6 border-b border-slate-100 flex justify-between items-center">
-                <h2 className="text-lg font-bold text-slate-800">Child Profile Verification Queue</h2>
-                <button className="text-blue-800 text-sm font-medium hover:text-blue-900">View All</button>
-              </div>
-
-              <div className="overflow-x-auto">
-                <table className="w-full text-left border-collapse">
-                  <thead className="bg-slate-50 text-slate-500 text-xs uppercase font-medium">
-                    <tr>
-                      <th className="px-6 py-4">Child Info</th>
-                      <th className="px-6 py-4">Submitted By</th>
-                      <th className="px-6 py-4">Location</th>
-                      <th className="px-6 py-4">AI Confidence</th>
-                      <th className="px-6 py-4 text-right">Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-100">
-                    <tr className="hover:bg-slate-50 transition">
-                      <td className="px-6 py-4 flex items-center gap-3">
-                        <img src="https://ui-avatars.com/api/?name=Linh+Dan&background=ffedd5&color=c2410c" className="w-10 h-10 rounded-full" />
-                        <div>
-                          <p className="font-semibold text-slate-900">Nguyen Linh Dan</p>
-                          <p className="text-xs text-slate-500">ID: #CH-8821</p>
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 text-sm text-slate-600">Volunteer A (Rep: 98%)</td>
-                      <td className="px-6 py-4 text-sm text-slate-600">Ha Giang, VN</td>
-                      <td className="px-6 py-4"><span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-emerald-100 text-emerald-800"> <i className="fa-solid fa-robot" /> 92% Match</span></td>
-                      <td className="px-6 py-4 text-right space-x-2">
-                        <button className="p-2 rounded-lg text-slate-400 hover:text-red-500 hover:bg-red-50"><i className="fa-solid fa-xmark" /></button>
-                        <button className="p-2 rounded-lg text-blue-800 hover:bg-blue-50 border border-blue-200 font-medium text-sm">Verify Profile</button>
-                      </td>
-                    </tr>
-
-                    <tr className="hover:bg-slate-50 transition">
-                      <td className="px-6 py-4 flex items-center gap-3">
-                        <img src="https://ui-avatars.com/api/?name=Van+Binh&background=e0e7ff&color=4338ca" className="w-10 h-10 rounded-full" />
-                        <div>
-                          <p className="font-semibold text-slate-900">Tran Van Binh</p>
-                          <p className="text-xs text-slate-500">ID: #CH-8822</p>
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 text-sm text-slate-600">Volunteer B (Rep: 75%)</td>
-                      <td className="px-6 py-4 text-sm text-slate-600">Lao Cai, VN</td>
-                      <td className="px-6 py-4"><span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-orange-100 text-orange-800"> <i className="fa-solid fa-robot" /> 45% Flagged</span></td>
-                      <td className="px-6 py-4 text-right space-x-2">
-                        <button className="p-2 rounded-lg text-slate-400 hover:text-red-500 hover:bg-red-50"><i className="fa-solid fa-xmark" /></button>
-                        <button className="p-2 rounded-lg text-blue-800 hover:bg-blue-50 border border-blue-200 font-medium text-sm">Investigate</button>
-                      </td>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          </section>
+      <div className="mt-6 rounded-xl border border-slate-200 bg-white">
+        <div className="flex items-center justify-between border-b border-slate-200 px-5 py-4">
+          <h2 className="font-semibold text-slate-900">Recent Transactions</h2>
+          <a href="/admin/analytics" className="flex items-center gap-1 text-sm text-emerald-600 hover:underline">
+            View all <ArrowUpRight className="h-3.5 w-3.5" />
+          </a>
         </div>
-      </AdminLayout>
-    </>
+        <div className="divide-y divide-slate-100">
+          {recentTx.length === 0 ? (
+            <div className="px-5 py-8 text-center text-sm text-slate-400">No recent transactions</div>
+          ) : (
+            recentTx.map((tx) => (
+              <div key={tx.id} className="flex items-center justify-between px-5 py-3">
+                <div>
+                  <p className="text-sm font-medium text-slate-700">{tx.action_type}</p>
+                  <p className="text-xs text-slate-400">{tx.pool_name || tx.message}</p>
+                </div>
+                <div className="text-right">
+                  <p className="text-sm font-semibold text-slate-900">
+                    {tx.amount ? formatVND(tx.amount) : '-'}
+                  </p>
+                  <p className="text-xs text-slate-400">{formatDate(tx.created_at)}</p>
+                </div>
+              </div>
+            ))
+          )}
+        </div>
+      </div>
+    </div>
   );
 }

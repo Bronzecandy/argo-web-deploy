@@ -1,14 +1,11 @@
-// src/store/authSlice.ts
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
-import { AuthResponse, authService, LoginCredentials, RegisterData } from '../services/auth.services';
+import { authService, AuthUser } from '@/src/services/auth.service';
+import { jwtToAddress } from '@/src/lib/zklogin';
+import { getSubFromJWT } from '@/src/lib/jwt';
+import type { LoginRequest } from '@/src/types/api.types';
 
 interface AuthState {
-  user: {
-    id: string;
-    email: string;
-    name: string;
-    role: string;
-  } | null;
+  user: AuthUser | null;
   isAuthenticated: boolean;
   isLoading: boolean;
   error: string | null;
@@ -17,114 +14,84 @@ interface AuthState {
 const initialState: AuthState = {
   user: null,
   isAuthenticated: false,
-  isLoading: false,
+  isLoading: true,
   error: null,
 };
 
-// Async thunks
-export const loginUser = createAsyncThunk(
-  'auth/login',
-  async (credentials: LoginCredentials, { rejectWithValue }) => {
+export const loginWithZKLogin = createAsyncThunk(
+  'auth/loginWithZKLogin',
+  async (googleIdToken: string, { rejectWithValue }) => {
     try {
-      const response = await authService.login(credentials);
-      return response;
-    } catch (error: any) {
-      return rejectWithValue(error.response?.data?.message || 'Login failed');
+      const sub = getSubFromJWT(googleIdToken);
+      const saltResponse = await authService.getSalt(sub);
+      const salt = saltResponse;
+      const address = jwtToAddress(googleIdToken, salt, false);
+      const credentials: LoginRequest = { address, sub };
+      const { token, user } = await authService.login(credentials);
+      return { token, user };
+    } catch (err: any) {
+      return rejectWithValue(err?.response?.data?.message || err?.message || 'Login failed');
     }
-  }
+  },
 );
 
-export const registerUser = createAsyncThunk(
-  'auth/register',
-  async (data: RegisterData, { rejectWithValue }) => {
-    try {
-      const response = await authService.register(data);
-      return response;
-    } catch (error: any) {
-      return rejectWithValue(error.response?.data?.message || 'Registration failed');
-    }
-  }
-);
-
-export const logoutUser = createAsyncThunk(
-  'auth/logout',
+export const restoreSession = createAsyncThunk(
+  'auth/restoreSession',
   async (_, { rejectWithValue }) => {
     try {
-      await authService.logout();
-    } catch (error: any) {
-      return rejectWithValue(error.response?.data?.message || 'Logout failed');
-    }
-  }
-);
-
-export const fetchCurrentUser = createAsyncThunk(
-  'auth/fetchCurrentUser',
-  async (_, { rejectWithValue }) => {
-    try {
-      const user = await authService.getCurrentUser();
+      const user = authService.getStoredUser();
+      if (!user) throw new Error('No stored session');
       return user;
-    } catch (error: any) {
-      return rejectWithValue(error.response?.data?.message || 'Failed to fetch user');
+    } catch {
+      return rejectWithValue('No session');
     }
-  }
+  },
 );
+
+export const logoutUser = createAsyncThunk('auth/logout', async () => {
+  await authService.logout();
+});
 
 const authSlice = createSlice({
   name: 'auth',
   initialState,
   reducers: {
-    setCredentials: (state, action: PayloadAction<AuthResponse>) => {
-      state.user = action.payload.user;
-      state.isAuthenticated = true;
-      state.error = null;
-    },
-    clearAuth: (state) => {
-      state.user = null;
-      state.isAuthenticated = false;
-      state.error = null;
-    },
     clearError: (state) => {
       state.error = null;
     },
   },
   extraReducers: (builder) => {
     builder
-      // Login
-      .addCase(loginUser.fulfilled, (state, action) => {
-        state.isLoading = false;
-        state.user = action.payload.user;
-        state.isAuthenticated = true;
+      .addCase(loginWithZKLogin.pending, (state) => {
+        state.isLoading = true;
         state.error = null;
       })
-      .addCase(loginUser.rejected, (state, action) => {
+      .addCase(loginWithZKLogin.fulfilled, (state, action) => {
+        state.isLoading = false;
+        state.isAuthenticated = true;
+        state.user = action.payload.user;
+      })
+      .addCase(loginWithZKLogin.rejected, (state, action) => {
         state.isLoading = false;
         state.error = action.payload as string;
       })
-      // Register
-      .addCase(registerUser.fulfilled, (state, action) => {
+      .addCase(restoreSession.fulfilled, (state, action) => {
         state.isLoading = false;
-        state.user = action.payload.user;
         state.isAuthenticated = true;
-        state.error = null;
-      })
-      .addCase(registerUser.rejected, (state, action) => {
-        state.isLoading = false;
-        state.error = action.payload as string;
-      })
-      // Logout
-      .addCase(logoutUser.fulfilled, (state) => {
-        state.user = null;
-        state.isAuthenticated = false;
-        state.error = null;
-      })
-      // Fetch current user
-      .addCase(fetchCurrentUser.fulfilled, (state, action) => {
-        state.isLoading = false;
         state.user = action.payload;
-        state.isAuthenticated = true;
       })
+      .addCase(restoreSession.rejected, (state) => {
+        state.isLoading = false;
+        state.isAuthenticated = false;
+        state.user = null;
+      })
+      .addCase(logoutUser.fulfilled, (state) => {
+        state.isAuthenticated = false;
+        state.user = null;
+        state.isLoading = false;
+      });
   },
 });
 
-export const { setCredentials, clearAuth, clearError } = authSlice.actions;
+export const { clearError } = authSlice.actions;
 export default authSlice.reducer;
