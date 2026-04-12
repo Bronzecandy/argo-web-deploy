@@ -19,6 +19,8 @@ export default function HomePage() {
       router.replace('/admin');
     } else if (user?.role === ROLES.LOCAL_LEADER) {
       router.replace('/leader');
+    } else if (user?.role === ROLES.DONOR) {
+      router.replace('/donor');
     } else {
       router.replace('/login');
     }

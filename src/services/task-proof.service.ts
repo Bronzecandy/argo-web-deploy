@@ -16,12 +16,14 @@ class TaskProofService {
     return apiService.get<TaskProof>(`/task-proofs/${id}`);
   }
 
-  async submit(data: { task_id: string; image_blob_id: string }) {
-    return apiService.post<BuildTransactionResponse>('/task-proofs', data);
+  async submit(taskId: string, image_blob_id: string) {
+    return apiService.post<MessageResponse>(`/task-proofs/task/${taskId}/submit`, undefined, {
+      params: { image_blob_id },
+    });
   }
 
   async approve(id: string) {
-    return apiService.post<MessageResponse>(`/task-proofs/${id}/approve`);
+    return apiService.post<BuildTransactionResponse>(`/task-proofs/${id}/approve`);
   }
 
   async refuse(id: string) {

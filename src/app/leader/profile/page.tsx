@@ -27,18 +27,29 @@ export default function LeaderProfilePage() {
   const [saving, setSaving] = useState(false);
 
   const loadProfile = useCallback(async () => {
+    if (!user?.address) return;
     setLoading(true);
     try {
-      const res = await profileService.get();
-      setProfile(res.data);
+      const res = await profileService.getByWallet(user.address);
+      const data = res.data;
+      setProfile({
+        id: data.wallet_address ?? user.address,
+        first_name: data.first_name,
+        last_name: data.last_name,
+        gender: '',
+        date_of_birth: '',
+        phone_number: '',
+        email: '',
+        identity_code: '',
+      });
       setForm({
-        first_name: res.data.first_name,
-        last_name: res.data.last_name,
-        gender: res.data.gender,
-        date_of_birth: res.data.date_of_birth?.slice(0, 10) || res.data.date_of_birth,
-        phone_number: res.data.phone_number,
-        email: res.data.email,
-        identity_code: res.data.identity_code,
+        first_name: data.first_name ?? '',
+        last_name: data.last_name ?? '',
+        gender: '',
+        date_of_birth: '',
+        phone_number: '',
+        email: '',
+        identity_code: '',
       });
     } catch (e: unknown) {
       const status = (e as { response?: { status?: number } })?.response?.status;
@@ -53,7 +64,7 @@ export default function LeaderProfilePage() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [user?.address]);
 
   useEffect(() => {
     void loadProfile();
@@ -68,13 +79,16 @@ export default function LeaderProfilePage() {
     setSaving(true);
     try {
       if (profile) {
-        const res = await profileService.update(form);
+        const res = await profileService.upload(profile.id, form);
         setProfile(res.data);
         toast.success('Profile updated');
-      } else {
-        const res = await profileService.upload(form);
+      } else if (user?.profileId) {
+        const res = await profileService.upload(user.profileId, form);
         setProfile(res.data);
         toast.success('Profile created');
+      } else {
+        toast.error('Profile ID not available');
+        return;
       }
       setEditMode(false);
     } catch (err) {

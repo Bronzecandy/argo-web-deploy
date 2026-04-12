@@ -6,12 +6,12 @@ class PaymentService {
     return apiService.post<UrlResponse>('/payments/donate', data);
   }
 
-  async generatePaymentUrl(data: DonateRequest) {
-    return apiService.post<UrlResponse>('/payments/generate-url', data);
+  async authCallback(id: string, imageBlobId: string) {
+    return apiService.get(`/payments/auth-callback/${id}`, { params: { imageBlobId } });
   }
 
-  async generateRegistrationPaymentUrl(registrationId: string) {
-    return apiService.post<UrlResponse>(`/payments/registration/${registrationId}`);
+  async callback(id: string) {
+    return apiService.get(`/payments/callback/${id}`);
   }
 }
 

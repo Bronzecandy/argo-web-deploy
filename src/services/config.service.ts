@@ -1,21 +1,17 @@
 import { apiService } from './api.service';
-import type { UpdateChildEditNeedDatesRequest, MessageResponse } from '@/src/types/api.types';
+import type { UpdateChildEditNeedDatesRequest, BuildTransactionResponse } from '@/src/types/api.types';
 
 class ConfigService {
-  async getEditNeedDates() {
-    return apiService.get('/configs/edit-need-dates');
+  async updateBooksNeedEditDates(data: UpdateChildEditNeedDatesRequest) {
+    return apiService.put<BuildTransactionResponse>('/configs/books-need-edit-dates', data);
   }
 
-  async updateEditNeedDates(data: UpdateChildEditNeedDatesRequest) {
-    return apiService.put<MessageResponse>('/configs/edit-need-dates', data);
+  async updateHealthInsuranceNeedEditDates(data: UpdateChildEditNeedDatesRequest) {
+    return apiService.put<BuildTransactionResponse>('/configs/health-insurance-need-edit-dates', data);
   }
 
-  async getBlobStore() {
-    return apiService.get('/configs/blob-store');
-  }
-
-  async getAllConfigs() {
-    return apiService.get('/configs');
+  async updateMealNeedEditDates(data: UpdateChildEditNeedDatesRequest) {
+    return apiService.put<BuildTransactionResponse>('/configs/meal-need-edit-dates', data);
   }
 }
 

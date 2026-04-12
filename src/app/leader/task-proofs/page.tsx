@@ -57,7 +57,7 @@ export default function LeaderTaskProofsPage() {
     }
     setSubmitting(true);
     try {
-      await taskProofService.submit({ task_id: taskId.trim(), image_blob_id: imageBlobId.trim() });
+      await taskProofService.submit(taskId.trim(), imageBlobId.trim());
       toast.success('Proof submitted');
       setTaskId('');
       setImageBlobId('');
