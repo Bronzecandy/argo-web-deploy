@@ -7,7 +7,7 @@ import PageHeader from '@/src/components/ui/PageHeader';
 import type { PersonalWalletProfile, UploadProfileRequest } from '@/src/types/api.types';
 import { toast } from 'sonner';
 import { User, Wallet, Save } from 'lucide-react';
-import { formatVND } from '@/src/lib/formatters';
+import { formatVND, toDDMMYYYY } from '@/src/lib/formatters';
 
 export default function DonorProfilePage() {
   const { user } = useAppSelector((state) => state.auth);
@@ -59,7 +59,8 @@ export default function DonorProfilePage() {
     }
     setSaving(true);
     try {
-      await profileService.upload(user.profileId, form);
+      const payload = { ...form, date_of_birth: toDDMMYYYY(form.date_of_birth) };
+      await profileService.upload(user.profileId, payload);
       toast.success('Profile updated successfully');
       setEditing(false);
       void loadProfile();

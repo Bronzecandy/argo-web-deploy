@@ -35,7 +35,7 @@ class ChildUploadService {
   }
 
   async confirm(id: string) {
-    return apiService.post<BuildTransactionResponse>(`/child-upload-reqs/${id}/confirm`);
+    return apiService.post<BuildTransactionResponse>(`/child-upload-reqs/${id}/confirm`, null);
   }
 }
 

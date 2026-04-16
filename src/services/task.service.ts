@@ -16,17 +16,17 @@ class TaskService {
   }
 
   async create(data: { description: string; region: string; start_period: string; end_period: string }) {
-    return apiService.post<PaginationResponse>('/tasks', undefined, { params: data });
+    return apiService.post<PaginationResponse>('/tasks', null, { params: data });
   }
 
   async claim(id: string) {
-    return apiService.post<MessageResponse>(`/tasks/${id}/claim`);
+    return apiService.post<MessageResponse>(`/tasks/${id}/claim`, null);
   }
 
   async review(id: string, is_vote_yes: boolean, refuse_reason?: string) {
-    return apiService.post<MessageResponse>(`/tasks/${id}/review`, undefined, {
-      params: { is_vote_yes, refuse_reason },
-    });
+    const params: Record<string, any> = { is_vote_yes };
+    if (refuse_reason) params.refuse_reason = refuse_reason;
+    return apiService.post<MessageResponse>(`/tasks/${id}/review`, null, { params });
   }
 }
 

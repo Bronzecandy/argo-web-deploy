@@ -8,6 +8,7 @@ import DataTable from '@/src/components/ui/DataTable';
 import StatusBadge from '@/src/components/ui/StatusBadge';
 import { formatDate, formatVND, truncateAddress } from '@/src/lib/formatters';
 import { centerService } from '@/src/services/center.service';
+import { useExecuteTransaction } from '@/src/hooks/useExecuteTransaction';
 import type { CenterRequest } from '@/src/types/api.types';
 
 const PAGE_SIZE = 10;
@@ -21,6 +22,7 @@ const STATUS_OPTIONS = [
 ];
 
 export default function AdminCentersPage() {
+  const { execute } = useExecuteTransaction();
   const [loading, setLoading] = useState(true);
   const [centers, setCenters] = useState<CenterRequest[]>([]);
   const [page, setPage] = useState(0);
@@ -105,19 +107,12 @@ export default function AdminCentersPage() {
 
   async function handleConfirm(id: string) {
     setConfirmBusyId(id);
-    try {
-      await centerService.confirm(id);
-      toast.success('Confirmation step completed');
-      await loadCenters();
-    } catch (e: unknown) {
-      const msg =
-        e && typeof e === 'object' && 'response' in e
-          ? String((e as { response?: { data?: { message?: string } } }).response?.data?.message ?? '')
-          : '';
-      toast.error(msg || 'Confirm failed');
-    } finally {
-      setConfirmBusyId(null);
-    }
+    const ok = await execute(
+      () => centerService.confirm(id),
+      { successMessage: 'Center confirmed & executed on-chain' },
+    );
+    if (ok) await loadCenters();
+    setConfirmBusyId(null);
   }
 
   return (

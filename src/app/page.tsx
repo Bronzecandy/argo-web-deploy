@@ -21,6 +21,8 @@ export default function HomePage() {
       router.replace('/leader');
     } else if (user?.role === ROLES.DONOR) {
       router.replace('/donor');
+    } else if (user?.role === ROLES.VOLUNTEER) {
+      router.replace('/volunteer');
     } else {
       router.replace('/login');
     }

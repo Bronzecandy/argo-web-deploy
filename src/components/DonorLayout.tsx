@@ -9,7 +9,6 @@ import { truncateAddress } from '@/src/lib/formatters';
 import {
   LayoutDashboard,
   Search,
-  Baby,
   HandCoins,
   Vote,
   History,
@@ -25,7 +24,6 @@ import {
 const NAV_ITEMS = [
   { label: 'Dashboard', href: '/donor', icon: LayoutDashboard },
   { label: 'Discover', href: '/donor/discover', icon: Search },
-  { label: 'Children', href: '/donor/children', icon: Baby },
   { label: 'Donate', href: '/donor/donate', icon: HandCoins },
   { label: 'Withdrawals', href: '/donor/withdrawals', icon: Vote },
   { label: 'Transactions', href: '/donor/transactions', icon: History },

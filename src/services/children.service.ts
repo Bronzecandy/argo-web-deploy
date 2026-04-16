@@ -54,7 +54,7 @@ class ChildrenService {
   }
 
   async supportBooksNeed(needId: string) {
-    return apiService.post<UrlResponse>(`/children/books-need/${needId}/support`);
+    return apiService.post<UrlResponse>(`/children/books-need/${needId}/support`, null);
   }
 
   // ─── Health insurance need ─────────────────────────────
@@ -67,7 +67,7 @@ class ChildrenService {
   }
 
   async supportHealthInsuranceNeed(needId: string) {
-    return apiService.post<UrlResponse>(`/children/health-insurance-need/${needId}/support`);
+    return apiService.post<UrlResponse>(`/children/health-insurance-need/${needId}/support`, null);
   }
 
   // ─── Special need ──────────────────────────────────────
@@ -80,7 +80,7 @@ class ChildrenService {
   }
 
   async confirmSpecialNeedProposal(id: string) {
-    return apiService.post<BuildTransactionResponse>(`/children/special-need/proposal/${id}/confirm`);
+    return apiService.post<BuildTransactionResponse>(`/children/special-need/proposal/${id}/confirm`, null);
   }
 
   async createSpecialNeedWithdrawProposal(data: CreateSpecialNeedWithdrawProposalRequest) {

@@ -8,6 +8,7 @@ import StatusBadge from '@/src/components/ui/StatusBadge';
 import { formatDate, truncateAddress } from '@/src/lib/formatters';
 import { taskProofService } from '@/src/services/task-proof.service';
 import { blobService } from '@/src/services/blob.service';
+import { useExecuteTransaction } from '@/src/hooks/useExecuteTransaction';
 import type { TaskProof } from '@/src/types/api.types';
 
 const PAGE_SIZE = 10;
@@ -52,17 +53,15 @@ export default function AdminTaskProofsPage() {
     void load();
   }, [load]);
 
+  const { execute } = useExecuteTransaction();
   const refresh = () => void load();
 
   const handleApprove = async (id: string) => {
-    try {
-      await taskProofService.approve(id);
-      toast.success('Proof approved');
-      refresh();
-    } catch (e) {
-      console.error(e);
-      toast.error('Approve failed');
-    }
+    const ok = await execute(
+      () => taskProofService.approve(id),
+      { successMessage: 'Proof approved & executed on-chain' },
+    );
+    if (ok) refresh();
   };
 
   const handleRefuse = async (id: string) => {

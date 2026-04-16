@@ -51,7 +51,9 @@ class AuthService {
 
   async logout(): Promise<void> {
     try {
-      await apiService.post('/auth/logout');
+      await apiService.post('/auth/logout', null);
+    } catch {
+      // Ignore server errors — logout must always succeed client-side
     } finally {
       apiService.clearTokens();
     }

@@ -9,6 +9,8 @@ import { formatDate, formatVND } from '@/src/lib/formatters';
 import { useAppSelector } from '@/src/store/hooks';
 import { withdrawService } from '@/src/services/withdraw.service';
 import { pendingWithdrawService } from '@/src/services/pending-withdraw.service';
+import { useExecuteTransaction } from '@/src/hooks/useExecuteTransaction';
+import FileUploadInput from '@/src/components/ui/FileUploadInput';
 import type { CreatePendingWithdrawProposalRequest, WithdrawProposal } from '@/src/types/api.types';
 
 type Tab = 'mine' | 'create';
@@ -24,6 +26,7 @@ function getErrorMessage(e: unknown, fallback: string) {
 }
 
 export default function LeaderWithdrawalsPage() {
+  const { execute } = useExecuteTransaction();
   const { user } = useAppSelector((state) => state.auth);
   const [tab, setTab] = useState<Tab>('mine');
 
@@ -84,17 +87,16 @@ export default function LeaderWithdrawalsPage() {
       proof_blob_id: createForm.proof_blob_id.trim() || undefined,
     };
     setSubmitting(true);
-    try {
-      await pendingWithdrawService.create(data);
-      toast.success('Pending withdrawal proposal created');
+    const ok = await execute(
+      () => pendingWithdrawService.create(data),
+      { successMessage: 'Pending withdrawal proposal created & executed' },
+    );
+    if (ok) {
       setCreateForm({ pool_id: '', description: '', withdraw_amount: '', proof_blob_id: '' });
       setTab('mine');
       setPage(0);
-    } catch (err: unknown) {
-      toast.error(getErrorMessage(err, 'Create failed'));
-    } finally {
-      setSubmitting(false);
     }
+    setSubmitting(false);
   }
 
   const columns = [
@@ -205,14 +207,13 @@ export default function LeaderWithdrawalsPage() {
               required
             />
           </div>
-          <div>
-            <label className="mb-1.5 block text-sm font-medium text-slate-700">Proof blob ID (optional)</label>
-            <input
-              className={inputClass}
-              value={createForm.proof_blob_id}
-              onChange={(e) => setCreateForm((f) => ({ ...f, proof_blob_id: e.target.value }))}
-            />
-          </div>
+          <FileUploadInput
+            label="Proof image (optional)"
+            value={createForm.proof_blob_id}
+            onChange={(val) => setCreateForm((f) => ({ ...f, proof_blob_id: val }))}
+            accept="image/*"
+            placeholder="Upload proof image or paste blob ID"
+          />
           <button
             type="submit"
             disabled={submitting}

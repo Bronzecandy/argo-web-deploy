@@ -8,6 +8,8 @@ import StatusBadge from '@/src/components/ui/StatusBadge';
 import { formatDate } from '@/src/lib/formatters';
 import { useAppSelector } from '@/src/store/hooks';
 import { centerService } from '@/src/services/center.service';
+import { regionService } from '@/src/services/region.service';
+import FileUploadInput from '@/src/components/ui/FileUploadInput';
 import type { CenterRequest, CreateCenterRequest } from '@/src/types/api.types';
 
 type Tab = 'mine' | 'register';
@@ -33,6 +35,12 @@ export default function LeaderCentersPage() {
 
   const [loading, setLoading] = useState(false);
   const [centers, setCenters] = useState<CenterRequest[]>([]);
+
+  const [regions, setRegions] = useState<string[]>([]);
+
+  useEffect(() => {
+    regionService.listRegions().then((res) => setRegions(res.data.regions || [])).catch(() => {});
+  }, []);
 
   const [submitting, setSubmitting] = useState(false);
   const [form, setForm] = useState({
@@ -159,7 +167,17 @@ export default function LeaderCentersPage() {
         >
           <div>
             <label className="mb-1.5 block text-sm font-medium text-slate-700">Region</label>
-            <input className={inputClass} value={form.region} onChange={(e) => setForm((f) => ({ ...f, region: e.target.value }))} required />
+            <select
+              className={inputClass}
+              value={form.region}
+              onChange={(e) => setForm((f) => ({ ...f, region: e.target.value }))}
+              required
+            >
+              <option value="">Select region…</option>
+              {regions.map((r) => (
+                <option key={r} value={r}>{r}</option>
+              ))}
+            </select>
           </div>
           <div>
             <label className="mb-1.5 block text-sm font-medium text-slate-700">Address</label>
@@ -169,15 +187,13 @@ export default function LeaderCentersPage() {
             <label className="mb-1.5 block text-sm font-medium text-slate-700">Phone number</label>
             <input className={inputClass} value={form.phone_number} onChange={(e) => setForm((f) => ({ ...f, phone_number: e.target.value }))} required />
           </div>
-          <div>
-            <label className="mb-1.5 block text-sm font-medium text-slate-700">Image blob ID</label>
-            <input
-              className={inputClass}
-              value={form.image_blob_id}
-              onChange={(e) => setForm((f) => ({ ...f, image_blob_id: e.target.value }))}
-              required
-            />
-          </div>
+          <FileUploadInput
+            label="Center image"
+            value={form.image_blob_id}
+            onChange={(val) => setForm((f) => ({ ...f, image_blob_id: val }))}
+            accept="image/*"
+            placeholder="Upload center image or paste blob ID"
+          />
           <button
             type="submit"
             disabled={submitting}

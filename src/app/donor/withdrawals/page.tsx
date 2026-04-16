@@ -2,18 +2,19 @@
 
 import { useEffect, useState, useCallback } from 'react';
 import { withdrawService } from '@/src/services/withdraw.service';
-import { transactionService } from '@/src/services/transaction.service';
 import { useAppSelector } from '@/src/store/hooks';
+import { useExecuteTransaction } from '@/src/hooks/useExecuteTransaction';
 import { formatVND, formatDateTime, truncateAddress } from '@/src/lib/formatters';
 import PageHeader from '@/src/components/ui/PageHeader';
 import DataTable from '@/src/components/ui/DataTable';
 import StatusBadge from '@/src/components/ui/StatusBadge';
-import type { WithdrawProposal, BuildTransactionResponse, ExecuteTransactionRequest } from '@/src/types/api.types';
+import type { WithdrawProposal } from '@/src/types/api.types';
 import { toast } from 'sonner';
 import { Vote, ThumbsUp, ThumbsDown, X } from 'lucide-react';
 
 export default function DonorWithdrawalsPage() {
   const { user } = useAppSelector((state) => state.auth);
+  const { execute } = useExecuteTransaction();
   const [proposals, setProposals] = useState<WithdrawProposal[]>([]);
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(0);
@@ -56,25 +57,19 @@ export default function DonorWithdrawalsPage() {
   const handleVote = async () => {
     if (!selectedProposal) return;
     setVoting(true);
-    try {
-      const res = await withdrawService.vote(
+    const ok = await execute(
+      () => withdrawService.vote(
         selectedProposal.id,
         voteType,
         voteType ? undefined : refuseReason || undefined,
-      );
-
-      const txData = res.data as BuildTransactionResponse;
-      if (txData.tx_bytes) {
-        toast.success('Vote submitted. Transaction ready to execute on-chain.');
-      } else {
-        toast.success('Vote recorded successfully');
-      }
+      ),
+      { successMessage: voteType ? 'Vote approved & executed on-chain' : 'Vote refused & executed on-chain' },
+    );
+    if (ok) {
       setSelectedProposal(null);
       void loadProposals();
-    } catch (e: any) {
-      toast.error(e?.response?.data?.message || 'Failed to vote');
-    } finally {
-      setVoting(false);
+    }
+    setVoting(false);
     }
   };
 

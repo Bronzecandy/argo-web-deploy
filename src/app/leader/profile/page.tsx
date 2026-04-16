@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import PageHeader from '@/src/components/ui/PageHeader';
-import { formatDate, truncateAddress } from '@/src/lib/formatters';
+import { formatDate, truncateAddress, toDDMMYYYY } from '@/src/lib/formatters';
 import { toast } from 'sonner';
 import { useAppSelector } from '@/src/store/hooks';
 import { profileService } from '@/src/services/profile.service';
@@ -78,12 +78,13 @@ export default function LeaderProfilePage() {
     e.preventDefault();
     setSaving(true);
     try {
+      const payload = { ...form, date_of_birth: toDDMMYYYY(form.date_of_birth) };
       if (profile) {
-        const res = await profileService.upload(profile.id, form);
+        const res = await profileService.upload(profile.id, payload);
         setProfile(res.data);
         toast.success('Profile updated');
       } else if (user?.profileId) {
-        const res = await profileService.upload(user.profileId, form);
+        const res = await profileService.upload(user.profileId, payload);
         setProfile(res.data);
         toast.success('Profile created');
       } else {

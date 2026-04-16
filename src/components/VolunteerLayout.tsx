@@ -8,49 +8,37 @@ import { logoutUser } from '@/src/store/authSlice';
 import { truncateAddress } from '@/src/lib/formatters';
 import {
   LayoutDashboard,
-  Users,
-  Baby,
-  Building2,
-  Wallet,
-  BarChart3,
-  Settings,
+  ClipboardList,
   ClipboardCheck,
+  User,
+  Bell,
   LogOut,
   Menu,
   X,
   Leaf,
-  ChevronDown,
-  MapPin,
-  HandCoins,
 } from 'lucide-react';
 
 const NAV_ITEMS = [
-  { label: 'Dashboard', href: '/admin', icon: LayoutDashboard },
-  { label: 'Account Management', href: '/admin/accounts', icon: Users },
-  { label: 'Child Profiles', href: '/admin/children', icon: Baby },
-  { label: 'Support Centers', href: '/admin/centers', icon: Building2 },
-  { label: 'Donors', href: '/admin/donors', icon: HandCoins },
-  { label: 'Treasury & Proposals', href: '/admin/treasury', icon: Wallet },
-  { label: 'Analytics', href: '/admin/analytics', icon: BarChart3 },
-  { label: 'Task Proofs', href: '/admin/task-proofs', icon: ClipboardCheck },
-  { label: 'Region Suggestions', href: '/admin/regions', icon: MapPin },
-  { label: 'Config', href: '/admin/config', icon: Settings },
+  { label: 'Dashboard', href: '/volunteer', icon: LayoutDashboard },
+  { label: 'Tasks', href: '/volunteer/tasks', icon: ClipboardList },
+  { label: 'Task Proofs', href: '/volunteer/task-proofs', icon: ClipboardCheck },
+  { label: 'Notifications', href: '/volunteer/notifications', icon: Bell },
+  { label: 'Profile', href: '/volunteer/profile', icon: User },
 ];
 
-export default function AdminLayout({ children }: { children: React.ReactNode }) {
+export default function VolunteerLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const dispatch = useAppDispatch();
   const { user } = useAppSelector((state) => state.auth);
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   const isActive = (href: string) => {
-    if (href === '/admin') return pathname === '/admin';
+    if (href === '/volunteer') return pathname === '/volunteer';
     return pathname.startsWith(href);
   };
 
   return (
     <div className="flex h-screen overflow-hidden bg-slate-50">
-      {/* Mobile overlay */}
       {sidebarOpen && (
         <div
           className="fixed inset-0 z-40 bg-black/30 lg:hidden"
@@ -58,7 +46,6 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         />
       )}
 
-      {/* Sidebar */}
       <aside
         className={`fixed inset-y-0 left-0 z-50 flex w-64 flex-col border-r border-slate-200 bg-white transition-transform lg:static lg:translate-x-0 ${
           sidebarOpen ? 'translate-x-0' : '-translate-x-full'
@@ -70,8 +57,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           </div>
           <div>
             <span className="font-bold text-slate-900">AgroTrust</span>
-            <span className="ml-1.5 rounded bg-emerald-100 px-1.5 py-0.5 text-[10px] font-semibold text-emerald-700">
-              ADMIN
+            <span className="ml-1.5 rounded bg-orange-100 px-1.5 py-0.5 text-[10px] font-semibold text-orange-700">
+              VOLUNTEER
             </span>
           </div>
           <button className="ml-auto lg:hidden" onClick={() => setSidebarOpen(false)}>
@@ -106,7 +93,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
         <div className="border-t border-slate-200 p-3">
           <div className="mb-2 rounded-lg bg-slate-50 px-3 py-2">
-            <p className="text-xs font-medium text-slate-700">{user?.role || 'Admin'}</p>
+            <p className="text-xs font-medium text-slate-700">Volunteer</p>
             <p className="text-xs text-slate-400">{truncateAddress(user?.address || '')}</p>
           </div>
           <button
@@ -119,7 +106,6 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         </div>
       </aside>
 
-      {/* Main */}
       <div className="flex flex-1 flex-col overflow-hidden">
         <header className="flex h-16 items-center gap-4 border-b border-slate-200 bg-white px-4 lg:px-6">
           <button className="lg:hidden" onClick={() => setSidebarOpen(true)}>

@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import { toast } from 'sonner';
+import { X, Check } from 'lucide-react';
 import PageHeader from '@/src/components/ui/PageHeader';
 import DataTable from '@/src/components/ui/DataTable';
 import StatusBadge from '@/src/components/ui/StatusBadge';
@@ -26,6 +27,9 @@ export default function AdminRegionsPage() {
   const [rows, setRows] = useState<SupportedRegionSuggestion[]>([]);
   const [totalPages, setTotalPages] = useState(1);
   const [loading, setLoading] = useState(true);
+
+  const [refuseModal, setRefuseModal] = useState<{ id: string } | null>(null);
+  const [refuseReason, setRefuseReason] = useState('');
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -53,20 +57,35 @@ export default function AdminRegionsPage() {
 
   const refresh = () => void load();
 
-  const handleReview = async (id: string, isVoteYes: boolean) => {
-    let refuseReason: string | undefined;
-    if (!isVoteYes) {
-      const reason = window.prompt('Refuse reason');
-      if (reason === null) return;
-      if (!reason.trim()) {
-        toast.error('Refuse reason is required');
-        return;
-      }
-      refuseReason = reason.trim();
+  const handleApprove = async (id: string) => {
+    try {
+      await regionService.reviewSuggestion(id, { is_vote_yes: true });
+      toast.success('Suggestion approved');
+      refresh();
+    } catch (e) {
+      console.error(e);
+      toast.error('Review failed');
+    }
+  };
+
+  const handleRefuse = (id: string) => {
+    setRefuseModal({ id });
+    setRefuseReason('');
+  };
+
+  const submitRefuse = async () => {
+    if (!refuseModal) return;
+    if (!refuseReason.trim()) {
+      toast.error('Refuse reason is required');
+      return;
     }
     try {
-      await regionService.reviewSuggestion(id, { is_vote_yes: isVoteYes, refuse_reason: refuseReason });
-      toast.success(isVoteYes ? 'Suggestion approved' : 'Suggestion refused');
+      await regionService.reviewSuggestion(refuseModal.id, {
+        is_vote_yes: false,
+        refuse_reason: refuseReason.trim(),
+      });
+      toast.success('Suggestion refused');
+      setRefuseModal(null);
       refresh();
     } catch (e) {
       console.error(e);
@@ -126,20 +145,14 @@ export default function AdminRegionsPage() {
               <div className="flex flex-wrap gap-1">
                 <button
                   type="button"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    void handleReview(r.id, true);
-                  }}
+                  onClick={(e) => { e.stopPropagation(); void handleApprove(r.id); }}
                   className="rounded-lg border border-emerald-200 px-2 py-1 text-xs font-medium text-emerald-700 hover:bg-emerald-50"
                 >
                   Approve
                 </button>
                 <button
                   type="button"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    void handleReview(r.id, false);
-                  }}
+                  onClick={(e) => { e.stopPropagation(); handleRefuse(r.id); }}
                   className="rounded-lg border border-red-200 px-2 py-1 text-xs font-medium text-red-700 hover:bg-red-50"
                 >
                   Refuse
@@ -149,6 +162,49 @@ export default function AdminRegionsPage() {
           },
         ]}
       />
+
+      {/* Refuse reason modal */}
+      {refuseModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 p-4">
+          <div className="w-full max-w-md rounded-xl border border-slate-200 bg-white p-5 shadow-xl">
+            <div className="mb-3 flex items-center justify-between">
+              <h3 className="text-lg font-semibold text-slate-900">Refuse region suggestion</h3>
+              <button
+                type="button"
+                onClick={() => setRefuseModal(null)}
+                className="rounded-lg p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-700"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+            <p className="mb-2 text-sm text-slate-600">Please provide a reason for refusing this suggestion.</p>
+            <textarea
+              value={refuseReason}
+              onChange={(e) => setRefuseReason(e.target.value)}
+              rows={3}
+              className="mb-4 w-full rounded-lg border border-slate-200 p-2 text-sm outline-none ring-emerald-600/20 focus:ring-2"
+              placeholder="Reason for refusal…"
+            />
+            <div className="flex justify-end gap-2">
+              <button
+                type="button"
+                onClick={() => setRefuseModal(null)}
+                className="rounded-lg border border-slate-200 px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={() => void submitRefuse()}
+                className="inline-flex items-center gap-1 rounded-lg bg-red-600 px-3 py-2 text-sm font-medium text-white hover:bg-red-700"
+              >
+                <Check className="h-4 w-4" />
+                Submit refusal
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

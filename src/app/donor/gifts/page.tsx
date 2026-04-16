@@ -1,17 +1,26 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { giftService } from '@/src/services/gift.service';
 import { blobService } from '@/src/services/blob.service';
+import { useExecuteTransaction } from '@/src/hooks/useExecuteTransaction';
 import PageHeader from '@/src/components/ui/PageHeader';
 import { toast } from 'sonner';
 import { Gift, Send, Upload, Package } from 'lucide-react';
 
 export default function DonorGiftsPage() {
+  const { execute } = useExecuteTransaction();
+  const searchParams = useSearchParams();
   const [tab, setTab] = useState<'send' | 'track'>('send');
 
   // Send gift form
   const [recipient, setRecipient] = useState('');
+
+  useEffect(() => {
+    const childId = searchParams.get('childId');
+    if (childId) setRecipient(childId);
+  }, [searchParams]);
   const [category, setCategory] = useState('');
   const [description, setDescription] = useState('');
   const [message, setMessage] = useState('');
@@ -43,18 +52,20 @@ export default function DonorGiftsPage() {
         imageBlobId = await blobService.upload(imageFile);
       }
 
-      await giftService.create({
-        recipient: recipient.trim(),
-        category: category.trim(),
-        description: description.trim(),
-        message: message.trim(),
-        gift_image_blob_id: imageBlobId,
-        gift_value: giftValue,
-        carrier: carrier.trim(),
-        tracking_code: trackingCode.trim(),
-      });
-
-      toast.success('Gift sent successfully! Transaction is being processed on-chain.');
+      const ok = await execute(
+        () => giftService.create({
+          recipient: recipient.trim(),
+          category: category.trim(),
+          description: description.trim(),
+          message: message.trim(),
+          gift_image_blob_id: imageBlobId,
+          gift_value: giftValue,
+          carrier: carrier.trim(),
+          tracking_code: trackingCode.trim(),
+        }),
+        { successMessage: 'Gift sent & recorded on-chain' },
+      );
+      if (!ok) { setSending(false); return; }
       setRecipient('');
       setCategory('');
       setDescription('');

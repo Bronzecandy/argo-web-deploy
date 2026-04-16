@@ -31,7 +31,7 @@ class CenterService {
   }
 
   async confirm(id: string) {
-    return apiService.post<BuildTransactionResponse>(`/centers/${id}/confirm`);
+    return apiService.post<BuildTransactionResponse>(`/centers/${id}/confirm`, null);
   }
 }
 

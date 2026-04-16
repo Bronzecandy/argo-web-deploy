@@ -19,6 +19,7 @@ import { formatDate, formatVND, truncateAddress } from '@/src/lib/formatters';
 import { registrationService } from '@/src/services/registration.service';
 import { staffService } from '@/src/services/staff.service';
 import { adminService } from '@/src/services/admin.service';
+import { useExecuteTransaction } from '@/src/hooks/useExecuteTransaction';
 import type { RegistrationRequest, Staff } from '@/src/types/api.types';
 
 type Tab = 'registrations' | 'staff';
@@ -44,6 +45,7 @@ type AdminRow = {
 };
 
 export default function AdminAccountsPage() {
+  const { execute } = useExecuteTransaction();
   const [activeTab, setActiveTab] = useState<Tab>('registrations');
 
   const [regLoading, setRegLoading] = useState(true);
@@ -198,19 +200,12 @@ export default function AdminAccountsPage() {
 
   async function handleConfirm(id: string) {
     setConfirmBusyId(id);
-    try {
-      await registrationService.confirm(id);
-      toast.success('Confirmation step completed — transaction payload received');
-      await loadRegistrations();
-    } catch (e: unknown) {
-      const msg =
-        e && typeof e === 'object' && 'response' in e
-          ? String((e as { response?: { data?: { message?: string } } }).response?.data?.message ?? '')
-          : '';
-      toast.error(msg || 'Confirm failed');
-    } finally {
-      setConfirmBusyId(null);
-    }
+    const ok = await execute(
+      () => registrationService.confirm(id),
+      { successMessage: 'Registration confirmed & executed on-chain' },
+    );
+    if (ok) await loadRegistrations();
+    setConfirmBusyId(null);
   }
 
   function applyRegSearch() {

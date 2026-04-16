@@ -17,11 +17,11 @@ class PendingSpecialNeedsService {
   }
 
   async approve(id: string) {
-    return apiService.post<BuildTransactionResponse>(`/pending-special-needs/${id}/approve`);
+    return apiService.post<BuildTransactionResponse>(`/pending-special-needs/${id}/approve`, null);
   }
 
   async refuse(id: string) {
-    return apiService.post<MessageResponse>(`/pending-special-needs/${id}/refuse`);
+    return apiService.post<MessageResponse>(`/pending-special-needs/${id}/refuse`, null);
   }
 }
 

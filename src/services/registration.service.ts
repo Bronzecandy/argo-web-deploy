@@ -31,7 +31,7 @@ class RegistrationService {
   }
 
   async confirm(id: string) {
-    return apiService.post<BuildTransactionResponse>(`/registrations/${id}/confirm`);
+    return apiService.post<BuildTransactionResponse>(`/registrations/${id}/confirm`, null);
   }
 }
 

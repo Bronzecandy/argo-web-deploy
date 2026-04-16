@@ -9,6 +9,8 @@ import { toast } from 'sonner';
 import { useAppSelector } from '@/src/store/hooks';
 import { giftService } from '@/src/services/gift.service';
 import { blobService } from '@/src/services/blob.service';
+import { useExecuteTransaction } from '@/src/hooks/useExecuteTransaction';
+import FileUploadInput from '@/src/components/ui/FileUploadInput';
 import type { Gift } from '@/src/types/api.types';
 
 const PAGE_SIZE = 10;
@@ -58,6 +60,8 @@ export default function LeaderGiftsPage() {
     setPage(0);
   };
 
+  const { execute } = useExecuteTransaction();
+
   const handleConfirmReceive = async (giftId: string) => {
     const blob = deliveredInputs[giftId]?.trim();
     if (!blob) {
@@ -65,17 +69,15 @@ export default function LeaderGiftsPage() {
       return;
     }
     setConfirmingId(giftId);
-    try {
-      await giftService.confirmReceive(giftId, blob);
-      toast.success('Receive confirmed');
+    const ok = await execute(
+      () => giftService.confirmReceive(giftId, blob),
+      { successMessage: 'Receive confirmed & executed on-chain' },
+    );
+    if (ok) {
       setDeliveredInputs((prev) => ({ ...prev, [giftId]: '' }));
       void load();
-    } catch (e) {
-      console.error(e);
-      toast.error('Confirm receive failed');
-    } finally {
-      setConfirmingId(null);
     }
+    setConfirmingId(null);
   };
 
   const canConfirm = (g: Gift) => {
@@ -166,12 +168,11 @@ export default function LeaderGiftsPage() {
                 render: (r) =>
                   canConfirm(r) ? (
                     <div className="flex flex-col gap-2" onClick={(e) => e.stopPropagation()}>
-                      <input
-                        type="text"
+                      <FileUploadInput
                         value={deliveredInputs[r.id] ?? ''}
-                        onChange={(e) => setDeliveredInputs((prev) => ({ ...prev, [r.id]: e.target.value }))}
-                        placeholder="Delivered image blob ID"
-                        className="w-full rounded border border-slate-200 px-2 py-1 text-xs focus:border-emerald-600 focus:outline-none focus:ring-1 focus:ring-emerald-600"
+                        onChange={(val) => setDeliveredInputs((prev) => ({ ...prev, [r.id]: val }))}
+                        accept="image/*"
+                        placeholder="Upload or paste blob ID"
                       />
                       <button
                         type="button"

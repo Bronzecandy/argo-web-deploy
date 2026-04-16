@@ -28,6 +28,16 @@ export function formatDateTime(dateString: string): string {
   }).format(date);
 }
 
+/**
+ * Convert yyyy-mm-dd (HTML date input) to dd/mm/yyyy (BE expected format).
+ */
+export function toDDMMYYYY(isoDate: string): string {
+  if (!isoDate) return '';
+  const [y, m, d] = isoDate.split('-');
+  if (!y || !m || !d) return isoDate;
+  return `${d}/${m}/${y}`;
+}
+
 export function truncateAddress(address: string, chars = 6): string {
   if (!address) return '';
   if (address.length <= chars * 2) return address;

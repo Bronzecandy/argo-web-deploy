@@ -18,6 +18,7 @@ import StatusBadge from '@/src/components/ui/StatusBadge';
 import { formatDate, formatVND, truncateAddress } from '@/src/lib/formatters';
 import { childUploadService } from '@/src/services/child-upload.service';
 import { childrenService } from '@/src/services/children.service';
+import { useExecuteTransaction } from '@/src/hooks/useExecuteTransaction';
 import type { Child, UploadChildRequestEntity } from '@/src/types/api.types';
 
 type Tab = 'uploads' | 'children';
@@ -57,6 +58,7 @@ export default function AdminChildrenPage() {
   const [childRegion, setChildRegion] = useState('');
   const [childGender, setChildGender] = useState('');
 
+  const { execute } = useExecuteTransaction();
   const [busyId, setBusyId] = useState<string | null>(null);
   const [refuseModal, setRefuseModal] = useState<{ id: string; kind: 'review' } | null>(null);
   const [refuseReason, setRefuseReason] = useState('');
@@ -180,19 +182,12 @@ export default function AdminChildrenPage() {
 
   async function runConfirm(id: string) {
     setBusyId(id);
-    try {
-      await childUploadService.confirm(id);
-      toast.success('Confirmation step completed');
-      await loadUploads();
-    } catch (e: unknown) {
-      const msg =
-        e && typeof e === 'object' && 'response' in e
-          ? String((e as { response?: { data?: { message?: string } } }).response?.data?.message ?? '')
-          : '';
-      toast.error(msg || 'Confirm failed');
-    } finally {
-      setBusyId(null);
-    }
+    const ok = await execute(
+      () => childUploadService.confirm(id),
+      { successMessage: 'Child upload confirmed & executed on-chain' },
+    );
+    if (ok) await loadUploads();
+    setBusyId(null);
   }
 
   return (

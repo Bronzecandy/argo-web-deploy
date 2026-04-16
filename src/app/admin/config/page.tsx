@@ -5,8 +5,10 @@ import { toast } from 'sonner';
 import PageHeader from '@/src/components/ui/PageHeader';
 
 import { configService } from '@/src/services/config.service';
+import { useExecuteTransaction } from '@/src/hooks/useExecuteTransaction';
 
 export default function AdminConfigPage() {
+  const { execute } = useExecuteTransaction();
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
   const [savingMeal, setSavingMeal] = useState(false);
@@ -15,50 +17,29 @@ export default function AdminConfigPage() {
 
   const handleSaveMealDates = async () => {
     setSavingMeal(true);
-    try {
-      await configService.updateMealNeedEditDates({
-        start_date: startDate || undefined,
-        end_date: endDate || undefined,
-      });
-      toast.success('Meal need edit dates updated');
-    } catch (e) {
-      console.error(e);
-      toast.error('Failed to save meal need dates');
-    } finally {
-      setSavingMeal(false);
-    }
+    await execute(
+      () => configService.updateMealNeedEditDates({ start_date: startDate || undefined, end_date: endDate || undefined }),
+      { successMessage: 'Meal need edit dates updated' },
+    );
+    setSavingMeal(false);
   };
 
   const handleSaveBooksDates = async () => {
     setSavingBooks(true);
-    try {
-      await configService.updateBooksNeedEditDates({
-        start_date: startDate || undefined,
-        end_date: endDate || undefined,
-      });
-      toast.success('Books need edit dates updated');
-    } catch (e) {
-      console.error(e);
-      toast.error('Failed to save books need dates');
-    } finally {
-      setSavingBooks(false);
-    }
+    await execute(
+      () => configService.updateBooksNeedEditDates({ start_date: startDate || undefined, end_date: endDate || undefined }),
+      { successMessage: 'Books need edit dates updated' },
+    );
+    setSavingBooks(false);
   };
 
   const handleSaveHealthDates = async () => {
     setSavingHealth(true);
-    try {
-      await configService.updateHealthInsuranceNeedEditDates({
-        start_date: startDate || undefined,
-        end_date: endDate || undefined,
-      });
-      toast.success('Health insurance need edit dates updated');
-    } catch (e) {
-      console.error(e);
-      toast.error('Failed to save health insurance need dates');
-    } finally {
-      setSavingHealth(false);
-    }
+    await execute(
+      () => configService.updateHealthInsuranceNeedEditDates({ start_date: startDate || undefined, end_date: endDate || undefined }),
+      { successMessage: 'Health insurance need edit dates updated' },
+    );
+    setSavingHealth(false);
   };
 
   return (

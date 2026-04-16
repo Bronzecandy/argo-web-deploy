@@ -4,9 +4,11 @@ import { useCallback, useEffect, useState } from 'react';
 import { toast } from 'sonner';
 import PageHeader from '@/src/components/ui/PageHeader';
 import DataTable from '@/src/components/ui/DataTable';
-import { formatDate } from '@/src/lib/formatters';
+import { formatDate, toDDMMYYYY } from '@/src/lib/formatters';
 import { childUploadService } from '@/src/services/child-upload.service';
 import { childrenService } from '@/src/services/children.service';
+import { regionService } from '@/src/services/region.service';
+import FileUploadInput from '@/src/components/ui/FileUploadInput';
 import type { Child, UploadChildRequest } from '@/src/types/api.types';
 
 type Tab = 'upload' | 'list';
@@ -34,6 +36,12 @@ export default function LeaderChildrenPage() {
   const [children, setChildren] = useState<Child[]>([]);
   const [page, setPage] = useState(0);
   const [totalPages, setTotalPages] = useState(1);
+
+  const [regions, setRegions] = useState<string[]>([]);
+
+  useEffect(() => {
+    regionService.listRegions().then((res) => setRegions(res.data.regions || [])).catch(() => {});
+  }, []);
 
   const [submitting, setSubmitting] = useState(false);
   const [form, setForm] = useState({
@@ -94,7 +102,7 @@ export default function LeaderChildrenPage() {
       first_name: form.first_name.trim(),
       last_name: form.last_name.trim(),
       gender: form.gender,
-      date_of_birth: form.date_of_birth,
+      date_of_birth: toDDMMYYYY(form.date_of_birth),
       region: form.region.trim(),
       home_address: form.home_address.trim(),
       identity_code: form.identity_code.trim(),
@@ -237,7 +245,17 @@ export default function LeaderChildrenPage() {
               </div>
               <div>
                 <label className="mb-1.5 block text-sm font-medium text-slate-700">Region</label>
-                <input className={inputClass} value={form.region} onChange={(e) => setField('region', e.target.value)} />
+                <select
+                  className={inputClass}
+                  value={form.region}
+                  onChange={(e) => setField('region', e.target.value)}
+                  required
+                >
+                  <option value="">Select region…</option>
+                  {regions.map((r) => (
+                    <option key={r} value={r}>{r}</option>
+                  ))}
+                </select>
               </div>
               <div className="sm:col-span-2">
                 <label className="mb-1.5 block text-sm font-medium text-slate-700">Home address</label>
@@ -247,14 +265,20 @@ export default function LeaderChildrenPage() {
                 <label className="mb-1.5 block text-sm font-medium text-slate-700">Identity code</label>
                 <input className={inputClass} value={form.identity_code} onChange={(e) => setField('identity_code', e.target.value)} />
               </div>
-              <div>
-                <label className="mb-1.5 block text-sm font-medium text-slate-700">Avatar blob ID</label>
-                <input className={inputClass} value={form.avatar_blob_id} onChange={(e) => setField('avatar_blob_id', e.target.value)} />
-              </div>
-              <div>
-                <label className="mb-1.5 block text-sm font-medium text-slate-700">Home blob ID</label>
-                <input className={inputClass} value={form.home_blob_id} onChange={(e) => setField('home_blob_id', e.target.value)} />
-              </div>
+              <FileUploadInput
+                label="Avatar image"
+                value={form.avatar_blob_id}
+                onChange={(val) => setField('avatar_blob_id', val)}
+                accept="image/*"
+                placeholder="Upload avatar or paste blob ID"
+              />
+              <FileUploadInput
+                label="Home image"
+                value={form.home_blob_id}
+                onChange={(val) => setField('home_blob_id', val)}
+                accept="image/*"
+                placeholder="Upload home photo or paste blob ID"
+              />
             </div>
           </section>
 
@@ -274,8 +298,13 @@ export default function LeaderChildrenPage() {
                 <input className={inputClass} value={form.g1_relation} onChange={(e) => setField('g1_relation', e.target.value)} required />
               </div>
               <div className="sm:col-span-2">
-                <label className="mb-1.5 block text-sm font-medium text-slate-700">Identity card blob ID</label>
-                <input className={inputClass} value={form.g1_id_blob} onChange={(e) => setField('g1_id_blob', e.target.value)} required />
+                <FileUploadInput
+                  label="Identity card image"
+                  value={form.g1_id_blob}
+                  onChange={(val) => setField('g1_id_blob', val)}
+                  accept="image/*"
+                  placeholder="Upload ID card or paste blob ID"
+                />
               </div>
             </div>
           </section>
@@ -296,8 +325,13 @@ export default function LeaderChildrenPage() {
                 <input className={inputClass} value={form.g2_relation} onChange={(e) => setField('g2_relation', e.target.value)} />
               </div>
               <div className="sm:col-span-2">
-                <label className="mb-1.5 block text-sm font-medium text-slate-700">Identity card blob ID</label>
-                <input className={inputClass} value={form.g2_id_blob} onChange={(e) => setField('g2_id_blob', e.target.value)} />
+                <FileUploadInput
+                  label="Identity card image"
+                  value={form.g2_id_blob}
+                  onChange={(val) => setField('g2_id_blob', val)}
+                  accept="image/*"
+                  placeholder="Upload ID card or paste blob ID"
+                />
               </div>
             </div>
           </section>

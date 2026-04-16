@@ -20,6 +20,7 @@ export default function DonorDashboardPage() {
   const [profile, setProfile] = useState<PersonalWalletProfile | null>(null);
   const [recentTxs, setRecentTxs] = useState<TransactionRecord[]>([]);
   const [activeProposals, setActiveProposals] = useState<WithdrawProposal[]>([]);
+  const [activeProposalsCount, setActiveProposalsCount] = useState(0);
   const [childrenCount, setChildrenCount] = useState(0);
   const [loading, setLoading] = useState(true);
 
@@ -36,7 +37,10 @@ export default function DonorDashboardPage() {
 
       if (profileRes) setProfile(profileRes.data);
       if (txRes) setRecentTxs(txRes.data.data || []);
-      if (proposalsRes) setActiveProposals(proposalsRes.data.data || []);
+      if (proposalsRes) {
+        setActiveProposals(proposalsRes.data.data || []);
+        setActiveProposalsCount(proposalsRes.data.amount || 0);
+      }
       if (childrenRes) setChildrenCount(childrenRes.data.amount || 0);
     } catch (e) {
       console.error('Dashboard load error:', e);
@@ -134,7 +138,7 @@ export default function DonorDashboardPage() {
         />
         <StatsCard
           label="Active Proposals"
-          value={activeProposals.length}
+          value={activeProposalsCount}
           icon={Vote}
         />
       </div>

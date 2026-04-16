@@ -19,6 +19,7 @@ export default function LoginPage() {
       if (user.role === ROLES.ADMIN) router.replace('/admin');
       else if (user.role === ROLES.LOCAL_LEADER) router.replace('/leader');
       else if (user.role === ROLES.DONOR) router.replace('/donor');
+      else if (user.role === ROLES.VOLUNTEER) router.replace('/volunteer');
       else toast.error('Your role does not have access to this platform');
     }
   }, [isAuthenticated, user, router]);

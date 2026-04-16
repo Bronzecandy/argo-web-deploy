@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState, useCallback } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { centerService } from '@/src/services/center.service';
 import { regionService } from '@/src/services/region.service';
 import { childrenService } from '@/src/services/children.service';
@@ -10,7 +11,9 @@ import type { CenterRequest, Child } from '@/src/types/api.types';
 import { Building2, MapPin, Baby, Search } from 'lucide-react';
 
 export default function DonorDiscoverPage() {
-  const [tab, setTab] = useState<'centers' | 'children'>('centers');
+  const searchParams = useSearchParams();
+  const initialTab = searchParams.get('tab') === 'children' ? 'children' : 'centers';
+  const [tab, setTab] = useState<'centers' | 'children'>(initialTab);
   const [centers, setCenters] = useState<CenterRequest[]>([]);
   const [children, setChildren] = useState<Child[]>([]);
   const [regions, setRegions] = useState<string[]>([]);

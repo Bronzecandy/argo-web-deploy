@@ -1,6 +1,7 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { paymentService } from '@/src/services/payment.service';
 import PageHeader from '@/src/components/ui/PageHeader';
 import { formatVND } from '@/src/lib/formatters';
@@ -10,7 +11,13 @@ import { HandCoins, ExternalLink } from 'lucide-react';
 const PRESET_AMOUNTS = [50000, 100000, 200000, 500000, 1000000, 2000000];
 
 export default function DonorDonatePage() {
+  const searchParams = useSearchParams();
   const [poolId, setPoolId] = useState('');
+
+  useEffect(() => {
+    const qPoolId = searchParams.get('poolId');
+    if (qPoolId) setPoolId(qPoolId);
+  }, [searchParams]);
   const [amount, setAmount] = useState(0);
   const [message, setMessage] = useState('');
   const [submitting, setSubmitting] = useState(false);

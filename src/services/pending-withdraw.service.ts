@@ -21,11 +21,11 @@ class PendingWithdrawService {
   }
 
   async approve(id: string) {
-    return apiService.post<BuildTransactionResponse>(`/pending-withdraw-proposals/${id}/approve`);
+    return apiService.post<BuildTransactionResponse>(`/pending-withdraw-proposals/${id}/approve`, null);
   }
 
   async refuse(id: string) {
-    return apiService.post<BuildTransactionResponse>(`/pending-withdraw-proposals/${id}/refuse`);
+    return apiService.post<BuildTransactionResponse>(`/pending-withdraw-proposals/${id}/refuse`, null);
   }
 }
 

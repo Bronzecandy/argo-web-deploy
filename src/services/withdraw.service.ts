@@ -21,21 +21,23 @@ class WithdrawService {
   }
 
   async vote(id: string, is_vote_yes: boolean, refuse_reason?: string) {
+    const params: Record<string, any> = { is_vote_yes };
+    if (refuse_reason) params.refuse_reason = refuse_reason;
     return apiService.post<BuildTransactionResponse>(
       `/withdraw-proposals/${id}/vote`,
-      undefined,
-      { params: { is_vote_yes, refuse_reason } },
+      null,
+      { params },
     );
   }
 
   async confirm(id: string) {
-    return apiService.post<any>(`/withdraw-proposals/${id}/confirm`);
+    return apiService.post<any>(`/withdraw-proposals/${id}/confirm`, null);
   }
 
   async mainPoolConfirm(id: string, imageBlobId: string) {
     return apiService.post<BuildTransactionResponse>(
       `/withdraw-proposals/${id}/main-pool-confirm`,
-      undefined,
+      null,
       { params: { id: imageBlobId } },
     );
   }

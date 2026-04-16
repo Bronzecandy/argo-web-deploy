@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState, type ReactNode } from 'react';
 import { toast } from 'sonner';
+import { X } from 'lucide-react';
 import PageHeader from '@/src/components/ui/PageHeader';
 import DataTable from '@/src/components/ui/DataTable';
 import StatusBadge from '@/src/components/ui/StatusBadge';
@@ -9,6 +10,7 @@ import { formatDate, formatVND, truncateAddress } from '@/src/lib/formatters';
 import { withdrawService } from '@/src/services/withdraw.service';
 import { pendingWithdrawService } from '@/src/services/pending-withdraw.service';
 import { pendingSpecialNeedsService } from '@/src/services/pending-special-needs.service';
+import { useExecuteTransaction } from '@/src/hooks/useExecuteTransaction';
 import type {
   PendingSpecialNeedProposal,
   PendingWithdrawProposal,
@@ -20,7 +22,10 @@ const PAGE_SIZE = 10;
 type TabId = 'proposals' | 'pending' | 'special';
 
 export default function AdminTreasuryPage() {
+  const { execute } = useExecuteTransaction();
   const [tab, setTab] = useState<TabId>('proposals');
+  const [refuseModal, setRefuseModal] = useState<{ id: string } | null>(null);
+  const [refuseReason, setRefuseReason] = useState('');
   const [minInput, setMinInput] = useState('');
   const [maxInput, setMaxInput] = useState('');
   const [minAmount, setMinAmount] = useState<number | undefined>();
@@ -107,79 +112,72 @@ export default function AdminTreasuryPage() {
   const refresh = () => void load();
 
   const handleVote = async (id: string, isVoteYes: boolean) => {
-    let refuseReason: string | undefined;
     if (!isVoteYes) {
-      const reason = window.prompt('Refuse reason (required for a no vote)');
-      if (reason === null) return;
-      if (!reason.trim()) {
-        toast.error('Refuse reason is required');
-        return;
-      }
-      refuseReason = reason.trim();
+      setRefuseModal({ id });
+      setRefuseReason('');
+      return;
     }
-    try {
-      await withdrawService.vote(id, isVoteYes, refuseReason);
-      toast.success(isVoteYes ? 'Vote recorded' : 'Vote recorded (refuse)');
+    const ok = await execute(
+      () => withdrawService.vote(id, true),
+      { successMessage: 'Vote recorded & executed' },
+    );
+    if (ok) refresh();
+  };
+
+  const submitRefuseVote = async () => {
+    if (!refuseModal) return;
+    if (!refuseReason.trim()) {
+      toast.error('Refuse reason is required');
+      return;
+    }
+    const ok = await execute(
+      () => withdrawService.vote(refuseModal.id, false, refuseReason.trim()),
+      { successMessage: 'Vote recorded (refuse) & executed' },
+    );
+    if (ok) {
+      setRefuseModal(null);
       refresh();
-    } catch (e) {
-      console.error(e);
-      toast.error('Vote failed');
     }
   };
 
   const handleConfirm = async (id: string) => {
-    try {
-      await withdrawService.confirm(id);
-      toast.success('Proposal confirmed');
-      refresh();
-    } catch (e) {
-      console.error(e);
-      toast.error('Confirm failed');
-    }
+    const ok = await execute(
+      () => withdrawService.confirm(id) as Promise<any>,
+      { successMessage: 'Proposal confirmed & executed' },
+    );
+    if (ok) refresh();
   };
 
   const handlePendingApprove = async (id: string) => {
-    try {
-      await pendingWithdrawService.approve(id);
-      toast.success('Pending withdrawal approved');
-      refresh();
-    } catch (e) {
-      console.error(e);
-      toast.error('Approve failed');
-    }
+    const ok = await execute(
+      () => pendingWithdrawService.approve(id),
+      { successMessage: 'Pending withdrawal approved & executed' },
+    );
+    if (ok) refresh();
   };
 
   const handlePendingRefuse = async (id: string) => {
-    try {
-      await pendingWithdrawService.refuse(id);
-      toast.success('Pending withdrawal refused');
-      refresh();
-    } catch (e) {
-      console.error(e);
-      toast.error('Refuse failed');
-    }
+    const ok = await execute(
+      () => pendingWithdrawService.refuse(id),
+      { successMessage: 'Pending withdrawal refused' },
+    );
+    if (ok) refresh();
   };
 
   const handleSpecialApprove = async (id: string) => {
-    try {
-      await pendingSpecialNeedsService.approve(id);
-      toast.success('Special need proposal approved');
-      refresh();
-    } catch (e) {
-      console.error(e);
-      toast.error('Approve failed');
-    }
+    const ok = await execute(
+      () => pendingSpecialNeedsService.approve(id),
+      { successMessage: 'Special need proposal approved & executed' },
+    );
+    if (ok) refresh();
   };
 
   const handleSpecialRefuse = async (id: string) => {
-    try {
-      await pendingSpecialNeedsService.refuse(id);
-      toast.success('Special need proposal refused');
-      refresh();
-    } catch (e) {
-      console.error(e);
-      toast.error('Refuse failed');
-    }
+    const ok = await execute(
+      () => pendingSpecialNeedsService.refuse(id),
+      { successMessage: 'Special need proposal refused' },
+    );
+    if (ok) refresh();
   };
 
   const tabBtn = (id: TabId, label: string) => (
@@ -376,6 +374,48 @@ export default function AdminTreasuryPage() {
           />
         )}
       </div>
+
+      {/* Refuse reason modal */}
+      {refuseModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 p-4">
+          <div className="w-full max-w-md rounded-xl border border-slate-200 bg-white p-5 shadow-xl">
+            <div className="mb-3 flex items-center justify-between">
+              <h3 className="text-lg font-semibold text-slate-900">Refuse vote</h3>
+              <button
+                type="button"
+                onClick={() => setRefuseModal(null)}
+                className="rounded-lg p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-700"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+            <p className="mb-2 text-sm text-slate-600">Please provide a reason for refusing this proposal.</p>
+            <textarea
+              value={refuseReason}
+              onChange={(e) => setRefuseReason(e.target.value)}
+              rows={3}
+              className="mb-4 w-full rounded-lg border border-slate-200 p-2 text-sm outline-none ring-emerald-600/20 focus:ring-2"
+              placeholder="Reason for refusal…"
+            />
+            <div className="flex justify-end gap-2">
+              <button
+                type="button"
+                onClick={() => setRefuseModal(null)}
+                className="rounded-lg border border-slate-200 px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={() => void submitRefuseVote()}
+                className="rounded-lg bg-red-600 px-3 py-2 text-sm font-medium text-white hover:bg-red-700"
+              >
+                Submit refusal
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

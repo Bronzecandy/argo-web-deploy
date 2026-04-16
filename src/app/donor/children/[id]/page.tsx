@@ -10,6 +10,7 @@ import { formatVND, formatDate } from '@/src/lib/formatters';
 import PageHeader from '@/src/components/ui/PageHeader';
 import type { Child, Gift } from '@/src/types/api.types';
 import { toast } from 'sonner';
+import Link from 'next/link';
 import {
   ArrowLeft,
   MapPin,
@@ -20,6 +21,7 @@ import {
   Sparkles,
   HandCoins,
   Gift as GiftIcon,
+  Send,
 } from 'lucide-react';
 
 export default function DonorChildDetailPage() {
@@ -348,6 +350,40 @@ export default function DonorChildDetailPage() {
               No active needs for this child
             </div>
           )}
+
+          {/* Quick action links */}
+          <div className="flex flex-wrap gap-3">
+            <Link
+              href={`/donor/gifts?childId=${child.id}`}
+              className="flex items-center gap-2 rounded-lg border border-pink-200 bg-pink-50 px-4 py-2.5 text-sm font-medium text-pink-700 hover:bg-pink-100 transition"
+            >
+              <Send className="h-4 w-4" /> Send a Gift to This Child
+            </Link>
+            {mealNeed?.pool_id && (
+              <Link
+                href={`/donor/donate?poolId=${mealNeed.pool_id}`}
+                className="flex items-center gap-2 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-2.5 text-sm font-medium text-emerald-700 hover:bg-emerald-100 transition"
+              >
+                <HandCoins className="h-4 w-4" /> Donate to Meal Pool
+              </Link>
+            )}
+            {healthNeed?.pool_id && (
+              <Link
+                href={`/donor/donate?poolId=${healthNeed.pool_id}`}
+                className="flex items-center gap-2 rounded-lg border border-blue-200 bg-blue-50 px-4 py-2.5 text-sm font-medium text-blue-700 hover:bg-blue-100 transition"
+              >
+                <HandCoins className="h-4 w-4" /> Donate to Health Pool
+              </Link>
+            )}
+            {booksNeeds[0]?.pool_id && (
+              <Link
+                href={`/donor/donate?poolId=${booksNeeds[0].pool_id}`}
+                className="flex items-center gap-2 rounded-lg border border-purple-200 bg-purple-50 px-4 py-2.5 text-sm font-medium text-purple-700 hover:bg-purple-100 transition"
+              >
+                <HandCoins className="h-4 w-4" /> Donate to Books Pool
+              </Link>
+            )}
+          </div>
         </div>
       </div>
 
