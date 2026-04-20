@@ -12,15 +12,23 @@ import type { CreateSupportedRegionSuggestionRequest, SupportedRegionSuggestion 
 
 const PAGE_SIZE = 10;
 
+type Tab = 'propose' | 'mine';
+
 export default function LeaderRegionsPage() {
   const { user } = useAppSelector((state) => state.auth);
+  const [tab, setTab] = useState<Tab>('propose');
   const [page, setPage] = useState(0);
   const [rows, setRows] = useState<SupportedRegionSuggestion[]>([]);
   const [totalPages, setTotalPages] = useState(1);
   const [loading, setLoading] = useState(true);
+  const [regions, setRegions] = useState<string[]>([]);
   const [region, setRegion] = useState('');
   const [content, setContent] = useState('');
   const [submitting, setSubmitting] = useState(false);
+
+  useEffect(() => {
+    regionService.listRegions().then((res) => setRegions(res.data.regions || [])).catch(() => {});
+  }, []);
 
   const loadPage = useCallback(async (p: number) => {
     const addr = user?.address || '';
@@ -33,11 +41,12 @@ export default function LeaderRegionsPage() {
     setLoading(true);
     try {
       const res = await regionService.getUserSuggestions(addr, { page: p, page_size: PAGE_SIZE });
-      setRows((res.data.data as SupportedRegionSuggestion[]) ?? []);
+      const raw = res.data.data;
+      setRows(Array.isArray(raw) ? (raw as SupportedRegionSuggestion[]) : []);
       setTotalPages(Math.max(1, res.data.total_pages ?? 1));
     } catch (e) {
       console.error(e);
-      toast.error('Failed to load your region suggestions');
+      toast.error('Không tải được danh sách đề xuất của bạn');
       setRows([]);
     } finally {
       setLoading(false);
@@ -45,13 +54,14 @@ export default function LeaderRegionsPage() {
   }, [user?.address]);
 
   useEffect(() => {
+    if (tab !== 'mine') return;
     void loadPage(page);
-  }, [page, loadPage]);
+  }, [tab, page, loadPage]);
 
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!region.trim() || !content.trim()) {
-      toast.error('Region and content are required');
+      toast.error('Vui lòng nhập vùng và nội dung đề xuất');
       return;
     }
     const payload: CreateSupportedRegionSuggestionRequest = {
@@ -61,98 +71,141 @@ export default function LeaderRegionsPage() {
     setSubmitting(true);
     try {
       await regionService.createSuggestion(payload);
-      toast.success('Suggestion submitted');
+      toast.success('Đã gửi đề xuất vùng cần hỗ trợ');
       setRegion('');
       setContent('');
+      setTab('mine');
       setPage(0);
-      if (page === 0) void loadPage(0);
-    } catch (err) {
+    } catch (err: unknown) {
       console.error(err);
-      toast.error('Failed to submit suggestion');
+      const msg =
+        err && typeof err === 'object' && 'response' in err
+          ? (err as { response?: { data?: { message?: string } } }).response?.data?.message
+          : null;
+      toast.error(msg || 'Gửi đề xuất thất bại');
     } finally {
       setSubmitting(false);
     }
   };
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6">
       <PageHeader
-        title="Region suggestions"
+        title="Đề xuất vùng cần hỗ trợ"
         description={
           user?.address
-            ? `Propose supported regions for your local area · ${truncateAddress(user.address)}`
-            : 'Propose supported regions for your local area'
+            ? `Gửi đề xuất lên nền tảng (POST /regions/supported-suggestions) · ${truncateAddress(user.address)}`
+            : 'Đăng nhập để gửi và xem đề xuất của bạn'
         }
       />
 
-      <section className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
-        <h2 className="mb-4 text-lg font-semibold text-slate-900">My suggestions</h2>
-        {!user?.address && (
-          <p className="text-sm text-amber-700">Connect your wallet or sign in to see your suggestions.</p>
-        )}
-        <DataTable<SupportedRegionSuggestion>
-          columns={[
-            { key: 'region', label: 'Region' },
-            {
-              key: 'content',
-              label: 'Content',
-              render: (r) => <span className="line-clamp-2 max-w-xs">{r.content}</span>,
-            },
-            { key: 'status', label: 'Status', render: (r) => <StatusBadge status={r.status || 'pending'} /> },
-            {
-              key: 'created_by',
-              label: 'Created by',
-              render: (r) => truncateAddress(r.created_by),
-            },
-            { key: 'created_at', label: 'Created', render: (r) => formatDate(r.created_at) },
-          ]}
-          data={rows}
-          loading={loading}
-          page={page}
-          totalPages={totalPages}
-          onPageChange={setPage}
-          emptyMessage="No suggestions yet"
-        />
-      </section>
+      <div className="flex gap-1 rounded-lg border border-slate-200 bg-slate-50 p-1">
+        <button
+          type="button"
+          onClick={() => setTab('propose')}
+          className={`flex flex-1 items-center justify-center rounded-md px-3 py-2 text-sm font-medium transition ${
+            tab === 'propose'
+              ? 'bg-white text-emerald-700 shadow-sm ring-1 ring-emerald-600/20'
+              : 'text-slate-600 hover:text-slate-900'
+          }`}
+        >
+          Gửi đề xuất mới
+        </button>
+        <button
+          type="button"
+          onClick={() => setTab('mine')}
+          className={`flex flex-1 items-center justify-center rounded-md px-3 py-2 text-sm font-medium transition ${
+            tab === 'mine'
+              ? 'bg-white text-emerald-700 shadow-sm ring-1 ring-emerald-600/20'
+              : 'text-slate-600 hover:text-slate-900'
+          }`}
+        >
+          Đề xuất của tôi
+        </button>
+      </div>
 
-      <section className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
-        <h2 className="mb-4 text-lg font-semibold text-slate-900">Create new</h2>
-        <form onSubmit={handleCreate} className="max-w-xl space-y-4">
-          <div>
-            <label htmlFor="region" className="mb-1 block text-xs font-medium text-slate-500">
-              Region
-            </label>
-            <input
-              id="region"
-              type="text"
-              value={region}
-              onChange={(e) => setRegion(e.target.value)}
-              className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-emerald-600 focus:outline-none focus:ring-1 focus:ring-emerald-600"
-              placeholder="Region name or code"
-            />
-          </div>
-          <div>
-            <label htmlFor="content" className="mb-1 block text-xs font-medium text-slate-500">
-              Content
-            </label>
-            <textarea
-              id="content"
-              value={content}
-              onChange={(e) => setContent(e.target.value)}
-              rows={4}
-              className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-emerald-600 focus:outline-none focus:ring-1 focus:ring-emerald-600"
-              placeholder="Why this region should be supported…"
-            />
-          </div>
-          <button
-            type="submit"
-            disabled={submitting}
-            className="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-emerald-700 disabled:opacity-50"
-          >
-            {submitting ? 'Submitting…' : 'Submit suggestion'}
-          </button>
-        </form>
-      </section>
+      {tab === 'propose' ? (
+        <section className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
+          <h2 className="mb-1 text-lg font-semibold text-slate-900">Đề xuất vùng cần hỗ trợ</h2>
+          <p className="mb-4 text-sm text-slate-500">
+            Mô tả vùng hoặc cộng đồng cần được hỗ trợ. Dữ liệu gửi theo API{' '}
+            <code className="rounded bg-slate-100 px-1 text-xs">POST /regions/supported-suggestions</code> với thân{' '}
+            <code className="rounded bg-slate-100 px-1 text-xs">region</code>,{' '}
+            <code className="rounded bg-slate-100 px-1 text-xs">content</code>.
+          </p>
+          <form onSubmit={handleCreate} className="max-w-xl space-y-4">
+            <div>
+              <label htmlFor="region" className="mb-1 block text-xs font-medium text-slate-500">
+                Tên vùng / khu vực
+              </label>
+              <input
+                id="region"
+                list="region-options"
+                type="text"
+                value={region}
+                onChange={(e) => setRegion(e.target.value)}
+                className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-emerald-600 focus:outline-none focus:ring-1 focus:ring-emerald-600"
+                placeholder="Chọn từ gợi ý hoặc nhập tên vùng mới"
+              />
+              <datalist id="region-options">
+                {regions.map((r) => (
+                  <option key={r} value={r} />
+                ))}
+              </datalist>
+            </div>
+            <div>
+              <label htmlFor="content" className="mb-1 block text-xs font-medium text-slate-500">
+                Nội dung đề xuất
+              </label>
+              <textarea
+                id="content"
+                value={content}
+                onChange={(e) => setContent(e.target.value)}
+                rows={5}
+                className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-emerald-600 focus:outline-none focus:ring-1 focus:ring-emerald-600"
+                placeholder="Lý do vùng này cần được hỗ trợ, tình hình thực tế, ưu tiên…"
+              />
+            </div>
+            <button
+              type="submit"
+              disabled={submitting}
+              className="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-emerald-700 disabled:opacity-50"
+            >
+              {submitting ? 'Đang gửi…' : 'Gửi đề xuất'}
+            </button>
+          </form>
+        </section>
+      ) : (
+        <section className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
+          <h2 className="mb-4 text-lg font-semibold text-slate-900">Đề xuất của tôi</h2>
+          {!user?.address && (
+            <p className="mb-4 text-sm text-amber-700">Vui lòng đăng nhập để xem danh sách đề xuất của bạn.</p>
+          )}
+          <DataTable<SupportedRegionSuggestion>
+            columns={[
+              { key: 'region', label: 'Vùng' },
+              {
+                key: 'content',
+                label: 'Nội dung',
+                render: (r) => <span className="line-clamp-2 max-w-xs">{r.content}</span>,
+              },
+              { key: 'status', label: 'Trạng thái', render: (r) => <StatusBadge status={r.status || 'pending'} /> },
+              {
+                key: 'created_by',
+                label: 'Người tạo',
+                render: (r) => truncateAddress(r.created_by),
+              },
+              { key: 'created_at', label: 'Ngày tạo', render: (r) => formatDate(r.created_at) },
+            ]}
+            data={rows}
+            loading={loading}
+            page={page}
+            totalPages={totalPages}
+            onPageChange={setPage}
+            emptyMessage="Chưa có đề xuất nào"
+          />
+        </section>
+      )}
     </div>
   );
 }

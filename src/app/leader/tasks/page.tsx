@@ -8,6 +8,7 @@ import { formatDate, truncateAddress } from '@/src/lib/formatters';
 import { toast } from 'sonner';
 import { useAppSelector } from '@/src/store/hooks';
 import { taskService } from '@/src/services/task.service';
+import { regionService } from '@/src/services/region.service';
 import type { Task } from '@/src/types/api.types';
 import { Hand, ClipboardCheck, ThumbsUp, ThumbsDown } from 'lucide-react';
 
@@ -23,8 +24,13 @@ export default function LeaderTasksPage() {
   const [region, setRegion] = useState('');
   const [startPeriod, setStartPeriod] = useState('');
   const [endPeriod, setEndPeriod] = useState('');
+  const [regions, setRegions] = useState<string[]>([]);
   const [submitting, setSubmitting] = useState(false);
   const [busyId, setBusyId] = useState<string | null>(null);
+
+  useEffect(() => {
+    regionService.listRegions().then((res) => setRegions(res.data.regions || [])).catch(() => {});
+  }, []);
 
   // Review modal
   const [reviewTask, setReviewTask] = useState<Task | null>(null);
@@ -202,13 +208,18 @@ export default function LeaderTasksPage() {
             <label htmlFor="task-region" className="mb-1 block text-xs font-medium text-slate-500">
               Region
             </label>
-            <input
+            <select
               id="task-region"
-              type="text"
               value={region}
               onChange={(e) => setRegion(e.target.value)}
               className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-emerald-600 focus:outline-none focus:ring-1 focus:ring-emerald-600"
-            />
+              required
+            >
+              <option value="">Select region…</option>
+              {regions.map((r) => (
+                <option key={r} value={r}>{r}</option>
+              ))}
+            </select>
           </div>
           <div className="grid gap-4 sm:grid-cols-2">
             <div>

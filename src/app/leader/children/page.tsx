@@ -22,9 +22,18 @@ const GENDER_OPTIONS = [
 ];
 
 function getErrorMessage(e: unknown, fallback: string) {
-  if (e && typeof e === 'object' && 'response' in e) {
-    const msg = (e as { response?: { data?: { message?: string } } }).response?.data?.message;
-    if (msg) return String(msg);
+  if (e && typeof e === 'object') {
+    const axErr = e as { response?: { data?: { message?: string }; status?: number }; message?: string; code?: string };
+    if (axErr.response?.data?.message) {
+      return `${axErr.response.status ?? ''} ${axErr.response.data.message}`.trim();
+    }
+    if (axErr.code === 'ECONNABORTED') {
+      return 'Request timed out – server may be starting up, please try again';
+    }
+    if (axErr.code === 'ERR_NETWORK') {
+      return 'Network error – the server may be blocking CORS or is unreachable';
+    }
+    if (axErr.message) return axErr.message;
   }
   return fallback;
 }
@@ -124,8 +133,10 @@ export default function LeaderChildrenPage() {
       };
     }
     setSubmitting(true);
+    console.log('[ChildUpload] Sending payload:', JSON.stringify(data, null, 2));
     try {
-      await childUploadService.create(data);
+      const res = await childUploadService.create(data);
+      console.log('[ChildUpload] Success:', res.status, res.data);
       toast.success('Child upload request submitted');
       setForm({
         first_name: '',
@@ -147,6 +158,13 @@ export default function LeaderChildrenPage() {
         g2_id_blob: '',
       });
     } catch (err: unknown) {
+      const ax = err as { response?: { status?: number; data?: any; headers?: any }; message?: string; code?: string; request?: any };
+      console.error('[ChildUpload] Error full object:', err);
+      console.error('[ChildUpload] response?.status:', ax.response?.status);
+      console.error('[ChildUpload] response?.data:', ax.response?.data);
+      console.error('[ChildUpload] error.message:', ax.message);
+      console.error('[ChildUpload] error.code:', ax.code);
+      console.error('[ChildUpload] Has request but no response:', !!ax.request && !ax.response);
       toast.error(getErrorMessage(err, 'Upload failed'));
     } finally {
       setSubmitting(false);
@@ -295,7 +313,11 @@ export default function LeaderChildrenPage() {
               </div>
               <div>
                 <label className="mb-1.5 block text-sm font-medium text-slate-700">Relation</label>
-                <input className={inputClass} value={form.g1_relation} onChange={(e) => setField('g1_relation', e.target.value)} required />
+                <select className={inputClass} value={form.g1_relation} onChange={(e) => setField('g1_relation', e.target.value)} required>
+                  <option value="">Select…</option>
+                  <option value="Cha">Cha</option>
+                  <option value="Mẹ">Mẹ</option>
+                </select>
               </div>
               <div className="sm:col-span-2">
                 <FileUploadInput
@@ -322,7 +344,11 @@ export default function LeaderChildrenPage() {
               </div>
               <div>
                 <label className="mb-1.5 block text-sm font-medium text-slate-700">Relation</label>
-                <input className={inputClass} value={form.g2_relation} onChange={(e) => setField('g2_relation', e.target.value)} />
+                <select className={inputClass} value={form.g2_relation} onChange={(e) => setField('g2_relation', e.target.value)}>
+                  <option value="">Select…</option>
+                  <option value="Cha">Cha</option>
+                  <option value="Mẹ">Mẹ</option>
+                </select>
               </div>
               <div className="sm:col-span-2">
                 <FileUploadInput

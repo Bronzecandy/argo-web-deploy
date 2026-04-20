@@ -31,7 +31,7 @@ const NAV_ITEMS = [
   { label: 'Children', href: '/leader/children', icon: Baby },
   { label: 'Withdrawals', href: '/leader/withdrawals', icon: Wallet },
   { label: 'Centers', href: '/leader/centers', icon: Building2 },
-  { label: 'Regions', href: '/leader/regions', icon: MapPin },
+  { label: 'Đề xuất vùng hỗ trợ', href: '/leader/regions', icon: MapPin },
   { label: 'Urgent Campaigns', href: '/leader/campaigns', icon: Megaphone },
   { label: 'Tasks', href: '/leader/tasks', icon: ListChecks },
   { label: 'Task Proofs', href: '/leader/task-proofs', icon: ClipboardCheck },

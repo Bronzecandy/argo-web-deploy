@@ -33,7 +33,7 @@ const NAV_ITEMS = [
   { label: 'Treasury & Proposals', href: '/admin/treasury', icon: Wallet },
   { label: 'Analytics', href: '/admin/analytics', icon: BarChart3 },
   { label: 'Task Proofs', href: '/admin/task-proofs', icon: ClipboardCheck },
-  { label: 'Region Suggestions', href: '/admin/regions', icon: MapPin },
+  { label: 'Yêu cầu vùng hỗ trợ', href: '/admin/regions', icon: MapPin },
   { label: 'Config', href: '/admin/config', icon: Settings },
 ];
 
