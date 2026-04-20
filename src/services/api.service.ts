@@ -1,5 +1,17 @@
-import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse, AxiosError } from 'axios';
+import axios, {
+  AxiosInstance,
+  AxiosRequestConfig,
+  AxiosResponse,
+  AxiosError,
+  InternalAxiosRequestConfig,
+} from 'axios';
 import { API_BASE_URL, STORAGE_KEYS } from '@/src/lib/constants';
+
+/** 1 lần gọi đầu + 5 lần thử lại = 6 lần tối đa khi gặp HTTP 500 */
+const MAX_500_RETRIES = 5;
+const RETRY_500_BASE_DELAY_MS = 500;
+
+type RequestConfigWithRetry = InternalAxiosRequestConfig & { __retryCount500?: number };
 
 class ApiService {
   private axiosInstance: AxiosInstance;
@@ -12,6 +24,22 @@ class ApiService {
     });
 
     this.setupInterceptors();
+  }
+
+  private logFinal500Failure(error: AxiosError, config: RequestConfigWithRetry) {
+    const method = (config.method ?? 'GET').toUpperCase();
+    const base = config.baseURL ?? '';
+    const url = typeof config.url === 'string' ? config.url : '';
+    const fullUrl = `${base}${url}`;
+    console.error(
+      `[API] Vẫn lỗi 500 sau ${MAX_500_RETRIES + 1} lần thử:`,
+      method,
+      fullUrl,
+      'response:',
+      error.response?.data ?? error.response?.statusText,
+      'raw:',
+      error.message,
+    );
   }
 
   private setupInterceptors() {
@@ -29,6 +57,21 @@ class ApiService {
     this.axiosInstance.interceptors.response.use(
       (response) => response,
       async (error: AxiosError) => {
+        const config = error.config as RequestConfigWithRetry | undefined;
+
+        if (error.response?.status === 500 && config) {
+          const retriesSoFar = config.__retryCount500 ?? 0;
+          if (retriesSoFar < MAX_500_RETRIES) {
+            config.__retryCount500 = retriesSoFar + 1;
+            const delayMs = RETRY_500_BASE_DELAY_MS * 2 ** retriesSoFar;
+            await new Promise<void>((resolve) => {
+              setTimeout(resolve, delayMs);
+            });
+            return this.axiosInstance.request(config);
+          }
+          this.logFinal500Failure(error, config);
+        }
+
         if (error.response?.status === 401) {
           this.clearTokens();
           if (typeof window !== 'undefined') {

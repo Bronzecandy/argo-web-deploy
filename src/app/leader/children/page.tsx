@@ -1,17 +1,25 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
+import { Check, ListChecks, ThumbsDown, ThumbsUp, X } from 'lucide-react';
 import { toast } from 'sonner';
 import PageHeader from '@/src/components/ui/PageHeader';
 import DataTable from '@/src/components/ui/DataTable';
-import { formatDate, toDDMMYYYY } from '@/src/lib/formatters';
+import StatusBadge from '@/src/components/ui/StatusBadge';
+import { formatDate, toDDMMYYYY, truncateAddress } from '@/src/lib/formatters';
 import { childUploadService } from '@/src/services/child-upload.service';
 import { childrenService } from '@/src/services/children.service';
 import { regionService } from '@/src/services/region.service';
 import FileUploadInput from '@/src/components/ui/FileUploadInput';
-import type { Child, UploadChildRequest } from '@/src/types/api.types';
+import type { Child, UploadChildRequest, UploadChildRequestEntity } from '@/src/types/api.types';
 
-type Tab = 'upload' | 'list';
+type Tab = 'upload' | 'list' | 'profiles';
+
+/** Chỉ hiển thị dòng có review_status tương đương Approved (chuẩn hóa hoa/thường, khoảng trắng). */
+function isChildUploadReviewApproved(reviewStatus?: string) {
+  const s = (reviewStatus || '').trim().toLowerCase().replace(/\s+/g, '_');
+  return s === 'approved';
+}
 
 const PAGE_SIZE = 10;
 
@@ -45,6 +53,14 @@ export default function LeaderChildrenPage() {
   const [children, setChildren] = useState<Child[]>([]);
   const [page, setPage] = useState(0);
   const [totalPages, setTotalPages] = useState(1);
+
+  const [profilesLoading, setProfilesLoading] = useState(false);
+  const [profileReqs, setProfileReqs] = useState<UploadChildRequestEntity[]>([]);
+  const [profilePage, setProfilePage] = useState(0);
+  const [profileTotalPages, setProfileTotalPages] = useState(1);
+  const [voteBusyId, setVoteBusyId] = useState<string | null>(null);
+  const [refuseModal, setRefuseModal] = useState<{ id: string } | null>(null);
+  const [refuseReason, setRefuseReason] = useState('');
 
   const [regions, setRegions] = useState<string[]>([]);
 
@@ -92,6 +108,69 @@ export default function LeaderChildrenPage() {
     if (tab !== 'list') return;
     void loadList();
   }, [tab, loadList]);
+
+  const loadProfiles = useCallback(async () => {
+    setProfilesLoading(true);
+    try {
+      const res = await childUploadService.list({
+        page: profilePage,
+        page_size: PAGE_SIZE,
+        sort_order: 'desc',
+        review_status: 'approved',
+      });
+      const body = res.data;
+      const raw = Array.isArray(body.data) ? body.data : [];
+      setProfileReqs(raw.filter((u) => isChildUploadReviewApproved(u.review_status)));
+      setProfileTotalPages(Math.max(1, body.total_pages ?? 1));
+    } catch (e: unknown) {
+      toast.error(getErrorMessage(e, 'Failed to load child upload requests'));
+      setProfileReqs([]);
+    } finally {
+      setProfilesLoading(false);
+    }
+  }, [profilePage]);
+
+  useEffect(() => {
+    if (tab !== 'profiles') return;
+    void loadProfiles();
+  }, [tab, loadProfiles]);
+
+  async function handleVoteYes(id: string) {
+    setVoteBusyId(id);
+    try {
+      await childUploadService.vote(id, { is_vote_yes: true });
+      toast.success('Vote recorded');
+      await loadProfiles();
+    } catch (e: unknown) {
+      toast.error(getErrorMessage(e, 'Vote failed'));
+    } finally {
+      setVoteBusyId(null);
+    }
+  }
+
+  function handleVoteNo(id: string) {
+    setRefuseModal({ id });
+    setRefuseReason('');
+  }
+
+  async function submitRefuseVote() {
+    if (!refuseModal) return;
+    const { id } = refuseModal;
+    setVoteBusyId(id);
+    try {
+      await childUploadService.vote(id, {
+        is_vote_yes: false,
+        refuse_reason: refuseReason.trim() || undefined,
+      });
+      toast.success('Vote recorded');
+      setRefuseModal(null);
+      await loadProfiles();
+    } catch (e: unknown) {
+      toast.error(getErrorMessage(e, 'Vote failed'));
+    } finally {
+      setVoteBusyId(null);
+    }
+  }
 
   function setField<K extends keyof typeof form>(key: K, value: (typeof form)[K]) {
     setForm((f) => ({ ...f, [key]: value }));
@@ -191,14 +270,14 @@ export default function LeaderChildrenPage() {
     <div>
       <PageHeader
         title="Children"
-        description="Upload new child profiles and browse registered children"
+        description="Upload child requests, vote on admin-approved profiles, and browse registered children"
       />
 
-      <div className="mb-6 flex gap-1 rounded-lg border border-slate-200 bg-slate-50 p-1">
+      <div className="mb-6 flex flex-wrap gap-1 rounded-lg border border-slate-200 bg-slate-50 p-1 sm:flex-nowrap">
         <button
           type="button"
           onClick={() => setTab('upload')}
-          className={`flex flex-1 items-center justify-center rounded-md px-3 py-2 text-sm font-medium transition ${
+          className={`flex min-w-0 flex-1 items-center justify-center rounded-md px-2 py-2 text-sm font-medium transition sm:px-3 ${
             tab === 'upload'
               ? 'bg-white text-emerald-700 shadow-sm ring-1 ring-emerald-600/20'
               : 'text-slate-600 hover:text-slate-900'
@@ -208,8 +287,20 @@ export default function LeaderChildrenPage() {
         </button>
         <button
           type="button"
+          onClick={() => setTab('profiles')}
+          className={`flex min-w-0 flex-1 items-center justify-center gap-1 rounded-md px-2 py-2 text-sm font-medium transition sm:px-3 ${
+            tab === 'profiles'
+              ? 'bg-white text-emerald-700 shadow-sm ring-1 ring-emerald-600/20'
+              : 'text-slate-600 hover:text-slate-900'
+          }`}
+        >
+          <ListChecks className="hidden h-4 w-4 shrink-0 sm:inline" />
+          <span className="truncate">Child profiles</span>
+        </button>
+        <button
+          type="button"
           onClick={() => setTab('list')}
-          className={`flex flex-1 items-center justify-center rounded-md px-3 py-2 text-sm font-medium transition ${
+          className={`flex min-w-0 flex-1 items-center justify-center rounded-md px-2 py-2 text-sm font-medium transition sm:px-3 ${
             tab === 'list'
               ? 'bg-white text-emerald-700 shadow-sm ring-1 ring-emerald-600/20'
               : 'text-slate-600 hover:text-slate-900'
@@ -370,6 +461,70 @@ export default function LeaderChildrenPage() {
             {submitting ? 'Submitting…' : 'Submit upload request'}
           </button>
         </form>
+      ) : tab === 'profiles' ? (
+        <div className="space-y-4">
+          <p className="rounded-lg border border-slate-200 bg-slate-50 px-4 py-3 text-xs text-slate-600">
+            Giao diện chỉ liệt kê các dòng có <code className="rounded bg-white px-1">review_status</code> tương đương{' '}
+            <code className="rounded bg-white px-1">Approved</code>. Vote:{' '}
+            <code className="rounded bg-white px-1">POST /child-upload-reqs/{'{id}'}/vote</code>.
+          </p>
+          <DataTable<UploadChildRequestEntity>
+            columns={[
+              { key: 'id', label: 'ID', render: (u) => <span className="font-mono text-xs">{truncateAddress(u.id, 8)}</span> },
+              {
+                key: 'name',
+                label: 'Name',
+                render: (u) => (
+                  <span>
+                    {u.first_name} {u.last_name}
+                  </span>
+                ),
+              },
+              { key: 'gender', label: 'Gender', render: (u) => <span className="capitalize">{u.gender}</span> },
+              { key: 'region', label: 'Region' },
+              {
+                key: 'review_status',
+                label: 'Review',
+                render: (u) => (u.review_status ? <StatusBadge status={u.review_status} /> : <span className="text-slate-400">—</span>),
+              },
+              { key: 'status', label: 'Status', render: (u) => <StatusBadge status={u.status} /> },
+              { key: 'created_at', label: 'Created', render: (u) => formatDate(u.created_at) },
+              {
+                key: 'actions',
+                label: 'Vote',
+                className: 'whitespace-nowrap',
+                render: (u) => (
+                  <div className="flex flex-wrap gap-1" onClick={(e) => e.stopPropagation()}>
+                    <button
+                      type="button"
+                      disabled={voteBusyId === u.id}
+                      onClick={() => void handleVoteYes(u.id)}
+                      className="inline-flex items-center gap-0.5 rounded-md border border-emerald-200 bg-emerald-50 px-2 py-1 text-xs font-medium text-emerald-800 hover:bg-emerald-100 disabled:opacity-50"
+                      title="Vote yes"
+                    >
+                      <ThumbsUp className="h-3.5 w-3.5" />
+                    </button>
+                    <button
+                      type="button"
+                      disabled={voteBusyId === u.id}
+                      onClick={() => handleVoteNo(u.id)}
+                      className="inline-flex items-center gap-0.5 rounded-md border border-red-200 bg-red-50 px-2 py-1 text-xs font-medium text-red-800 hover:bg-red-100 disabled:opacity-50"
+                      title="Vote no"
+                    >
+                      <ThumbsDown className="h-3.5 w-3.5" />
+                    </button>
+                  </div>
+                ),
+              },
+            ]}
+            data={profileReqs}
+            loading={profilesLoading}
+            page={profilePage}
+            totalPages={profileTotalPages}
+            onPageChange={(p) => setProfilePage(p)}
+            emptyMessage="No admin-approved child upload requests to vote on."
+          />
+        </div>
       ) : (
         <DataTable<Child>
           columns={columns}
@@ -380,6 +535,50 @@ export default function LeaderChildrenPage() {
           onPageChange={setPage}
           emptyMessage="No children found"
         />
+      )}
+
+      {refuseModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 p-4">
+          <div className="w-full max-w-md rounded-xl border border-slate-200 bg-white p-5 shadow-xl">
+            <div className="mb-3 flex items-center justify-between">
+              <h3 className="text-lg font-semibold text-slate-900">Vote no</h3>
+              <button
+                type="button"
+                onClick={() => setRefuseModal(null)}
+                className="rounded-lg p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-700"
+                aria-label="Close"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+            <p className="mb-2 text-sm text-slate-600">Optional reason for refusal.</p>
+            <textarea
+              value={refuseReason}
+              onChange={(e) => setRefuseReason(e.target.value)}
+              rows={3}
+              className="mb-4 w-full rounded-lg border border-slate-200 p-2 text-sm outline-none ring-emerald-600/20 focus:ring-2"
+              placeholder="Reason…"
+            />
+            <div className="flex justify-end gap-2">
+              <button
+                type="button"
+                onClick={() => setRefuseModal(null)}
+                className="rounded-lg border border-slate-200 px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                disabled={voteBusyId === refuseModal.id}
+                onClick={() => void submitRefuseVote()}
+                className="inline-flex items-center gap-1 rounded-lg bg-red-600 px-3 py-2 text-sm font-medium text-white hover:bg-red-700 disabled:opacity-50"
+              >
+                <Check className="h-4 w-4" />
+                Submit
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

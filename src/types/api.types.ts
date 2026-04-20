@@ -546,6 +546,7 @@ export interface CenterQueryParams extends PaginationParams {
 
 export interface ChildUploadQueryParams extends PaginationParams {
   status?: string;
+  review_status?: string;
   region?: string;
   gender?: string;
   is_closed?: boolean;

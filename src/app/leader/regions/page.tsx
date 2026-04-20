@@ -40,7 +40,12 @@ export default function LeaderRegionsPage() {
     }
     setLoading(true);
     try {
-      const res = await regionService.getUserSuggestions(addr, { page: p, page_size: PAGE_SIZE });
+      const res = await regionService.listSuggestions({
+        page: p,
+        page_size: PAGE_SIZE,
+        created_by: addr,
+        sort_order: 'desc',
+      });
       const raw = res.data.data;
       setRows(Array.isArray(raw) ? (raw as SupportedRegionSuggestion[]) : []);
       setTotalPages(Math.max(1, res.data.total_pages ?? 1));

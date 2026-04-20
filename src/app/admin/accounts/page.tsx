@@ -26,6 +26,11 @@ type Tab = 'registrations' | 'staff';
 
 const PAGE_SIZE = 10;
 
+function isRegistrationApproved(status?: string) {
+  const s = (status || '').toLowerCase().replace(/\s+/g, '_');
+  return s === 'approved';
+}
+
 const REG_STATUS_OPTIONS = [
   { value: '', label: 'All statuses' },
   { value: 'pending', label: 'Pending' },
@@ -315,40 +320,46 @@ export default function AdminAccountsPage() {
                 key: 'actions',
                 label: 'Actions',
                 className: 'whitespace-nowrap',
-                render: (r) => (
-                  <div className="flex flex-wrap gap-1" onClick={(e) => e.stopPropagation()}>
-                    <button
-                      type="button"
-                      disabled={voteBusyId === r.id}
-                      onClick={() => handleVote(r.id, true)}
-                      className="inline-flex items-center gap-1 rounded-md border border-emerald-200 bg-emerald-50 px-2 py-1 text-xs font-medium text-emerald-800 hover:bg-emerald-100 disabled:opacity-50"
-                      title="Approve vote"
+                render: (r) => {
+                  const approved = isRegistrationApproved(r.status);
+                  return (
+                    <div
+                      className={`flex flex-wrap gap-1 ${approved ? 'pointer-events-none opacity-40' : ''}`}
+                      onClick={(e) => e.stopPropagation()}
                     >
-                      <ThumbsUp className="h-3.5 w-3.5" />
-                    </button>
-                    <button
-                      type="button"
-                      disabled={voteBusyId === r.id}
-                      onClick={() => handleVote(r.id, false)}
-                      className="inline-flex items-center gap-1 rounded-md border border-red-200 bg-red-50 px-2 py-1 text-xs font-medium text-red-800 hover:bg-red-100 disabled:opacity-50"
-                      title="Refuse vote"
-                    >
-                      <ThumbsDown className="h-3.5 w-3.5" />
-                    </button>
-                    {r.isAvailableToConfirm && (
                       <button
                         type="button"
-                        disabled={confirmBusyId === r.id}
-                        onClick={() => handleConfirm(r.id)}
-                        className="inline-flex items-center gap-1 rounded-md border border-slate-200 bg-white px-2 py-1 text-xs font-medium text-slate-800 hover:bg-slate-50 disabled:opacity-50"
-                        title="Confirm on-chain"
+                        disabled={approved || voteBusyId === r.id}
+                        onClick={() => handleVote(r.id, true)}
+                        className="inline-flex items-center gap-1 rounded-md border border-emerald-200 bg-emerald-50 px-2 py-1 text-xs font-medium text-emerald-800 hover:bg-emerald-100 disabled:cursor-not-allowed disabled:opacity-50"
+                        title="Approve vote"
                       >
-                        <ShieldCheck className="h-3.5 w-3.5" />
-                        Confirm
+                        <ThumbsUp className="h-3.5 w-3.5" />
                       </button>
-                    )}
-                  </div>
-                ),
+                      <button
+                        type="button"
+                        disabled={approved || voteBusyId === r.id}
+                        onClick={() => handleVote(r.id, false)}
+                        className="inline-flex items-center gap-1 rounded-md border border-red-200 bg-red-50 px-2 py-1 text-xs font-medium text-red-800 hover:bg-red-100 disabled:cursor-not-allowed disabled:opacity-50"
+                        title="Refuse vote"
+                      >
+                        <ThumbsDown className="h-3.5 w-3.5" />
+                      </button>
+                      {r.isAvailableToConfirm && (
+                        <button
+                          type="button"
+                          disabled={approved || confirmBusyId === r.id}
+                          onClick={() => handleConfirm(r.id)}
+                          className="inline-flex items-center gap-1 rounded-md border border-slate-200 bg-white px-2 py-1 text-xs font-medium text-slate-800 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
+                          title="Confirm on-chain"
+                        >
+                          <ShieldCheck className="h-3.5 w-3.5" />
+                          Confirm
+                        </button>
+                      )}
+                    </div>
+                  );
+                },
               },
             ]}
             data={registrations}

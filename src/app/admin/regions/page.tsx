@@ -42,7 +42,7 @@ export default function AdminRegionsPage() {
   const load = useCallback(async () => {
     setLoading(true);
     try {
-      const res = await regionService.listSuggestions({
+      const res = await regionService.adminListSuggestions({
         page,
         page_size: PAGE_SIZE,
         sort_order: 'desc',
@@ -112,7 +112,7 @@ export default function AdminRegionsPage() {
       />
 
       <p className="rounded-lg border border-slate-200 bg-slate-50 px-4 py-3 text-xs text-slate-600">
-        Danh sách: <code className="rounded bg-white px-1">GET /regions/supported-suggestions</code> — phản hồi phân trang gồm{' '}
+        Danh sách: <code className="rounded bg-white px-1">GET /regions/admin/supported-suggestions</code> — phản hồi phân trang gồm{' '}
         <code className="rounded bg-white px-1">data</code>, <code className="rounded bg-white px-1">amount</code>,{' '}
         <code className="rounded bg-white px-1">page</code>, <code className="rounded bg-white px-1">total_pages</code>. Duyệt:{' '}
         <code className="rounded bg-white px-1">POST /regions/supported-suggestions/{'{id}'}/review</code> với body{' '}

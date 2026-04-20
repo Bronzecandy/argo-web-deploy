@@ -1,16 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
-import {
-  Baby,
-  Check,
-  ClipboardCheck,
-  FileUp,
-  ShieldCheck,
-  ThumbsDown,
-  ThumbsUp,
-  X,
-} from 'lucide-react';
+import { Baby, Check, ClipboardCheck, FileUp, X } from 'lucide-react';
 import { toast } from 'sonner';
 import PageHeader from '@/src/components/ui/PageHeader';
 import DataTable from '@/src/components/ui/DataTable';
@@ -18,7 +9,6 @@ import StatusBadge from '@/src/components/ui/StatusBadge';
 import { formatDate, formatVND, truncateAddress } from '@/src/lib/formatters';
 import { childUploadService } from '@/src/services/child-upload.service';
 import { childrenService } from '@/src/services/children.service';
-import { useExecuteTransaction } from '@/src/hooks/useExecuteTransaction';
 import type { Child, UploadChildRequestEntity } from '@/src/types/api.types';
 
 type Tab = 'uploads' | 'children';
@@ -58,7 +48,6 @@ export default function AdminChildrenPage() {
   const [childRegion, setChildRegion] = useState('');
   const [childGender, setChildGender] = useState('');
 
-  const { execute } = useExecuteTransaction();
   const [busyId, setBusyId] = useState<string | null>(null);
   const [refuseModal, setRefuseModal] = useState<{ id: string; kind: 'review' } | null>(null);
   const [refuseReason, setRefuseReason] = useState('');
@@ -161,33 +150,6 @@ export default function AdminChildrenPage() {
     } finally {
       setBusyId(null);
     }
-  }
-
-  async function runVote(id: string, isYes: boolean) {
-    setBusyId(id);
-    try {
-      await childUploadService.vote(id, { is_vote_yes: isYes });
-      toast.success('Vote recorded');
-      await loadUploads();
-    } catch (e: unknown) {
-      const msg =
-        e && typeof e === 'object' && 'response' in e
-          ? String((e as { response?: { data?: { message?: string } } }).response?.data?.message ?? '')
-          : '';
-      toast.error(msg || 'Vote failed');
-    } finally {
-      setBusyId(null);
-    }
-  }
-
-  async function runConfirm(id: string) {
-    setBusyId(id);
-    const ok = await execute(
-      () => childUploadService.confirm(id),
-      { successMessage: 'Child upload confirmed & executed on-chain' },
-    );
-    if (ok) await loadUploads();
-    setBusyId(null);
   }
 
   return (
@@ -306,60 +268,27 @@ export default function AdminChildrenPage() {
               { key: 'created_at', label: 'Created', render: (u) => formatDate(u.created_at) },
               {
                 key: 'actions',
-                label: 'Actions',
-                className: 'min-w-[200px]',
+                label: 'Review',
+                className: 'min-w-[120px]',
                 render: (u) => (
-                  <div className="flex flex-col gap-1.5" onClick={(e) => e.stopPropagation()}>
-                    <div className="flex flex-wrap gap-1">
-                      <span className="mr-1 text-[10px] font-semibold uppercase text-slate-400">Review</span>
-                      <button
-                        type="button"
-                        disabled={busyId === u.id}
-                        onClick={() => runReview(u.id, true)}
-                        className="inline-flex items-center gap-0.5 rounded border border-emerald-200 bg-emerald-50 px-1.5 py-0.5 text-[11px] font-medium text-emerald-800 hover:bg-emerald-100 disabled:opacity-50"
-                      >
-                        <ClipboardCheck className="h-3 w-3" />
-                        OK
-                      </button>
-                      <button
-                        type="button"
-                        disabled={busyId === u.id}
-                        onClick={() => runReview(u.id, false)}
-                        className="inline-flex items-center gap-0.5 rounded border border-amber-200 bg-amber-50 px-1.5 py-0.5 text-[11px] font-medium text-amber-900 hover:bg-amber-100 disabled:opacity-50"
-                      >
-                        Refuse
-                      </button>
-                    </div>
-                    <div className="flex flex-wrap gap-1">
-                      <span className="mr-1 text-[10px] font-semibold uppercase text-slate-400">Vote</span>
-                      <button
-                        type="button"
-                        disabled={busyId === u.id}
-                        onClick={() => runVote(u.id, true)}
-                        className="inline-flex items-center rounded border border-emerald-200 bg-white p-0.5 text-emerald-700 hover:bg-emerald-50 disabled:opacity-50"
-                        title="Vote yes"
-                      >
-                        <ThumbsUp className="h-3.5 w-3.5" />
-                      </button>
-                      <button
-                        type="button"
-                        disabled={busyId === u.id}
-                        onClick={() => runVote(u.id, false)}
-                        className="inline-flex items-center rounded border border-red-200 bg-white p-0.5 text-red-700 hover:bg-red-50 disabled:opacity-50"
-                        title="Vote no"
-                      >
-                        <ThumbsDown className="h-3.5 w-3.5" />
-                      </button>
-                      <button
-                        type="button"
-                        disabled={busyId === u.id}
-                        onClick={() => runConfirm(u.id)}
-                        className="inline-flex items-center gap-0.5 rounded border border-slate-200 bg-slate-50 px-1.5 py-0.5 text-[11px] font-medium text-slate-800 hover:bg-slate-100 disabled:opacity-50"
-                      >
-                        <ShieldCheck className="h-3 w-3" />
-                        Confirm
-                      </button>
-                    </div>
+                  <div className="flex flex-wrap gap-1" onClick={(e) => e.stopPropagation()}>
+                    <button
+                      type="button"
+                      disabled={busyId === u.id}
+                      onClick={() => runReview(u.id, true)}
+                      className="inline-flex items-center gap-0.5 rounded border border-emerald-200 bg-emerald-50 px-1.5 py-0.5 text-[11px] font-medium text-emerald-800 hover:bg-emerald-100 disabled:opacity-50"
+                    >
+                      <ClipboardCheck className="h-3 w-3" />
+                      OK
+                    </button>
+                    <button
+                      type="button"
+                      disabled={busyId === u.id}
+                      onClick={() => runReview(u.id, false)}
+                      className="inline-flex items-center gap-0.5 rounded border border-amber-200 bg-amber-50 px-1.5 py-0.5 text-[11px] font-medium text-amber-900 hover:bg-amber-100 disabled:opacity-50"
+                    >
+                      Refuse
+                    </button>
                   </div>
                 ),
               },

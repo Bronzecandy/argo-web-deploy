@@ -22,6 +22,7 @@ class RegionService {
     page_size?: number;
     status?: string;
     keyword?: string;
+    created_by?: string;
     sort_order?: string;
   }) {
     return apiService.get<PaginationResponse<SupportedRegionSuggestion[]>>('/regions/admin/supported-suggestions', {
