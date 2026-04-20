@@ -7,7 +7,7 @@ import PageHeader from '@/src/components/ui/PageHeader';
 import type { PersonalWalletProfile, UploadProfileRequest } from '@/src/types/api.types';
 import { toast } from 'sonner';
 import { User, Wallet, Save } from 'lucide-react';
-import { formatVND, toDDMMYYYY } from '@/src/lib/formatters';
+import { formatVND, formatDateTime, toDDMMYYYY } from '@/src/lib/formatters';
 
 export default function DonorProfilePage() {
   const { user } = useAppSelector((state) => state.auth);

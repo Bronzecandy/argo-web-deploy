@@ -229,7 +229,7 @@ export default function AdminDashboard() {
           ) : (
             <ResponsiveContainer width="100%" height={300}>
               <PieChart>
-                <Pie data={txByType} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={100} label={({ name, percent }) => `${name} (${(percent * 100).toFixed(0)}%)`} labelLine={{ stroke: '#94a3b8' }}>
+                <Pie data={txByType} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={100} label={({ name, percent }) => `${name} (${((percent ?? 0) * 100).toFixed(0)}%)`} labelLine={{ stroke: '#94a3b8' }}>
                   {txByType.map((_, i) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}
                 </Pie>
                 <Tooltip />

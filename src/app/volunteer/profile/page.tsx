@@ -52,11 +52,11 @@ export default function VolunteerProfilePage() {
       const data: UploadProfileRequest = {
         first_name: firstName,
         last_name: lastName,
-        gender: gender || undefined,
-        date_of_birth: dob ? toDDMMYYYY(dob) : undefined,
-        phone_number: phone || undefined,
-        email: email || undefined,
-        identity_code: identityCode || undefined,
+        gender: gender || '',
+        date_of_birth: dob ? toDDMMYYYY(dob) : '',
+        phone_number: phone || '',
+        email: email || '',
+        identity_code: identityCode || '',
       };
       await profileService.upload(user.profileId, data);
       toast.success('Profile updated');

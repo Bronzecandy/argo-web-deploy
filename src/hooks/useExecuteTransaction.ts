@@ -3,21 +3,24 @@
 import { useCallback, useState } from 'react';
 import { toast } from 'sonner';
 import { transactionService } from '@/src/services/transaction.service';
-import type { BuildTransactionResponse, ExecuteTransactionRequest } from '@/src/types/api.types';
+import type { BuildTransactionResponse, ExecuteTransactionRequest, MessageResponse } from '@/src/types/api.types';
+
+type ExecuteApiPayload = BuildTransactionResponse | MessageResponse;
+
+function hasTxBytes(data: ExecuteApiPayload): data is BuildTransactionResponse {
+  return typeof (data as BuildTransactionResponse).tx_bytes === 'string' && !!(data as BuildTransactionResponse).tx_bytes;
+}
 
 /**
- * Wraps any API call that returns BuildTransactionResponse.
- * After the API succeeds it automatically calls POST /tx/execute
- * with the tx_bytes + a placeholder signature (the backend handles
- * zkLogin verification). Passes through extra fields like center_req,
- * registration_req, upload_child_req, proposal_id.
+ * Wraps API calls that return BuildTransactionResponse (on-chain) or MessageResponse only.
+ * When tx_bytes is present it calls POST /tx/execute; otherwise shows success without execute.
  */
 export function useExecuteTransaction() {
   const [executing, setExecuting] = useState(false);
 
   const execute = useCallback(
     async (
-      apiCall: () => Promise<{ data: BuildTransactionResponse }>,
+      apiCall: () => Promise<{ data: ExecuteApiPayload }>,
       options?: { successMessage?: string; skipExecute?: boolean },
     ): Promise<boolean> => {
       setExecuting(true);
@@ -25,7 +28,7 @@ export function useExecuteTransaction() {
         const res = await apiCall();
         const txData = res.data;
 
-        if (!txData.tx_bytes || options?.skipExecute) {
+        if (!hasTxBytes(txData) || options?.skipExecute) {
           toast.success(options?.successMessage || 'Action completed');
           return true;
         }

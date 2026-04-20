@@ -21,10 +21,9 @@ export default function VolunteerNotificationsPage() {
     if (!user?.address) return;
     setLoading(true);
     try {
-      const res = await notificationService.list({
+      const res = await notificationService.listByUser(user.address, {
         page,
         page_size: PAGE_SIZE,
-        wallet_address: user.address,
       });
       setNotis(res.data.data || []);
       setTotalPages(res.data.total_pages || 1);

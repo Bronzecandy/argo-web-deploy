@@ -29,7 +29,7 @@ export default function VolunteerDashboardPage() {
       const [tasksRes, proofsRes, notisRes, profileRes] = await Promise.all([
         taskService.list({ page_size: 5, sort_order: 'desc' }).catch(() => null),
         taskProofService.list({ page_size: 5, sort_order: 'desc' }).catch(() => null),
-        notificationService.list({ page_size: 5, wallet_address: user.address }).catch(() => null),
+        notificationService.listByUser(user.address, { page_size: 5 }).catch(() => null),
         profileService.getByWallet(user.address).catch(() => null),
       ]);
 

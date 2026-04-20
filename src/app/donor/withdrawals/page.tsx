@@ -9,7 +9,6 @@ import PageHeader from '@/src/components/ui/PageHeader';
 import DataTable from '@/src/components/ui/DataTable';
 import StatusBadge from '@/src/components/ui/StatusBadge';
 import type { WithdrawProposal } from '@/src/types/api.types';
-import { toast } from 'sonner';
 import { Vote, ThumbsUp, ThumbsDown, X } from 'lucide-react';
 
 export default function DonorWithdrawalsPage() {
@@ -70,7 +69,6 @@ export default function DonorWithdrawalsPage() {
       void loadProposals();
     }
     setVoting(false);
-    }
   };
 
   const hasVoted = (proposal: WithdrawProposal) => {
