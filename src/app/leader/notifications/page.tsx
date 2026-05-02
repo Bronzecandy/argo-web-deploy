@@ -84,10 +84,10 @@ export default function LeaderNotificationsPage() {
           </ul>
         )}
 
-        {user?.address && totalPages > 1 && (
+        {user?.address && !loading && items.length > 0 && (
           <div className="mt-6 flex items-center justify-between border-t border-slate-100 pt-4">
             <span className="text-xs text-slate-500">
-              Page {page + 1} of {totalPages}
+              Page {page + 1} of {Math.max(1, totalPages)}
             </span>
             <div className="flex gap-1">
               <button
@@ -100,8 +100,8 @@ export default function LeaderNotificationsPage() {
               </button>
               <button
                 type="button"
-                onClick={() => setPage((p) => Math.min(totalPages - 1, p + 1))}
-                disabled={page >= totalPages - 1 || loading}
+                onClick={() => setPage((p) => Math.min(Math.max(1, totalPages) - 1, p + 1))}
+                disabled={page >= Math.max(1, totalPages) - 1 || loading}
                 className="rounded-lg p-1.5 text-slate-400 transition hover:bg-slate-100 hover:text-slate-700 disabled:opacity-30"
               >
                 <ChevronRight className="h-4 w-4" />

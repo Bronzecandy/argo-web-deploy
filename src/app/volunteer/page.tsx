@@ -27,9 +27,9 @@ export default function VolunteerDashboardPage() {
     setLoading(true);
     try {
       const [tasksRes, proofsRes, notisRes, profileRes] = await Promise.all([
-        taskService.list({ page_size: 5, sort_order: 'desc' }).catch(() => null),
-        taskProofService.list({ page_size: 5, sort_order: 'desc' }).catch(() => null),
-        notificationService.listByUser(user.address, { page_size: 5 }).catch(() => null),
+        taskService.list({ page: 0, page_size: 20, sort_order: 'desc' }).catch(() => null),
+        taskProofService.list({ page: 0, page_size: 20, sort_order: 'desc' }).catch(() => null),
+        notificationService.listByUser(user.address, { page: 0, page_size: 20 }).catch(() => null),
         profileService.getByWallet(user.address).catch(() => null),
       ]);
 

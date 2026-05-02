@@ -32,7 +32,7 @@ export default function DonorDiscoverPage() {
     try {
       const res = await centerService.list({
         page,
-        page_size: 12,
+        page_size: 20,
         status: 'approved',
         region: selectedRegion || undefined,
         keyword: keyword || undefined,
@@ -51,7 +51,7 @@ export default function DonorDiscoverPage() {
     try {
       const res = await childrenService.list({
         page,
-        page_size: 12,
+        page_size: 20,
         region: selectedRegion || undefined,
         keyword: keyword || undefined,
       });
@@ -202,9 +202,11 @@ export default function DonorDiscoverPage() {
       )}
 
       {/* Pagination */}
-      {totalPages > 1 && (
+      {!loading &&
+        ((tab === 'centers' && centers.length > 0) || (tab === 'children' && children.length > 0)) && (
         <div className="mt-6 flex items-center justify-center gap-2">
           <button
+            type="button"
             onClick={() => setPage((p) => Math.max(0, p - 1))}
             disabled={page === 0}
             className="rounded-lg border border-slate-200 px-3 py-1.5 text-sm font-medium text-slate-600 hover:bg-slate-50 disabled:opacity-40"
@@ -212,11 +214,12 @@ export default function DonorDiscoverPage() {
             Previous
           </button>
           <span className="text-sm text-slate-500">
-            Page {page + 1} of {totalPages}
+            Page {page + 1} of {Math.max(1, totalPages)}
           </span>
           <button
-            onClick={() => setPage((p) => Math.min(totalPages - 1, p + 1))}
-            disabled={page >= totalPages - 1}
+            type="button"
+            onClick={() => setPage((p) => Math.min(Math.max(1, totalPages) - 1, p + 1))}
+            disabled={page >= Math.max(1, totalPages) - 1}
             className="rounded-lg border border-slate-200 px-3 py-1.5 text-sm font-medium text-slate-600 hover:bg-slate-50 disabled:opacity-40"
           >
             Next

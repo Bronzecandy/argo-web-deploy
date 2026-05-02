@@ -11,7 +11,7 @@ import { taskProofService } from '@/src/services/task-proof.service';
 import { blobService } from '@/src/services/blob.service';
 import type { TaskProof } from '@/src/types/api.types';
 
-const PAGE_SIZE = 10;
+const PAGE_SIZE = 20;
 
 export default function VolunteerTaskProofsPage() {
   const [page, setPage] = useState(0);

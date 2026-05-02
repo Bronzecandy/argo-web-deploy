@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
-import { Building2, Check, MapPin, ShieldCheck, ThumbsDown, ThumbsUp, X } from 'lucide-react';
+import { Building2, Check, ClipboardList, MapPin, ShieldCheck, ThumbsDown, ThumbsUp, X } from 'lucide-react';
 import { toast } from 'sonner';
 import PageHeader from '@/src/components/ui/PageHeader';
 import DataTable from '@/src/components/ui/DataTable';
@@ -11,7 +11,7 @@ import { centerService } from '@/src/services/center.service';
 import { useExecuteTransaction } from '@/src/hooks/useExecuteTransaction';
 import type { CenterRequest } from '@/src/types/api.types';
 
-const PAGE_SIZE = 10;
+const PAGE_SIZE = 20;
 
 const STATUS_OPTIONS = [
   { value: '', label: 'All statuses' },
@@ -21,14 +21,49 @@ const STATUS_OPTIONS = [
   { value: 'refused', label: 'Refused' },
 ];
 
+type CentersTab = 'centers' | 'requests';
+
+const CENTER_TABLE_BASE = [
+  { key: 'id', label: 'ID', render: (c: CenterRequest) => <span className="font-mono text-xs">{truncateAddress(c.id, 8)}</span> },
+  { key: 'region', label: 'Region' },
+  {
+    key: 'address',
+    label: 'Address',
+    render: (c: CenterRequest) => (
+      <span className="max-w-[220px] truncate text-slate-700" title={c.address}>
+        {truncateAddress(c.address, 14)}
+      </span>
+    ),
+  },
+  { key: 'phone_number', label: 'Phone' },
+  {
+    key: 'created_by',
+    label: 'Created by',
+    render: (c: CenterRequest) => <span className="font-mono text-xs">{truncateAddress(c.created_by, 8)}</span>,
+  },
+  { key: 'status', label: 'Status', render: (c: CenterRequest) => <StatusBadge status={c.status} /> },
+  { key: 'created_at', label: 'Created', render: (c: CenterRequest) => formatDate(c.created_at) },
+];
+
 export default function AdminCentersPage() {
   const { execute } = useExecuteTransaction();
+  const [tab, setTab] = useState<CentersTab>('centers');
+
   const [loading, setLoading] = useState(true);
   const [centers, setCenters] = useState<CenterRequest[]>([]);
   const [page, setPage] = useState(0);
   const [totalPages, setTotalPages] = useState(1);
   const [totalAmount, setTotalAmount] = useState(0);
   const [status, setStatus] = useState('');
+
+  const [reqLoading, setReqLoading] = useState(false);
+  const [reqs, setReqs] = useState<CenterRequest[]>([]);
+  const [reqPage, setReqPage] = useState(0);
+  const [reqTotalPages, setReqTotalPages] = useState(1);
+  const [reqTotalAmount, setReqTotalAmount] = useState(0);
+  const [reqStatus, setReqStatus] = useState('');
+  const [reqKeywordDraft, setReqKeywordDraft] = useState('');
+  const [reqKeyword, setReqKeyword] = useState('');
 
   const [voteBusyId, setVoteBusyId] = useState<string | null>(null);
   const [confirmBusyId, setConfirmBusyId] = useState<string | null>(null);
@@ -59,9 +94,41 @@ export default function AdminCentersPage() {
     }
   }, [page, status]);
 
+  const loadCenterRequests = useCallback(async () => {
+    setReqLoading(true);
+    try {
+      const res = await centerService.listCenterRequests({
+        page: reqPage,
+        page_size: PAGE_SIZE,
+        status: reqStatus || undefined,
+        keyword: reqKeyword.trim() || undefined,
+        sort_order: 'desc',
+      });
+      const body = res.data;
+      setReqs(Array.isArray(body.data) ? body.data : []);
+      setReqTotalAmount(typeof body.amount === 'number' ? body.amount : 0);
+      setReqTotalPages(Math.max(1, body.total_pages ?? 1));
+    } catch (e: unknown) {
+      const msg =
+        e && typeof e === 'object' && 'response' in e
+          ? String((e as { response?: { data?: { message?: string } } }).response?.data?.message ?? '')
+          : '';
+      toast.error(msg || 'Failed to load center requests');
+      setReqs([]);
+    } finally {
+      setReqLoading(false);
+    }
+  }, [reqPage, reqStatus, reqKeyword]);
+
   useEffect(() => {
+    if (tab !== 'centers') return;
     void loadCenters();
-  }, [loadCenters]);
+  }, [tab, loadCenters]);
+
+  useEffect(() => {
+    if (tab !== 'requests') return;
+    void loadCenterRequests();
+  }, [tab, loadCenterRequests]);
 
   async function handleVote(id: string, isYes: boolean) {
     if (!isYes) {
@@ -71,9 +138,9 @@ export default function AdminCentersPage() {
     }
     setVoteBusyId(id);
     try {
-      await centerService.vote(id, { is_vote_yes: true });
+      await centerService.voteCenterRequest(id, { is_vote_yes: true });
       toast.success('Vote recorded');
-      await loadCenters();
+      await loadCenterRequests();
     } catch (e: unknown) {
       const msg =
         e && typeof e === 'object' && 'response' in e
@@ -87,13 +154,16 @@ export default function AdminCentersPage() {
 
   async function submitRefuseVote() {
     if (!refuseModal) return;
-    const id = refuseModal.id;
+    const { id } = refuseModal;
     setVoteBusyId(id);
     try {
-      await centerService.vote(id, { is_vote_yes: false, refuse_reason: refuseReason || undefined });
+      await centerService.voteCenterRequest(id, {
+        is_vote_yes: false,
+        refuse_reason: refuseReason || undefined,
+      });
       toast.success('Refusal recorded');
       setRefuseModal(null);
-      await loadCenters();
+      await loadCenterRequests();
     } catch (e: unknown) {
       const msg =
         e && typeof e === 'object' && 'response' in e
@@ -108,112 +178,198 @@ export default function AdminCentersPage() {
   async function handleConfirm(id: string) {
     setConfirmBusyId(id);
     const ok = await execute(
-      () => centerService.confirm(id),
+      () => centerService.confirmCenterRequest(id),
       { successMessage: 'Center confirmed & executed on-chain' },
     );
-    if (ok) await loadCenters();
+    if (ok) await loadCenterRequests();
     setConfirmBusyId(null);
   }
+
+  const requestColumns = [
+    ...CENTER_TABLE_BASE,
+    {
+      key: 'actions',
+      label: 'Actions',
+      className: 'whitespace-nowrap',
+      render: (c: CenterRequest) => (
+        <div className="flex flex-wrap gap-1" onClick={(e) => e.stopPropagation()}>
+          <button
+            type="button"
+            disabled={voteBusyId === c.id}
+            onClick={() => handleVote(c.id, true)}
+            className="inline-flex items-center gap-1 rounded-md border border-emerald-200 bg-emerald-50 px-2 py-1 text-xs font-medium text-emerald-800 hover:bg-emerald-100 disabled:opacity-50"
+            title="Approve vote"
+          >
+            <ThumbsUp className="h-3.5 w-3.5" />
+          </button>
+          <button
+            type="button"
+            disabled={voteBusyId === c.id}
+            onClick={() => handleVote(c.id, false)}
+            className="inline-flex items-center gap-1 rounded-md border border-red-200 bg-red-50 px-2 py-1 text-xs font-medium text-red-800 hover:bg-red-100 disabled:opacity-50"
+            title="Refuse vote"
+          >
+            <ThumbsDown className="h-3.5 w-3.5" />
+          </button>
+          {c.isAvailableToConfirm && (
+            <button
+              type="button"
+              disabled={confirmBusyId === c.id}
+              onClick={() => handleConfirm(c.id)}
+              className="inline-flex items-center gap-1 rounded-md border border-slate-200 bg-white px-2 py-1 text-xs font-medium text-slate-800 hover:bg-slate-50 disabled:opacity-50"
+            >
+              <ShieldCheck className="h-3.5 w-3.5" />
+              Confirm
+            </button>
+          )}
+        </div>
+      ),
+    },
+  ];
+
+  const headerTotal = tab === 'centers' ? totalAmount : reqTotalAmount;
 
   return (
     <div className="p-6">
       <PageHeader
         title="Support centers"
-        description="Review and confirm regional support centers"
+        description={
+          tab === 'centers'
+            ? 'On-chain support centers (GET /centers)'
+            : 'New center submissions from Local Leaders (GET /center-reqs)'
+        }
         actions={
           <span className="inline-flex items-center gap-1.5 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-1.5 text-xs font-medium text-emerald-800">
             <Building2 className="h-3.5 w-3.5" />
-            {totalAmount.toLocaleString('vi-VN')} total
+            {headerTotal.toLocaleString('vi-VN')} total
           </span>
         }
       />
 
-      <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div className="flex flex-wrap items-center gap-2">
-          <MapPin className="h-4 w-4 text-slate-400" />
-          <label htmlFor="center-status" className="text-sm text-slate-600">
-            Status
-          </label>
-          <select
-            id="center-status"
-            value={status}
-            onChange={(e) => {
-              setStatus(e.target.value);
-              setPage(0);
-            }}
-            className="rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none ring-emerald-600/20 focus:ring-2"
-          >
-            {STATUS_OPTIONS.map((o) => (
-              <option key={o.value || 'all'} value={o.value}>
-                {o.label}
-              </option>
-            ))}
-          </select>
-        </div>
+      <div className="mb-6 flex gap-1 rounded-lg border border-slate-200 bg-slate-50 p-1">
+        <button
+          type="button"
+          onClick={() => setTab('centers')}
+          className={`flex flex-1 items-center justify-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition ${
+            tab === 'centers'
+              ? 'bg-white text-emerald-700 shadow-sm ring-1 ring-emerald-600/20'
+              : 'text-slate-600 hover:text-slate-900'
+          }`}
+        >
+          <Building2 className="h-4 w-4 shrink-0" />
+          Centers
+        </button>
+        <button
+          type="button"
+          onClick={() => setTab('requests')}
+          className={`flex flex-1 items-center justify-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition ${
+            tab === 'requests'
+              ? 'bg-white text-emerald-700 shadow-sm ring-1 ring-emerald-600/20'
+              : 'text-slate-600 hover:text-slate-900'
+          }`}
+        >
+          <ClipboardList className="h-4 w-4 shrink-0" />
+          Center requests
+        </button>
       </div>
 
-      <DataTable<CenterRequest>
-        columns={[
-          { key: 'id', label: 'ID', render: (c) => <span className="font-mono text-xs">{truncateAddress(c.id, 8)}</span> },
-          { key: 'region', label: 'Region' },
-          {
-            key: 'address',
-            label: 'Address',
-            render: (c) => (
-              <span className="max-w-[220px] truncate text-slate-700" title={c.address}>
-                {truncateAddress(c.address, 14)}
-              </span>
-            ),
-          },
-          { key: 'phone_number', label: 'Phone' },
-          { key: 'status', label: 'Status', render: (c) => <StatusBadge status={c.status} /> },
-          { key: 'created_at', label: 'Created', render: (c) => formatDate(c.created_at) },
-          {
-            key: 'actions',
-            label: 'Actions',
-            className: 'whitespace-nowrap',
-            render: (c) => (
-              <div className="flex flex-wrap gap-1" onClick={(e) => e.stopPropagation()}>
-                <button
-                  type="button"
-                  disabled={voteBusyId === c.id}
-                  onClick={() => handleVote(c.id, true)}
-                  className="inline-flex items-center gap-1 rounded-md border border-emerald-200 bg-emerald-50 px-2 py-1 text-xs font-medium text-emerald-800 hover:bg-emerald-100 disabled:opacity-50"
-                  title="Approve vote"
-                >
-                  <ThumbsUp className="h-3.5 w-3.5" />
-                </button>
-                <button
-                  type="button"
-                  disabled={voteBusyId === c.id}
-                  onClick={() => handleVote(c.id, false)}
-                  className="inline-flex items-center gap-1 rounded-md border border-red-200 bg-red-50 px-2 py-1 text-xs font-medium text-red-800 hover:bg-red-100 disabled:opacity-50"
-                  title="Refuse vote"
-                >
-                  <ThumbsDown className="h-3.5 w-3.5" />
-                </button>
-                {c.isAvailableToConfirm && (
-                  <button
-                    type="button"
-                    disabled={confirmBusyId === c.id}
-                    onClick={() => handleConfirm(c.id)}
-                    className="inline-flex items-center gap-1 rounded-md border border-slate-200 bg-white px-2 py-1 text-xs font-medium text-slate-800 hover:bg-slate-50 disabled:opacity-50"
-                  >
-                    <ShieldCheck className="h-3.5 w-3.5" />
-                    Confirm
-                  </button>
-                )}
-              </div>
-            ),
-          },
-        ]}
-        data={centers}
-        loading={loading}
-        page={page}
-        totalPages={totalPages}
-        onPageChange={(p) => setPage(p)}
-        emptyMessage="No centers match the selected status."
-      />
+      {tab === 'centers' ? (
+        <>
+          <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex flex-wrap items-center gap-2">
+              <MapPin className="h-4 w-4 text-slate-400" />
+              <label htmlFor="center-status" className="text-sm text-slate-600">
+                Status
+              </label>
+              <select
+                id="center-status"
+                value={status}
+                onChange={(e) => {
+                  setStatus(e.target.value);
+                  setPage(0);
+                }}
+                className="rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none ring-emerald-600/20 focus:ring-2"
+              >
+                {STATUS_OPTIONS.map((o) => (
+                  <option key={o.value || 'all-c'} value={o.value}>
+                    {o.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+
+          <DataTable<CenterRequest>
+            columns={[...CENTER_TABLE_BASE]}
+            data={centers}
+            loading={loading}
+            page={page}
+            totalPages={totalPages}
+            onPageChange={(p) => setPage(p)}
+            emptyMessage="No centers match the selected status."
+          />
+        </>
+      ) : (
+        <>
+          <div className="mb-4 flex flex-col gap-3 lg:flex-row lg:flex-wrap lg:items-end">
+            <div className="flex flex-wrap items-center gap-2">
+              <MapPin className="h-4 w-4 text-slate-400" />
+              <label htmlFor="req-status" className="text-sm text-slate-600">
+                Status
+              </label>
+              <select
+                id="req-status"
+                value={reqStatus}
+                onChange={(e) => {
+                  setReqStatus(e.target.value);
+                  setReqPage(0);
+                }}
+                className="rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none ring-emerald-600/20 focus:ring-2"
+              >
+                {STATUS_OPTIONS.map((o) => (
+                  <option key={o.value || 'all-r'} value={o.value}>
+                    {o.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div className="flex min-w-[200px] flex-1 flex-col gap-1 sm:max-w-md">
+              <label htmlFor="req-keyword" className="text-sm text-slate-600">
+                Keyword
+              </label>
+              <input
+                id="req-keyword"
+                type="search"
+                value={reqKeywordDraft}
+                onChange={(e) => setReqKeywordDraft(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && (setReqKeyword(reqKeywordDraft), setReqPage(0))}
+                placeholder="Search…"
+                className="rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none ring-emerald-600/20 focus:ring-2"
+              />
+            </div>
+            <button
+              type="button"
+              onClick={() => {
+                setReqKeyword(reqKeywordDraft);
+                setReqPage(0);
+              }}
+              className="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-emerald-700"
+            >
+              Search
+            </button>
+          </div>
+
+          <DataTable<CenterRequest>
+            columns={requestColumns}
+            data={reqs}
+            loading={reqLoading}
+            page={reqPage}
+            totalPages={reqTotalPages}
+            onPageChange={(p) => setReqPage(p)}
+            emptyMessage="No center requests match your filters."
+          />
+        </>
+      )}
 
       {refuseModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 p-4">

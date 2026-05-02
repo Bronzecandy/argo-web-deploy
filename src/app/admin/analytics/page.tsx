@@ -8,7 +8,7 @@ import { formatDate, formatVND, truncateAddress } from '@/src/lib/formatters';
 import { transactionService } from '@/src/services/transaction.service';
 import type { TransactionRecord } from '@/src/types/api.types';
 
-const PAGE_SIZE = 10;
+const PAGE_SIZE = 20;
 
 const ACTION_TYPE_OPTIONS = [
   { value: '', label: 'All types' },

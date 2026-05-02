@@ -4,6 +4,7 @@ import type {
   CenterRequest,
   CreateCenterRequest,
   CenterQueryParams,
+  CenterReqQueryParams,
   VoteRequest,
   BuildTransactionResponse,
   MessageResponse,
@@ -14,16 +15,21 @@ class CenterService {
     return apiService.get<PaginationResponse<CenterRequest[]>>('/centers', { params });
   }
 
+  async listCenterRequests(params?: CenterReqQueryParams) {
+    return apiService.get<PaginationResponse<CenterRequest[]>>('/center-reqs', { params });
+  }
+
   async getById(id: string) {
     return apiService.get<PaginationResponse>(`/centers/${id}`);
   }
 
-  async getByWallet(walletAddress: string) {
-    return apiService.get<PaginationResponse>(`/centers/user/${walletAddress}`);
+  async getByWallet(walletAddress: string, params?: { page?: number; page_size?: number }) {
+    return apiService.get<PaginationResponse<CenterRequest[]>>(`/centers/user/${walletAddress}`, { params });
   }
 
+  /** Submit a new center registration request (Local Leader “Register new center”). */
   async create(data: CreateCenterRequest) {
-    return apiService.post<CenterRequest>('/centers', data);
+    return apiService.post<CenterRequest>('/center-reqs', data);
   }
 
   async vote(id: string, data: VoteRequest) {
@@ -32,6 +38,14 @@ class CenterService {
 
   async confirm(id: string) {
     return apiService.post<BuildTransactionResponse>(`/centers/${id}/confirm`, null);
+  }
+
+  async voteCenterRequest(id: string, data: VoteRequest) {
+    return apiService.post<MessageResponse>(`/center-reqs/${id}/vote`, data);
+  }
+
+  async confirmCenterRequest(id: string) {
+    return apiService.post<BuildTransactionResponse>(`/center-reqs/${id}/confirm`, null);
   }
 }
 

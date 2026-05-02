@@ -22,6 +22,7 @@ import {
   ChevronDown,
   MapPin,
   HandCoins,
+  CreditCard,
 } from 'lucide-react';
 
 const NAV_ITEMS = [
@@ -30,8 +31,9 @@ const NAV_ITEMS = [
   { label: 'Child Profiles', href: '/admin/children', icon: Baby },
   { label: 'Support Centers', href: '/admin/centers', icon: Building2 },
   { label: 'Donors', href: '/admin/donors', icon: HandCoins },
+  { label: 'Payments', href: '/admin/payments', icon: CreditCard },
   { label: 'Treasury & Proposals', href: '/admin/treasury', icon: Wallet },
-  { label: 'Analytics', href: '/admin/analytics', icon: BarChart3 },
+  { label: 'Transaction Records', href: '/admin/analytics', icon: BarChart3 },
   { label: 'Task Proofs', href: '/admin/task-proofs', icon: ClipboardCheck },
   { label: 'Yêu cầu vùng hỗ trợ', href: '/admin/regions', icon: MapPin },
   { label: 'Config', href: '/admin/config', icon: Settings },

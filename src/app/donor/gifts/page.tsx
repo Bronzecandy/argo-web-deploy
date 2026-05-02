@@ -34,6 +34,8 @@ export default function DonorGiftsPage() {
   const [trackChildId, setTrackChildId] = useState('');
   const [trackedGifts, setTrackedGifts] = useState<any[]>([]);
   const [tracking, setTracking] = useState(false);
+  const [giftPage, setGiftPage] = useState(0);
+  const [giftTotalPages, setGiftTotalPages] = useState(1);
 
   const handleSendGift = async () => {
     if (!recipient.trim()) {
@@ -81,16 +83,24 @@ export default function DonorGiftsPage() {
     }
   };
 
-  const handleTrackGifts = async () => {
+  const GIFT_PAGE_SIZE = 20;
+
+  const handleTrackGifts = async (pageOverride?: number) => {
     if (!trackChildId.trim()) {
       toast.error('Please enter a child ID');
       return;
     }
+    const p = pageOverride ?? giftPage;
     setTracking(true);
     try {
-      const res = await giftService.listByChild(trackChildId.trim());
+      const res = await giftService.listByChild(trackChildId.trim(), {
+        page: p,
+        page_size: GIFT_PAGE_SIZE,
+        sort_order: 'desc',
+      });
       setTrackedGifts(res.data.data || []);
-      if (!res.data.data?.length) {
+      setGiftTotalPages(Math.max(1, res.data.total_pages ?? 1));
+      if (pageOverride === undefined && p === 0 && !res.data.data?.length) {
         toast.info('No gifts found for this child');
       }
     } catch {
@@ -260,7 +270,10 @@ export default function DonorGiftsPage() {
               className="flex-1 max-w-md rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500"
             />
             <button
-              onClick={() => void handleTrackGifts()}
+              onClick={() => {
+                setGiftPage(0);
+                void handleTrackGifts(0);
+              }}
               disabled={tracking}
               className="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-700 disabled:opacity-50"
             >
@@ -294,6 +307,37 @@ export default function DonorGiftsPage() {
                   </div>
                 </div>
               ))}
+              {trackedGifts.length > 0 && (
+                <div className="flex items-center justify-center gap-2 pt-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const next = Math.max(0, giftPage - 1);
+                      setGiftPage(next);
+                      void handleTrackGifts(next);
+                    }}
+                    disabled={tracking || giftPage <= 0}
+                    className="rounded-lg border border-slate-200 px-3 py-1.5 text-sm font-medium text-slate-600 hover:bg-slate-50 disabled:opacity-40"
+                  >
+                    Previous
+                  </button>
+                  <span className="text-sm text-slate-500">
+                    Page {giftPage + 1} of {giftTotalPages}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const next = Math.min(giftTotalPages - 1, giftPage + 1);
+                      setGiftPage(next);
+                      void handleTrackGifts(next);
+                    }}
+                    disabled={tracking || giftPage >= giftTotalPages - 1}
+                    className="rounded-lg border border-slate-200 px-3 py-1.5 text-sm font-medium text-slate-600 hover:bg-slate-50 disabled:opacity-40"
+                  >
+                    Next
+                  </button>
+                </div>
+              )}
             </div>
           )}
         </div>

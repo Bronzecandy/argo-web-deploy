@@ -26,7 +26,7 @@ export default function DonorTransactionsPage() {
     try {
       const res = await transactionService.list({
         page,
-        page_size: 15,
+        page_size: 20,
         actor: user.address,
         action_type: actionType || undefined,
         sort_order: sortOrder,

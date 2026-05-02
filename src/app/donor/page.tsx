@@ -19,10 +19,17 @@ export default function DonorDashboardPage() {
   const { user } = useAppSelector((state) => state.auth);
   const [profile, setProfile] = useState<PersonalWalletProfile | null>(null);
   const [recentTxs, setRecentTxs] = useState<TransactionRecord[]>([]);
+  const [txPage, setTxPage] = useState(0);
+  const [txTotalPages, setTxTotalPages] = useState(1);
   const [activeProposals, setActiveProposals] = useState<WithdrawProposal[]>([]);
+  const [proposalPage, setProposalPage] = useState(0);
+  const [proposalTotalPages, setProposalTotalPages] = useState(1);
   const [activeProposalsCount, setActiveProposalsCount] = useState(0);
   const [childrenCount, setChildrenCount] = useState(0);
   const [loading, setLoading] = useState(true);
+
+  const DASH_TX_PAGE_SIZE = 20;
+  const DASH_PROPOSAL_PAGE_SIZE = 20;
 
   const loadDashboard = useCallback(async () => {
     if (!user?.address) return;
@@ -30,15 +37,33 @@ export default function DonorDashboardPage() {
     try {
       const [profileRes, txRes, proposalsRes, childrenRes] = await Promise.all([
         profileService.getByWallet(user.address).catch(() => null),
-        transactionService.list({ page_size: 5, actor: user.address, sort_order: 'desc' }).catch(() => null),
-        withdrawService.list({ page_size: 5, is_closed: false }).catch(() => null),
-        childrenService.list({ page_size: 1 }).catch(() => null),
+        transactionService
+          .list({
+            page: txPage,
+            page_size: DASH_TX_PAGE_SIZE,
+            actor: user.address,
+            sort_order: 'desc',
+          })
+          .catch(() => null),
+        withdrawService
+          .list({
+            page: proposalPage,
+            page_size: DASH_PROPOSAL_PAGE_SIZE,
+            is_closed: false,
+            sort_order: 'desc',
+          })
+          .catch(() => null),
+        childrenService.list({ page: 0, page_size: 1 }).catch(() => null),
       ]);
 
       if (profileRes) setProfile(profileRes.data);
-      if (txRes) setRecentTxs(txRes.data.data || []);
+      if (txRes) {
+        setRecentTxs(txRes.data.data || []);
+        setTxTotalPages(Math.max(1, txRes.data.total_pages ?? 1));
+      }
       if (proposalsRes) {
         setActiveProposals(proposalsRes.data.data || []);
+        setProposalTotalPages(Math.max(1, proposalsRes.data.total_pages ?? 1));
         setActiveProposalsCount(proposalsRes.data.amount || 0);
       }
       if (childrenRes) setChildrenCount(childrenRes.data.amount || 0);
@@ -47,7 +72,7 @@ export default function DonorDashboardPage() {
     } finally {
       setLoading(false);
     }
-  }, [user?.address]);
+  }, [user?.address, txPage, proposalPage]);
 
   useEffect(() => {
     void loadDashboard();
@@ -169,7 +194,14 @@ export default function DonorDashboardPage() {
             View all <ArrowRight className="h-4 w-4" />
           </Link>
         </div>
-        <DataTable columns={txColumns} data={recentTxs} emptyMessage="No transactions yet" />
+        <DataTable
+          columns={txColumns}
+          data={recentTxs}
+          emptyMessage="No transactions yet"
+          page={txPage}
+          totalPages={txTotalPages}
+          onPageChange={setTxPage}
+        />
       </div>
 
       {/* Active Withdrawal Proposals */}
@@ -183,7 +215,14 @@ export default function DonorDashboardPage() {
             Vote now <ArrowRight className="h-4 w-4" />
           </Link>
         </div>
-        <DataTable columns={proposalColumns} data={activeProposals} emptyMessage="No active proposals" />
+        <DataTable
+          columns={proposalColumns}
+          data={activeProposals}
+          emptyMessage="No active proposals"
+          page={proposalPage}
+          totalPages={proposalTotalPages}
+          onPageChange={setProposalPage}
+        />
       </div>
     </div>
   );

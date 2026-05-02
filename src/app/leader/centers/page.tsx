@@ -12,6 +12,8 @@ import { regionService } from '@/src/services/region.service';
 import FileUploadInput from '@/src/components/ui/FileUploadInput';
 import type { CenterRequest, CreateCenterRequest } from '@/src/types/api.types';
 
+const PAGE_SIZE = 20;
+
 type Tab = 'mine' | 'register';
 
 function getErrorMessage(e: unknown, fallback: string) {
@@ -35,6 +37,8 @@ export default function LeaderCentersPage() {
 
   const [loading, setLoading] = useState(false);
   const [centers, setCenters] = useState<CenterRequest[]>([]);
+  const [page, setPage] = useState(0);
+  const [totalPages, setTotalPages] = useState(1);
 
   const [regions, setRegions] = useState<string[]>([]);
 
@@ -54,19 +58,22 @@ export default function LeaderCentersPage() {
     const addr = user?.address;
     if (!addr) {
       setCenters([]);
+      setTotalPages(1);
       return;
     }
     setLoading(true);
     try {
-      const res = await centerService.getByWallet(addr);
+      const res = await centerService.getByWallet(addr, { page, page_size: PAGE_SIZE });
       setCenters(normalizeCenterList(res.data));
+      setTotalPages(Math.max(1, res.data.total_pages ?? 1));
     } catch (e: unknown) {
       toast.error(getErrorMessage(e, 'Failed to load centers'));
       setCenters([]);
+      setTotalPages(1);
     } finally {
       setLoading(false);
     }
-  }, [user?.address]);
+  }, [user?.address, page]);
 
   useEffect(() => {
     if (tab !== 'mine') return;
@@ -90,6 +97,7 @@ export default function LeaderCentersPage() {
       await centerService.create(data);
       toast.success('Center registration submitted');
       setForm({ region: '', address: '', phone_number: '', image_blob_id: '' });
+      setPage(0);
       setTab('mine');
     } catch (err: unknown) {
       toast.error(getErrorMessage(err, 'Registration failed'));
@@ -157,6 +165,9 @@ export default function LeaderCentersPage() {
             columns={columns}
             data={centers}
             loading={loading}
+            page={page}
+            totalPages={totalPages}
+            onPageChange={setPage}
             emptyMessage="No center registrations yet"
           />
         )

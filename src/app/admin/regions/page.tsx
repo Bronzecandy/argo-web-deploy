@@ -10,7 +10,7 @@ import { formatDate, truncateAddress } from '@/src/lib/formatters';
 import { regionService } from '@/src/services/region.service';
 import type { SupportedRegionSuggestion } from '@/src/types/api.types';
 
-const PAGE_SIZE = 10;
+const PAGE_SIZE = 20;
 
 /** Theo Swagger: status ví dụ "Pending", "Approved", "Refused" — chuẩn hóa so sánh */
 function isPendingReview(status?: string) {

@@ -11,7 +11,7 @@ import { pendingSpecialNeedsService } from '@/src/services/pending-special-needs
 import { childrenService } from '@/src/services/children.service';
 import type { CreateSpecialNeedProposalRequest, PendingSpecialNeedProposal } from '@/src/types/api.types';
 
-const PAGE_SIZE = 10;
+const PAGE_SIZE = 20;
 
 export default function LeaderCampaignsPage() {
   const { user } = useAppSelector((state) => state.auth);

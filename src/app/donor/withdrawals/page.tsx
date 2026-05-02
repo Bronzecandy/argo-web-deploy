@@ -31,7 +31,7 @@ export default function DonorWithdrawalsPage() {
     try {
       const res = await withdrawService.list({
         page,
-        page_size: 10,
+        page_size: 20,
         is_closed: filter === 'executed' ? true : filter === 'open' ? false : undefined,
         is_executed: filter === 'executed' ? true : undefined,
         sort_order: 'desc',

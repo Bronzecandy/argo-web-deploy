@@ -9,7 +9,7 @@ import { donorService } from '@/src/services/donor.service';
 import type { Donor } from '@/src/types/api.types';
 import { HandCoins, Search, X } from 'lucide-react';
 
-const PAGE_SIZE = 10;
+const PAGE_SIZE = 20;
 
 export default function AdminDonorsPage() {
   const [donors, setDonors] = useState<Donor[]>([]);

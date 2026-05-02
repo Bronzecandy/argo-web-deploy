@@ -33,7 +33,7 @@ export default function LeaderDashboardPage() {
             : Promise.resolve({ data: { amount: 0, data: [], page: 0, total_pages: 0 } }),
           centerService.list({ page: 0, page_size: 1 }),
           address
-            ? notificationService.listByUser(address, { page: 0, page_size: 5 })
+            ? notificationService.listByUser(address, { page: 0, page_size: 20 })
             : Promise.resolve({ data: { data: [], amount: 0, page: 0, total_pages: 0 } }),
         ]);
 

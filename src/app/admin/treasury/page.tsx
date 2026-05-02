@@ -17,7 +17,7 @@ import type {
   WithdrawProposal,
 } from '@/src/types/api.types';
 
-const PAGE_SIZE = 10;
+const PAGE_SIZE = 20;
 
 type TabId = 'proposals' | 'pending' | 'special';
 

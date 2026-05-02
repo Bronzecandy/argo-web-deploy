@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useLayoutEffect, useState, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { childrenService } from '@/src/services/children.service';
 import { childNeedsService, type BookNeed, type MealNeed, type HealthInsuranceNeed } from '@/src/services/child-needs.service';
@@ -32,7 +32,12 @@ export default function DonorChildDetailPage() {
   const [booksNeeds, setBooksNeeds] = useState<BookNeed[]>([]);
   const [healthNeed, setHealthNeed] = useState<HealthInsuranceNeed | null>(null);
   const [gifts, setGifts] = useState<Gift[]>([]);
+  const [giftsLoading, setGiftsLoading] = useState(false);
+  const [giftPage, setGiftPage] = useState(0);
+  const [giftTotalPages, setGiftTotalPages] = useState(1);
   const [loading, setLoading] = useState(true);
+
+  const GIFT_PAGE_SIZE = 20;
 
   // Sponsor form state
   const [sponsorType, setSponsorType] = useState<'meal' | 'books' | 'health' | 'special' | null>(null);
@@ -42,6 +47,10 @@ export default function DonorChildDetailPage() {
   const [specialDescription, setSpecialDescription] = useState('');
   const [specialCampaignId, setSpecialCampaignId] = useState('');
   const [submitting, setSubmitting] = useState(false);
+
+  useLayoutEffect(() => {
+    setGiftPage(0);
+  }, [id]);
 
   const loadChild = useCallback(async () => {
     if (!id) return;
@@ -73,10 +82,6 @@ export default function DonorChildDetailPage() {
         }
       }
 
-      promises.push(
-        giftService.listByChild(id).then((r) => setGifts(r.data.data || [])).catch(() => {})
-      );
-
       await Promise.all(promises);
     } catch {
       toast.error('Failed to load child details');
@@ -85,9 +90,33 @@ export default function DonorChildDetailPage() {
     }
   }, [id]);
 
+  const loadGifts = useCallback(async () => {
+    if (!id) return;
+    setGiftsLoading(true);
+    try {
+      const r = await giftService.listByChild(id, {
+        page: giftPage,
+        page_size: GIFT_PAGE_SIZE,
+        sort_order: 'desc',
+      });
+      setGifts(Array.isArray(r.data.data) ? r.data.data : []);
+      setGiftTotalPages(Math.max(1, r.data.total_pages ?? 1));
+    } catch {
+      setGifts([]);
+      setGiftTotalPages(1);
+    } finally {
+      setGiftsLoading(false);
+    }
+  }, [id, giftPage]);
+
   useEffect(() => {
     void loadChild();
   }, [loadChild]);
+
+  useEffect(() => {
+    if (!id) return;
+    void loadGifts();
+  }, [id, loadGifts]);
 
   const handleSponsorMeal = async () => {
     if (!sponsorNeedId) return;
@@ -318,30 +347,61 @@ export default function DonorChildDetailPage() {
           )}
 
           {/* Gifts */}
-          {gifts.length > 0 && (
+          {(gifts.length > 0 || giftsLoading) && (
             <div className="rounded-xl border border-slate-200 bg-white p-5">
               <div className="flex items-center gap-2 mb-3">
                 <GiftIcon className="h-5 w-5 text-emerald-600" />
                 <h3 className="font-semibold text-slate-900">Gifts Received</h3>
               </div>
-              <div className="space-y-2">
-                {gifts.map((g) => (
-                  <div key={g.id} className="flex items-center gap-3 rounded-lg bg-slate-50 p-3">
-                    {g.gift_image_blob_id && (
-                      <img src={BLOB_URL(g.gift_image_blob_id)} alt="Gift" className="h-10 w-10 rounded-lg object-cover" />
-                    )}
-                    <div className="flex-1">
-                      <p className="text-sm font-medium text-slate-700">{g.category}: {g.description}</p>
-                      <p className="text-xs text-slate-400">{formatDate(g.uploaded_at)}</p>
-                    </div>
-                    <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${
-                      g.status === 'delivered' ? 'bg-emerald-50 text-emerald-700' : 'bg-amber-50 text-amber-700'
-                    }`}>
-                      {g.status}
-                    </span>
+              {giftsLoading ? (
+                <div className="flex justify-center py-8">
+                  <div className="h-8 w-8 animate-spin rounded-full border-4 border-emerald-600 border-t-transparent" />
+                </div>
+              ) : (
+                <>
+                  <div className="space-y-2">
+                    {gifts.map((g) => (
+                      <div key={g.id} className="flex items-center gap-3 rounded-lg bg-slate-50 p-3">
+                        {g.gift_image_blob_id && (
+                          <img src={BLOB_URL(g.gift_image_blob_id)} alt="Gift" className="h-10 w-10 rounded-lg object-cover" />
+                        )}
+                        <div className="flex-1">
+                          <p className="text-sm font-medium text-slate-700">{g.category}: {g.description}</p>
+                          <p className="text-xs text-slate-400">{formatDate(g.uploaded_at)}</p>
+                        </div>
+                        <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${
+                          g.status === 'delivered' ? 'bg-emerald-50 text-emerald-700' : 'bg-amber-50 text-amber-700'
+                        }`}>
+                          {g.status}
+                        </span>
+                      </div>
+                    ))}
                   </div>
-                ))}
-              </div>
+                  {gifts.length > 0 && (
+                    <div className="mt-4 flex items-center justify-center gap-2 border-t border-slate-100 pt-4">
+                      <button
+                        type="button"
+                        onClick={() => setGiftPage((p) => Math.max(0, p - 1))}
+                        disabled={giftsLoading || giftPage <= 0}
+                        className="rounded-lg border border-slate-200 px-3 py-1.5 text-sm font-medium text-slate-600 hover:bg-slate-50 disabled:opacity-40"
+                      >
+                        Previous
+                      </button>
+                      <span className="text-sm text-slate-500">
+                        Page {giftPage + 1} of {giftTotalPages}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => setGiftPage((p) => Math.min(giftTotalPages - 1, p + 1))}
+                        disabled={giftsLoading || giftPage >= giftTotalPages - 1}
+                        className="rounded-lg border border-slate-200 px-3 py-1.5 text-sm font-medium text-slate-600 hover:bg-slate-50 disabled:opacity-40"
+                      >
+                        Next
+                      </button>
+                    </div>
+                  )}
+                </>
+              )}
             </div>
           )}
 

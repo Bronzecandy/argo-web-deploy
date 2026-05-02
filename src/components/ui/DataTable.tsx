@@ -80,22 +80,24 @@ export default function DataTable<T extends Record<string, any>>({
         </table>
       </div>
 
-      {totalPages > 1 && onPageChange && (
+      {onPageChange && (
         <div className="flex items-center justify-between border-t border-slate-200 bg-slate-50 px-4 py-3">
           <span className="text-xs text-slate-500">
-            Page {page + 1} of {totalPages}
+            Page {page + 1} of {Math.max(1, totalPages)}
           </span>
           <div className="flex gap-1">
             <button
+              type="button"
               onClick={() => onPageChange(page - 1)}
-              disabled={page === 0}
+              disabled={page <= 0}
               className="rounded-lg p-1.5 text-slate-400 transition hover:bg-white hover:text-slate-700 disabled:opacity-30"
             >
               <ChevronLeft className="h-4 w-4" />
             </button>
             <button
+              type="button"
               onClick={() => onPageChange(page + 1)}
-              disabled={page >= totalPages - 1}
+              disabled={page >= Math.max(1, totalPages) - 1}
               className="rounded-lg p-1.5 text-slate-400 transition hover:bg-white hover:text-slate-700 disabled:opacity-30"
             >
               <ChevronRight className="h-4 w-4" />

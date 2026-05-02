@@ -10,7 +10,7 @@ import { taskService } from '@/src/services/task.service';
 import type { Task } from '@/src/types/api.types';
 import { Hand } from 'lucide-react';
 
-const PAGE_SIZE = 10;
+const PAGE_SIZE = 20;
 
 export default function VolunteerTasksPage() {
   const [page, setPage] = useState(0);

@@ -15,7 +15,7 @@ import type { CreatePendingWithdrawProposalRequest, WithdrawProposal } from '@/s
 
 type Tab = 'mine' | 'create';
 
-const PAGE_SIZE = 10;
+const PAGE_SIZE = 20;
 
 function getErrorMessage(e: unknown, fallback: string) {
   if (e && typeof e === 'object' && 'response' in e) {

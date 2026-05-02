@@ -8,7 +8,7 @@ import { notificationService } from '@/src/services/notification.service';
 import { formatDate } from '@/src/lib/formatters';
 import type { Notification } from '@/src/types/api.types';
 
-const PAGE_SIZE = 10;
+const PAGE_SIZE = 20;
 
 export default function VolunteerNotificationsPage() {
   const { user } = useAppSelector((state) => state.auth);
@@ -63,19 +63,21 @@ export default function VolunteerNotificationsPage() {
         </div>
       )}
 
-      {totalPages > 1 && (
+      {!loading && notis.length > 0 && (
         <div className="mt-6 flex items-center justify-center gap-2">
           <button
+            type="button"
             onClick={() => setPage((p) => Math.max(0, p - 1))}
             disabled={page === 0}
             className="rounded-lg border border-slate-200 px-3 py-1.5 text-sm font-medium text-slate-600 hover:bg-slate-50 disabled:opacity-40"
           >
             Previous
           </button>
-          <span className="text-sm text-slate-500">Page {page + 1} of {totalPages}</span>
+          <span className="text-sm text-slate-500">Page {page + 1} of {Math.max(1, totalPages)}</span>
           <button
-            onClick={() => setPage((p) => Math.min(totalPages - 1, p + 1))}
-            disabled={page >= totalPages - 1}
+            type="button"
+            onClick={() => setPage((p) => Math.min(Math.max(1, totalPages) - 1, p + 1))}
+            disabled={page >= Math.max(1, totalPages) - 1}
             className="rounded-lg border border-slate-200 px-3 py-1.5 text-sm font-medium text-slate-600 hover:bg-slate-50 disabled:opacity-40"
           >
             Next

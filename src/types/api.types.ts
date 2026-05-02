@@ -500,6 +500,31 @@ export interface DonateRequest {
   message?: string;
 }
 
+/** entities.Payment — GET /payments */
+export interface Payment {
+  id: string;
+  actor?: string;
+  amount?: number;
+  cancel_reason?: string;
+  created_at?: string;
+  currency?: string;
+  donation_id?: string;
+  expired_at?: string;
+  is_donate_tx?: boolean;
+  is_transferred?: boolean;
+  message?: string;
+  method?: string;
+  profile_id?: string;
+  proof_blob_id?: string;
+  proposal_id?: string;
+  review_status?: string;
+  reviewed_by?: string;
+  status?: string;
+  transaction_id?: string;
+  transferred_at?: string;
+  updated_at?: string;
+}
+
 // ─── Admin ───────────────────────────────────────────────
 export interface UpdatePublisherInfoRequest {
   first_name: string;
@@ -544,6 +569,15 @@ export interface CenterQueryParams extends PaginationParams {
   is_available_to_confirm?: boolean;
 }
 
+/** GET /center-reqs */
+export interface CenterReqQueryParams extends PaginationParams {
+  status?: string;
+  region?: string;
+  keyword?: string;
+  is_closed?: boolean;
+  is_available_to_confirm?: boolean;
+}
+
 export interface ChildUploadQueryParams extends PaginationParams {
   status?: string;
   review_status?: string;
@@ -564,6 +598,18 @@ export interface WithdrawQueryParams extends PaginationParams {
   is_executed?: boolean;
   min_amount?: number;
   max_amount?: number;
+}
+
+export interface PaymentQueryParams extends PaginationParams {
+  actor?: string;
+  filter_prop?: string;
+  is_donate_payment?: boolean;
+  is_payment_expired?: boolean;
+  keyword?: string;
+  max_amount?: number;
+  method?: string;
+  min_amount?: number;
+  status?: string;
 }
 
 export interface PendingWithdrawQueryParams extends PaginationParams {

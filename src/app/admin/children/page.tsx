@@ -13,7 +13,7 @@ import type { Child, UploadChildRequestEntity } from '@/src/types/api.types';
 
 type Tab = 'uploads' | 'children';
 
-const PAGE_SIZE = 10;
+const PAGE_SIZE = 20;
 
 const STATUS_OPTIONS = [
   { value: '', label: 'All statuses' },

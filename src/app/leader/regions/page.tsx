@@ -10,7 +10,7 @@ import { useAppSelector } from '@/src/store/hooks';
 import { regionService } from '@/src/services/region.service';
 import type { CreateSupportedRegionSuggestionRequest, SupportedRegionSuggestion } from '@/src/types/api.types';
 
-const PAGE_SIZE = 10;
+const PAGE_SIZE = 20;
 
 type Tab = 'propose' | 'mine';
 
