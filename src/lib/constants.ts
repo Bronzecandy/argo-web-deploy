@@ -15,6 +15,7 @@ export const ROLES = {
   LOCAL_LEADER: 'LocalLeader',
   VOLUNTEER: 'Volunteer',
   DONOR: 'Donor',
+  USER: 'User',
 } as const;
 
 export type UserRole = (typeof ROLES)[keyof typeof ROLES];

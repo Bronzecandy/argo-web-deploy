@@ -4,6 +4,7 @@ import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAppSelector } from '@/src/store/hooks';
 import type { UserRole } from '@/src/lib/constants';
+import { userHasAnyRole } from '@/src/services/auth.service';
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
@@ -22,7 +23,7 @@ export default function ProtectedRoute({ children, allowedRoles }: ProtectedRout
 
   useEffect(() => {
     if (!isLoading && isAuthenticated && allowedRoles && user) {
-      if (!allowedRoles.includes(user.role as UserRole)) {
+      if (!userHasAnyRole(user, allowedRoles)) {
         router.replace('/unauthorized');
       }
     }
@@ -38,7 +39,7 @@ export default function ProtectedRoute({ children, allowedRoles }: ProtectedRout
 
   if (!isAuthenticated) return null;
 
-  if (allowedRoles && user && !allowedRoles.includes(user.role as UserRole)) {
+  if (allowedRoles && user && !userHasAnyRole(user, allowedRoles)) {
     return null;
   }
 

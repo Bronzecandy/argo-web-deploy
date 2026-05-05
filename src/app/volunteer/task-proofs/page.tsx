@@ -127,7 +127,7 @@ export default function VolunteerTaskProofsPage() {
                 );
               },
             },
-            { key: 'status', label: 'Status', render: (r) => <StatusBadge status={r.status} /> },
+            { key: 'status', label: 'Status', render: (r) => <StatusBadge status={r.review_status ?? r.status ?? '—'} /> },
             { key: 'reviewed_by', label: 'Reviewed by', render: (r) => (r.reviewed_by ? truncateAddress(r.reviewed_by) : '-') },
             { key: 'created_at', label: 'Created', render: (r) => formatDate(r.created_at) },
           ]}

@@ -481,7 +481,13 @@ export interface TaskProof {
   task_id?: string;
   actor_address: string;
   image_blob_id: string;
-  status: string;
+  /** Legacy field; list API may expose only `review_status`. */
+  status?: string;
+  review_status?: string;
+  description?: string;
+  actor_profile_id?: string;
+  ai_evaluation?: string;
+  raw_submit_date?: string;
   reviewed_by?: string;
   created_at: string;
   updated_at: string;
@@ -639,6 +645,7 @@ export interface TaskQueryParams extends PaginationParams {
 export interface TaskProofQueryParams extends PaginationParams {
   actor_address?: string;
   status?: string;
+  review_status?: string;
   reviewed_by?: string;
 }
 

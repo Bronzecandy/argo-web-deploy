@@ -19,10 +19,10 @@ export default function HomePage() {
       router.replace('/admin');
     } else if (user?.role === ROLES.LOCAL_LEADER) {
       router.replace('/leader');
-    } else if (user?.role === ROLES.DONOR) {
-      router.replace('/donor');
     } else if (user?.role === ROLES.VOLUNTEER) {
       router.replace('/volunteer');
+    } else if (user?.role === ROLES.DONOR || user?.role === ROLES.USER) {
+      router.replace('/donor');
     } else {
       router.replace('/login');
     }

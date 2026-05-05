@@ -15,25 +15,68 @@ import type { TaskProof } from '@/src/types/api.types';
 
 const PAGE_SIZE = 20;
 
-function isReviewableStatus(status: string) {
-  const s = status?.toLowerCase();
-  return s === 'pending' || s === 'pending_review' || s === 'submitted';
+/** Values aligned with backend `review_status` (e.g. "Approved"). */
+const STATUS_OPTIONS = [
+  { value: '', label: 'All statuses' },
+  { value: 'Pending', label: 'Pending' },
+  { value: 'PendingReview', label: 'Pending review' },
+  { value: 'Approved', label: 'Approved' },
+  { value: 'Refused', label: 'Refused' },
+  { value: 'Rejected', label: 'Rejected' },
+];
+
+/** Normalize API status for comparison (handles "Pending Review", empty, etc.). */
+function normalizeProofStatus(status?: string | null) {
+  return (status ?? '')
+    .toLowerCase()
+    .trim()
+    .replace(/\s+/g, '_');
+}
+
+/** Show Approve/Refuse unless the proof is clearly finished (matches real API enums + spacing variants). */
+const TERMINAL_PROOF_STATUSES = new Set([
+  'approved',
+  'refused',
+  'rejected',
+  'completed',
+  'executed',
+  'cancelled',
+  'canceled',
+  'closed',
+]);
+
+function isProofActionable(status?: string | null) {
+  const s = normalizeProofStatus(status);
+  if (!s) return true;
+  return !TERMINAL_PROOF_STATUSES.has(s);
+}
+
+/** Prefer API `review_status`, then legacy `status`. */
+function proofReviewStatus(r: TaskProof): string {
+  return (r.review_status ?? r.status ?? '').trim();
 }
 
 export default function LeaderTaskProofsPage() {
   const { user } = useAppSelector((state) => state.auth);
   const [page, setPage] = useState(0);
+  const [status, setStatus] = useState('');
   const [rows, setRows] = useState<TaskProof[]>([]);
   const [totalPages, setTotalPages] = useState(1);
   const [loading, setLoading] = useState(true);
   const [taskId, setTaskId] = useState('');
   const [imageBlobId, setImageBlobId] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  const [listVersion, setListVersion] = useState(0);
 
-  const loadPage = useCallback(async (p: number) => {
+  const load = useCallback(async () => {
     setLoading(true);
     try {
-      const res = await taskProofService.list({ page: p, page_size: PAGE_SIZE, sort_order: 'desc' });
+      const res = await taskProofService.list({
+        page,
+        page_size: PAGE_SIZE,
+        sort_order: 'desc',
+        review_status: status || undefined,
+      });
       setRows(res.data.data ?? []);
       setTotalPages(Math.max(1, res.data.total_pages ?? 1));
     } catch (e) {
@@ -43,14 +86,14 @@ export default function LeaderTaskProofsPage() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [page, status, listVersion]);
 
   useEffect(() => {
-    void loadPage(page);
-  }, [page, loadPage]);
+    void load();
+  }, [load]);
 
   const { execute } = useExecuteTransaction();
-  const refresh = () => void loadPage(page);
+  const refresh = () => void load();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -65,7 +108,7 @@ export default function LeaderTaskProofsPage() {
       setTaskId('');
       setImageBlobId('');
       setPage(0);
-      if (page === 0) void loadPage(0);
+      setListVersion((v) => v + 1);
     } catch (err) {
       console.error(err);
       toast.error('Failed to submit proof');
@@ -138,6 +181,23 @@ export default function LeaderTaskProofsPage() {
 
       <section className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
         <h2 className="mb-4 text-lg font-semibold text-slate-900">Proofs</h2>
+        <div className="mb-4">
+          <label className="mb-1 block text-xs font-medium text-slate-500">Review status</label>
+          <select
+            value={status}
+            onChange={(e) => {
+              setStatus(e.target.value);
+              setPage(0);
+            }}
+            className="min-w-[200px] rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500"
+          >
+            {STATUS_OPTIONS.map((o) => (
+              <option key={o.value || 'all'} value={o.value}>
+                {o.label}
+              </option>
+            ))}
+          </select>
+        </div>
         <DataTable<TaskProof>
           columns={[
             { key: 'id', label: 'ID', render: (r) => <span className="font-mono text-xs">{truncateAddress(r.id, 4)}</span> },
@@ -161,42 +221,53 @@ export default function LeaderTaskProofsPage() {
                 );
               },
             },
-            { key: 'status', label: 'Status', render: (r) => <StatusBadge status={r.status} /> },
+            {
+              key: 'review_status',
+              label: 'Status',
+              render: (r) => {
+                const label = proofReviewStatus(r);
+                return label ? <StatusBadge status={label} /> : <span className="text-slate-400">—</span>;
+              },
+            },
+            { key: 'reviewed_by', label: 'Reviewed by', render: (r) => (r.reviewed_by ? truncateAddress(r.reviewed_by) : '-') },
             { key: 'created_at', label: 'Created', render: (r) => formatDate(r.created_at) },
             {
               key: 'actions',
               label: 'Actions',
               className: 'whitespace-nowrap',
-              render: (r) => (
-                <div className="flex flex-wrap gap-1">
-                  {isReviewableStatus(r.status) ? (
-                    <>
-                      <button
-                        type="button"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          void handleApprove(r.id);
-                        }}
-                        className="rounded-lg border border-emerald-200 px-2 py-1 text-xs font-medium text-emerald-700 hover:bg-emerald-50"
-                      >
-                        Approve
-                      </button>
-                      <button
-                        type="button"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          void handleRefuse(r.id);
-                        }}
-                        className="rounded-lg border border-red-200 px-2 py-1 text-xs font-medium text-red-700 hover:bg-red-50"
-                      >
-                        Refuse
-                      </button>
-                    </>
-                  ) : (
-                    <span className="text-xs text-slate-400">—</span>
-                  )}
-                </div>
-              ),
+              render: (r) => {
+                const actionable = isProofActionable(proofReviewStatus(r));
+                return (
+                  <div className="flex flex-wrap gap-1">
+                    <button
+                      type="button"
+                      disabled={!actionable}
+                      title={actionable ? undefined : 'This proof is already reviewed'}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        if (!actionable) return;
+                        void handleApprove(r.id);
+                      }}
+                      className="rounded-lg border border-emerald-200 px-2 py-1 text-xs font-medium text-emerald-700 hover:bg-emerald-50 disabled:pointer-events-none disabled:opacity-40 disabled:grayscale"
+                    >
+                      Approve
+                    </button>
+                    <button
+                      type="button"
+                      disabled={!actionable}
+                      title={actionable ? undefined : 'This proof is already reviewed'}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        if (!actionable) return;
+                        void handleRefuse(r.id);
+                      }}
+                      className="rounded-lg border border-red-200 px-2 py-1 text-xs font-medium text-red-700 hover:bg-red-50 disabled:pointer-events-none disabled:opacity-40 disabled:grayscale"
+                    >
+                      Refuse
+                    </button>
+                  </div>
+                );
+              },
             },
           ]}
           data={rows}
@@ -204,7 +275,7 @@ export default function LeaderTaskProofsPage() {
           page={page}
           totalPages={totalPages}
           onPageChange={setPage}
-          emptyMessage="No task proofs"
+          emptyMessage="No task proofs match your filters"
         />
       </section>
     </div>

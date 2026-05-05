@@ -4,7 +4,7 @@ import { ROLES } from '@/src/lib/constants';
 
 export default function DonorRootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <ProtectedRoute allowedRoles={[ROLES.DONOR]}>
+    <ProtectedRoute allowedRoles={[ROLES.DONOR, ROLES.USER]}>
       <DonorLayout>{children}</DonorLayout>
     </ProtectedRoute>
   );

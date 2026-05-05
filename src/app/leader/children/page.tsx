@@ -1,19 +1,17 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
-import { Check, ListChecks, ThumbsDown, ThumbsUp, X } from 'lucide-react';
+import { Check, ClipboardCheck, ListChecks, ThumbsDown, ThumbsUp, X } from 'lucide-react';
 import { toast } from 'sonner';
 import PageHeader from '@/src/components/ui/PageHeader';
 import DataTable from '@/src/components/ui/DataTable';
 import StatusBadge from '@/src/components/ui/StatusBadge';
-import { formatDate, toDDMMYYYY, truncateAddress } from '@/src/lib/formatters';
+import { formatDate, truncateAddress } from '@/src/lib/formatters';
 import { childUploadService } from '@/src/services/child-upload.service';
 import { childrenService } from '@/src/services/children.service';
-import { regionService } from '@/src/services/region.service';
-import FileUploadInput from '@/src/components/ui/FileUploadInput';
-import type { Child, UploadChildRequest, UploadChildRequestEntity } from '@/src/types/api.types';
+import type { Child, UploadChildRequestEntity } from '@/src/types/api.types';
 
-type Tab = 'upload' | 'list' | 'profiles';
+type Tab = 'review' | 'profiles' | 'list';
 
 /** Chỉ hiển thị dòng có review_status tương đương Approved (chuẩn hóa hoa/thường, khoảng trắng). */
 function isChildUploadReviewApproved(reviewStatus?: string) {
@@ -23,7 +21,16 @@ function isChildUploadReviewApproved(reviewStatus?: string) {
 
 const PAGE_SIZE = 20;
 
+const STATUS_OPTIONS = [
+  { value: '', label: 'All statuses' },
+  { value: 'pending', label: 'Pending' },
+  { value: 'pending_review', label: 'Pending review' },
+  { value: 'approved', label: 'Approved' },
+  { value: 'refused', label: 'Refused' },
+];
+
 const GENDER_OPTIONS = [
+  { value: '', label: 'All genders' },
   { value: 'male', label: 'Male' },
   { value: 'female', label: 'Female' },
   { value: 'other', label: 'Other' },
@@ -47,47 +54,29 @@ function getErrorMessage(e: unknown, fallback: string) {
 }
 
 export default function LeaderChildrenPage() {
-  const [tab, setTab] = useState<Tab>('upload');
+  const [tab, setTab] = useState<Tab>('review');
 
   const [listLoading, setListLoading] = useState(false);
   const [children, setChildren] = useState<Child[]>([]);
   const [page, setPage] = useState(0);
   const [totalPages, setTotalPages] = useState(1);
 
+  const [uploadLoading, setUploadLoading] = useState(true);
+  const [uploads, setUploads] = useState<UploadChildRequestEntity[]>([]);
+  const [uploadPage, setUploadPage] = useState(0);
+  const [uploadTotalPages, setUploadTotalPages] = useState(1);
+  const [uploadStatus, setUploadStatus] = useState('');
+  const [uploadRegion, setUploadRegion] = useState('');
+  const [uploadGender, setUploadGender] = useState('');
+  const [busyId, setBusyId] = useState<string | null>(null);
+
   const [profilesLoading, setProfilesLoading] = useState(false);
   const [profileReqs, setProfileReqs] = useState<UploadChildRequestEntity[]>([]);
   const [profilePage, setProfilePage] = useState(0);
   const [profileTotalPages, setProfileTotalPages] = useState(1);
   const [voteBusyId, setVoteBusyId] = useState<string | null>(null);
-  const [refuseModal, setRefuseModal] = useState<{ id: string } | null>(null);
+  const [refuseModal, setRefuseModal] = useState<{ id: string; mode: 'review' | 'vote' } | null>(null);
   const [refuseReason, setRefuseReason] = useState('');
-
-  const [regions, setRegions] = useState<string[]>([]);
-
-  useEffect(() => {
-    regionService.listRegions().then((res) => setRegions(res.data.regions || [])).catch(() => {});
-  }, []);
-
-  const [submitting, setSubmitting] = useState(false);
-  const [form, setForm] = useState({
-    first_name: '',
-    last_name: '',
-    gender: '',
-    date_of_birth: '',
-    region: '',
-    home_address: '',
-    identity_code: '',
-    avatar_blob_id: '',
-    home_blob_id: '',
-    g1_full_name: '',
-    g1_phone: '',
-    g1_relation: '',
-    g1_id_blob: '',
-    g2_full_name: '',
-    g2_phone: '',
-    g2_relation: '',
-    g2_id_blob: '',
-  });
 
   const loadList = useCallback(async () => {
     setListLoading(true);
@@ -108,6 +97,32 @@ export default function LeaderChildrenPage() {
     if (tab !== 'list') return;
     void loadList();
   }, [tab, loadList]);
+
+  const loadUploads = useCallback(async () => {
+    setUploadLoading(true);
+    try {
+      const res = await childUploadService.list({
+        page: uploadPage,
+        page_size: PAGE_SIZE,
+        status: uploadStatus || undefined,
+        region: uploadRegion.trim() || undefined,
+        gender: uploadGender || undefined,
+      });
+      const body = res.data;
+      setUploads(Array.isArray(body.data) ? body.data : []);
+      setUploadTotalPages(Math.max(1, body.total_pages ?? 1));
+    } catch (e: unknown) {
+      toast.error(getErrorMessage(e, 'Failed to load upload requests'));
+      setUploads([]);
+    } finally {
+      setUploadLoading(false);
+    }
+  }, [uploadPage, uploadStatus, uploadRegion, uploadGender]);
+
+  useEffect(() => {
+    if (tab !== 'review') return;
+    void loadUploads();
+  }, [tab, loadUploads]);
 
   const loadProfiles = useCallback(async () => {
     setProfilesLoading(true);
@@ -135,6 +150,40 @@ export default function LeaderChildrenPage() {
     void loadProfiles();
   }, [tab, loadProfiles]);
 
+  async function runReview(id: string, isYes: boolean) {
+    if (!isYes) {
+      setRefuseModal({ id, mode: 'review' });
+      setRefuseReason('');
+      return;
+    }
+    setBusyId(id);
+    try {
+      await childUploadService.review(id, { is_vote_yes: true });
+      toast.success('Review recorded');
+      await loadUploads();
+    } catch (e: unknown) {
+      toast.error(getErrorMessage(e, 'Review failed'));
+    } finally {
+      setBusyId(null);
+    }
+  }
+
+  async function submitRefuseReview() {
+    if (!refuseModal || refuseModal.mode !== 'review') return;
+    const { id } = refuseModal;
+    setBusyId(id);
+    try {
+      await childUploadService.review(id, { is_vote_yes: false, refuse_reason: refuseReason || undefined });
+      toast.success('Review refusal recorded');
+      setRefuseModal(null);
+      await loadUploads();
+    } catch (e: unknown) {
+      toast.error(getErrorMessage(e, 'Review failed'));
+    } finally {
+      setBusyId(null);
+    }
+  }
+
   async function handleVoteYes(id: string) {
     setVoteBusyId(id);
     try {
@@ -149,12 +198,12 @@ export default function LeaderChildrenPage() {
   }
 
   function handleVoteNo(id: string) {
-    setRefuseModal({ id });
+    setRefuseModal({ id, mode: 'vote' });
     setRefuseReason('');
   }
 
   async function submitRefuseVote() {
-    if (!refuseModal) return;
+    if (!refuseModal || refuseModal.mode !== 'vote') return;
     const { id } = refuseModal;
     setVoteBusyId(id);
     try {
@@ -172,84 +221,6 @@ export default function LeaderChildrenPage() {
     }
   }
 
-  function setField<K extends keyof typeof form>(key: K, value: (typeof form)[K]) {
-    setForm((f) => ({ ...f, [key]: value }));
-  }
-
-  async function handleUpload(e: React.FormEvent) {
-    e.preventDefault();
-    if (!form.first_name.trim() || !form.last_name.trim() || !form.gender || !form.date_of_birth) {
-      toast.error('Please fill required child fields');
-      return;
-    }
-    if (!form.g1_full_name.trim() || !form.g1_phone.trim() || !form.g1_relation.trim() || !form.g1_id_blob.trim()) {
-      toast.error('First guardian details are required');
-      return;
-    }
-    const data: UploadChildRequest = {
-      first_name: form.first_name.trim(),
-      last_name: form.last_name.trim(),
-      gender: form.gender,
-      date_of_birth: toDDMMYYYY(form.date_of_birth),
-      region: form.region.trim(),
-      home_address: form.home_address.trim(),
-      identity_code: form.identity_code.trim(),
-      avatar_blob_id: form.avatar_blob_id.trim(),
-      home_blob_id: form.home_blob_id.trim(),
-      first_guardian: {
-        guardian_full_name: form.g1_full_name.trim(),
-        guardian_phone_number: form.g1_phone.trim(),
-        guardian_relation: form.g1_relation.trim(),
-        identity_card_blob_id: form.g1_id_blob.trim(),
-      },
-    };
-    if (form.g2_full_name.trim()) {
-      data.second_guardian = {
-        guardian_full_name: form.g2_full_name.trim(),
-        guardian_phone_number: form.g2_phone.trim(),
-        guardian_relation: form.g2_relation.trim(),
-        identity_card_blob_id: form.g2_id_blob.trim(),
-      };
-    }
-    setSubmitting(true);
-    console.log('[ChildUpload] Sending payload:', JSON.stringify(data, null, 2));
-    try {
-      const res = await childUploadService.create(data);
-      console.log('[ChildUpload] Success:', res.status, res.data);
-      toast.success('Child upload request submitted');
-      setForm({
-        first_name: '',
-        last_name: '',
-        gender: '',
-        date_of_birth: '',
-        region: '',
-        home_address: '',
-        identity_code: '',
-        avatar_blob_id: '',
-        home_blob_id: '',
-        g1_full_name: '',
-        g1_phone: '',
-        g1_relation: '',
-        g1_id_blob: '',
-        g2_full_name: '',
-        g2_phone: '',
-        g2_relation: '',
-        g2_id_blob: '',
-      });
-    } catch (err: unknown) {
-      const ax = err as { response?: { status?: number; data?: any; headers?: any }; message?: string; code?: string; request?: any };
-      console.error('[ChildUpload] Error full object:', err);
-      console.error('[ChildUpload] response?.status:', ax.response?.status);
-      console.error('[ChildUpload] response?.data:', ax.response?.data);
-      console.error('[ChildUpload] error.message:', ax.message);
-      console.error('[ChildUpload] error.code:', ax.code);
-      console.error('[ChildUpload] Has request but no response:', !!ax.request && !ax.response);
-      toast.error(getErrorMessage(err, 'Upload failed'));
-    } finally {
-      setSubmitting(false);
-    }
-  }
-
   const columns = [
     { key: 'first_name', label: 'First name' },
     { key: 'last_name', label: 'Last name' },
@@ -263,27 +234,28 @@ export default function LeaderChildrenPage() {
     { key: 'identity_code', label: 'Identity code' },
   ];
 
-  const inputClass =
-    'w-full rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none ring-emerald-600/20 transition focus:border-emerald-600 focus:ring-2';
+  const refuseModalTitle = refuseModal?.mode === 'review' ? 'Refuse review' : 'Vote no';
+  const busyRefuseId = refuseModal?.mode === 'review' ? busyId : voteBusyId;
 
   return (
     <div>
       <PageHeader
         title="Children"
-        description="Upload child requests, vote on admin-approved profiles, and browse registered children"
+        description="Review child upload requests, vote on approved profiles, and browse registered children"
       />
 
       <div className="mb-6 flex flex-wrap gap-1 rounded-lg border border-slate-200 bg-slate-50 p-1 sm:flex-nowrap">
         <button
           type="button"
-          onClick={() => setTab('upload')}
-          className={`flex min-w-0 flex-1 items-center justify-center rounded-md px-2 py-2 text-sm font-medium transition sm:px-3 ${
-            tab === 'upload'
+          onClick={() => setTab('review')}
+          className={`flex min-w-0 flex-1 items-center justify-center gap-1 rounded-md px-2 py-2 text-sm font-medium transition sm:px-3 ${
+            tab === 'review'
               ? 'bg-white text-emerald-700 shadow-sm ring-1 ring-emerald-600/20'
               : 'text-slate-600 hover:text-slate-900'
           }`}
         >
-          Upload new child
+          <ClipboardCheck className="hidden h-4 w-4 shrink-0 sm:inline" />
+          <span className="truncate">Upload requests</span>
         </button>
         <button
           type="button"
@@ -310,163 +282,123 @@ export default function LeaderChildrenPage() {
         </button>
       </div>
 
-      {tab === 'upload' ? (
-        <form
-          onSubmit={handleUpload}
-          className="space-y-6 rounded-xl border border-slate-200 bg-white p-6 shadow-sm"
-        >
-          <section>
-            <h2 className="mb-4 text-sm font-semibold text-slate-900">Child</h2>
-            <div className="grid gap-4 sm:grid-cols-2">
-              <div>
-                <label className="mb-1.5 block text-sm font-medium text-slate-700">First name</label>
-                <input className={inputClass} value={form.first_name} onChange={(e) => setField('first_name', e.target.value)} required />
-              </div>
-              <div>
-                <label className="mb-1.5 block text-sm font-medium text-slate-700">Last name</label>
-                <input className={inputClass} value={form.last_name} onChange={(e) => setField('last_name', e.target.value)} required />
-              </div>
-              <div>
-                <label className="mb-1.5 block text-sm font-medium text-slate-700">Gender</label>
-                <select
-                  className={inputClass}
-                  value={form.gender}
-                  onChange={(e) => setField('gender', e.target.value)}
-                  required
-                >
-                  <option value="">Select…</option>
-                  {GENDER_OPTIONS.map((o) => (
-                    <option key={o.value} value={o.value}>
-                      {o.label}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <div>
-                <label className="mb-1.5 block text-sm font-medium text-slate-700">Date of birth</label>
-                <input
-                  type="date"
-                  className={inputClass}
-                  value={form.date_of_birth}
-                  onChange={(e) => setField('date_of_birth', e.target.value)}
-                  required
-                />
-              </div>
-              <div>
-                <label className="mb-1.5 block text-sm font-medium text-slate-700">Region</label>
-                <select
-                  className={inputClass}
-                  value={form.region}
-                  onChange={(e) => setField('region', e.target.value)}
-                  required
-                >
-                  <option value="">Select region…</option>
-                  {regions.map((r) => (
-                    <option key={r} value={r}>{r}</option>
-                  ))}
-                </select>
-              </div>
-              <div className="sm:col-span-2">
-                <label className="mb-1.5 block text-sm font-medium text-slate-700">Home address</label>
-                <input className={inputClass} value={form.home_address} onChange={(e) => setField('home_address', e.target.value)} />
-              </div>
-              <div className="sm:col-span-2">
-                <label className="mb-1.5 block text-sm font-medium text-slate-700">Identity code</label>
-                <input className={inputClass} value={form.identity_code} onChange={(e) => setField('identity_code', e.target.value)} />
-              </div>
-              <FileUploadInput
-                label="Avatar image"
-                value={form.avatar_blob_id}
-                onChange={(val) => setField('avatar_blob_id', val)}
-                accept="image/*"
-                placeholder="Upload avatar or paste blob ID"
+      {tab === 'review' && (
+        <div className="space-y-4">
+          <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
+            <div className="flex flex-wrap gap-3">
+              <select
+                value={uploadStatus}
+                onChange={(e) => {
+                  setUploadStatus(e.target.value);
+                  setUploadPage(0);
+                }}
+                className="rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none ring-emerald-600/20 focus:ring-2"
+              >
+                {STATUS_OPTIONS.map((o) => (
+                  <option key={o.value || 'all-s'} value={o.value}>
+                    {o.label}
+                  </option>
+                ))}
+              </select>
+              <input
+                type="text"
+                placeholder="Region"
+                value={uploadRegion}
+                onChange={(e) => {
+                  setUploadRegion(e.target.value);
+                  setUploadPage(0);
+                }}
+                className="min-w-[140px] rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none ring-emerald-600/20 focus:ring-2"
               />
-              <FileUploadInput
-                label="Home image"
-                value={form.home_blob_id}
-                onChange={(val) => setField('home_blob_id', val)}
-                accept="image/*"
-                placeholder="Upload home photo or paste blob ID"
-              />
+              <select
+                value={uploadGender}
+                onChange={(e) => {
+                  setUploadGender(e.target.value);
+                  setUploadPage(0);
+                }}
+                className="rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none ring-emerald-600/20 focus:ring-2"
+              >
+                {GENDER_OPTIONS.map((o) => (
+                  <option key={o.value || 'all-g'} value={o.value}>
+                    {o.label}
+                  </option>
+                ))}
+              </select>
             </div>
-          </section>
+          </div>
 
-          <section>
-            <h2 className="mb-4 text-sm font-semibold text-slate-900">First guardian</h2>
-            <div className="grid gap-4 sm:grid-cols-2">
-              <div className="sm:col-span-2">
-                <label className="mb-1.5 block text-sm font-medium text-slate-700">Full name</label>
-                <input className={inputClass} value={form.g1_full_name} onChange={(e) => setField('g1_full_name', e.target.value)} required />
-              </div>
-              <div>
-                <label className="mb-1.5 block text-sm font-medium text-slate-700">Phone number</label>
-                <input className={inputClass} value={form.g1_phone} onChange={(e) => setField('g1_phone', e.target.value)} required />
-              </div>
-              <div>
-                <label className="mb-1.5 block text-sm font-medium text-slate-700">Relation</label>
-                <select className={inputClass} value={form.g1_relation} onChange={(e) => setField('g1_relation', e.target.value)} required>
-                  <option value="">Select…</option>
-                  <option value="Cha">Cha</option>
-                  <option value="Mẹ">Mẹ</option>
-                </select>
-              </div>
-              <div className="sm:col-span-2">
-                <FileUploadInput
-                  label="Identity card image"
-                  value={form.g1_id_blob}
-                  onChange={(val) => setField('g1_id_blob', val)}
-                  accept="image/*"
-                  placeholder="Upload ID card or paste blob ID"
-                />
-              </div>
-            </div>
-          </section>
+          <DataTable<UploadChildRequestEntity>
+            columns={[
+              { key: 'id', label: 'ID', render: (u) => <span className="font-mono text-xs">{truncateAddress(u.id, 8)}</span> },
+              {
+                key: 'name',
+                label: 'Name',
+                render: (u) => (
+                  <span>
+                    {u.first_name} {u.last_name}
+                  </span>
+                ),
+              },
+              { key: 'gender', label: 'Gender', render: (u) => <span className="capitalize">{u.gender}</span> },
+              { key: 'region', label: 'Region' },
+              { key: 'status', label: 'Status', render: (u) => <StatusBadge status={u.status} /> },
+              {
+                key: 'review_status',
+                label: 'Review',
+                render: (u) => (u.review_status ? <StatusBadge status={u.review_status} /> : <span className="text-slate-400">—</span>),
+              },
+              {
+                key: 'ai_evaluation',
+                label: 'AI note',
+                render: (u) => (
+                  <span className="max-w-[200px] truncate text-slate-600" title={u.ai_evaluation}>
+                    {u.ai_evaluation ?? '—'}
+                  </span>
+                ),
+              },
+              { key: 'created_at', label: 'Created', render: (u) => formatDate(u.created_at) },
+              {
+                key: 'actions',
+                label: 'Review',
+                className: 'min-w-[120px]',
+                render: (u) => (
+                  <div className="flex flex-wrap gap-1" onClick={(e) => e.stopPropagation()}>
+                    <button
+                      type="button"
+                      disabled={busyId === u.id}
+                      onClick={() => void runReview(u.id, true)}
+                      className="inline-flex items-center gap-0.5 rounded border border-emerald-200 bg-emerald-50 px-1.5 py-0.5 text-[11px] font-medium text-emerald-800 hover:bg-emerald-100 disabled:opacity-50"
+                    >
+                      <ClipboardCheck className="h-3 w-3" />
+                      OK
+                    </button>
+                    <button
+                      type="button"
+                      disabled={busyId === u.id}
+                      onClick={() => void runReview(u.id, false)}
+                      className="inline-flex items-center gap-0.5 rounded border border-amber-200 bg-amber-50 px-1.5 py-0.5 text-[11px] font-medium text-amber-900 hover:bg-amber-100 disabled:opacity-50"
+                    >
+                      Refuse
+                    </button>
+                  </div>
+                ),
+              },
+            ]}
+            data={uploads}
+            loading={uploadLoading}
+            page={uploadPage}
+            totalPages={uploadTotalPages}
+            onPageChange={(p) => setUploadPage(p)}
+            emptyMessage="No upload requests match your filters."
+          />
+        </div>
+      )}
 
-          <section>
-            <h2 className="mb-4 text-sm font-semibold text-slate-900">Second guardian (optional)</h2>
-            <div className="grid gap-4 sm:grid-cols-2">
-              <div className="sm:col-span-2">
-                <label className="mb-1.5 block text-sm font-medium text-slate-700">Full name</label>
-                <input className={inputClass} value={form.g2_full_name} onChange={(e) => setField('g2_full_name', e.target.value)} />
-              </div>
-              <div>
-                <label className="mb-1.5 block text-sm font-medium text-slate-700">Phone number</label>
-                <input className={inputClass} value={form.g2_phone} onChange={(e) => setField('g2_phone', e.target.value)} />
-              </div>
-              <div>
-                <label className="mb-1.5 block text-sm font-medium text-slate-700">Relation</label>
-                <select className={inputClass} value={form.g2_relation} onChange={(e) => setField('g2_relation', e.target.value)}>
-                  <option value="">Select…</option>
-                  <option value="Cha">Cha</option>
-                  <option value="Mẹ">Mẹ</option>
-                </select>
-              </div>
-              <div className="sm:col-span-2">
-                <FileUploadInput
-                  label="Identity card image"
-                  value={form.g2_id_blob}
-                  onChange={(val) => setField('g2_id_blob', val)}
-                  accept="image/*"
-                  placeholder="Upload ID card or paste blob ID"
-                />
-              </div>
-            </div>
-          </section>
-
-          <button
-            type="submit"
-            disabled={submitting}
-            className="rounded-lg bg-emerald-600 px-5 py-2.5 text-sm font-medium text-white shadow-sm transition hover:bg-emerald-700 disabled:opacity-60"
-          >
-            {submitting ? 'Submitting…' : 'Submit upload request'}
-          </button>
-        </form>
-      ) : tab === 'profiles' ? (
+      {tab === 'profiles' && (
         <div className="space-y-4">
           <p className="rounded-lg border border-slate-200 bg-slate-50 px-4 py-3 text-xs text-slate-600">
-            Giao diện chỉ liệt kê các dòng có <code className="rounded bg-white px-1">review_status</code> tương đương{' '}
-            <code className="rounded bg-white px-1">Approved</code>. Vote:{' '}
-            <code className="rounded bg-white px-1">POST /child-upload-reqs/{'{id}'}/vote</code>.
+            Requests with <code className="rounded bg-white px-1">review_status</code> approved by local leaders appear here
+            for on-chain voting: <code className="rounded bg-white px-1">POST /child-upload-reqs/{'{id}'}/vote</code>.
           </p>
           <DataTable<UploadChildRequestEntity>
             columns={[
@@ -522,10 +454,12 @@ export default function LeaderChildrenPage() {
             page={profilePage}
             totalPages={profileTotalPages}
             onPageChange={(p) => setProfilePage(p)}
-            emptyMessage="No admin-approved child upload requests to vote on."
+            emptyMessage="No leader-approved child upload requests to vote on."
           />
         </div>
-      ) : (
+      )}
+
+      {tab === 'list' && (
         <DataTable<Child>
           columns={columns}
           data={children}
@@ -541,7 +475,7 @@ export default function LeaderChildrenPage() {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 p-4">
           <div className="w-full max-w-md rounded-xl border border-slate-200 bg-white p-5 shadow-xl">
             <div className="mb-3 flex items-center justify-between">
-              <h3 className="text-lg font-semibold text-slate-900">Vote no</h3>
+              <h3 className="text-lg font-semibold text-slate-900">{refuseModalTitle}</h3>
               <button
                 type="button"
                 onClick={() => setRefuseModal(null)}
@@ -551,13 +485,12 @@ export default function LeaderChildrenPage() {
                 <X className="h-5 w-5" />
               </button>
             </div>
-            <p className="mb-2 text-sm text-slate-600">Optional reason for refusal.</p>
             <textarea
               value={refuseReason}
               onChange={(e) => setRefuseReason(e.target.value)}
               rows={3}
               className="mb-4 w-full rounded-lg border border-slate-200 p-2 text-sm outline-none ring-emerald-600/20 focus:ring-2"
-              placeholder="Reason…"
+              placeholder="Optional reason…"
             />
             <div className="flex justify-end gap-2">
               <button
@@ -569,8 +502,10 @@ export default function LeaderChildrenPage() {
               </button>
               <button
                 type="button"
-                disabled={voteBusyId === refuseModal.id}
-                onClick={() => void submitRefuseVote()}
+                disabled={busyRefuseId === refuseModal.id}
+                onClick={() =>
+                  void (refuseModal.mode === 'review' ? submitRefuseReview() : submitRefuseVote())
+                }
                 className="inline-flex items-center gap-1 rounded-lg bg-red-600 px-3 py-2 text-sm font-medium text-white hover:bg-red-700 disabled:opacity-50"
               >
                 <Check className="h-4 w-4" />
