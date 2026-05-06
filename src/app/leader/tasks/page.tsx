@@ -8,7 +8,6 @@ import { formatDate, truncateAddress } from '@/src/lib/formatters';
 import { toast } from 'sonner';
 import { useAppSelector } from '@/src/store/hooks';
 import { taskService } from '@/src/services/task.service';
-import { regionService } from '@/src/services/region.service';
 import type { Task } from '@/src/types/api.types';
 import { Hand, ClipboardCheck, ThumbsUp, ThumbsDown } from 'lucide-react';
 
@@ -16,45 +15,63 @@ const PAGE_SIZE = 20;
 
 export default function LeaderTasksPage() {
   const { user } = useAppSelector((state) => state.auth);
+  const { poolName, status: poolStatus, error: poolError } = useAppSelector((state) => state.leaderPool);
+
   const [page, setPage] = useState(0);
   const [rows, setRows] = useState<Task[]>([]);
   const [totalPages, setTotalPages] = useState(1);
   const [loading, setLoading] = useState(true);
   const [description, setDescription] = useState('');
-  const [region, setRegion] = useState('');
   const [startPeriod, setStartPeriod] = useState('');
   const [endPeriod, setEndPeriod] = useState('');
-  const [regions, setRegions] = useState<string[]>([]);
   const [submitting, setSubmitting] = useState(false);
   const [busyId, setBusyId] = useState<string | null>(null);
+  const [listVersion, setListVersion] = useState(0);
 
-  useEffect(() => {
-    regionService.listRegions().then((res) => setRegions(res.data.regions || [])).catch(() => {});
-  }, []);
-
-  // Review modal
   const [reviewTask, setReviewTask] = useState<Task | null>(null);
   const [reviewVote, setReviewVote] = useState(true);
   const [reviewReason, setReviewReason] = useState('');
 
-  const loadPage = useCallback(async (p: number) => {
-    setLoading(true);
-    try {
-      const res = await taskService.list({ page: p, page_size: PAGE_SIZE, sort_order: 'desc' });
-      setRows(res.data.data ?? []);
-      setTotalPages(Math.max(1, res.data.total_pages ?? 1));
-    } catch (e) {
-      console.error(e);
-      toast.error('Failed to load tasks');
-      setRows([]);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+  const canUsePool = poolStatus === 'succeeded' && !!poolName;
+
+  const loadPage = useCallback(
+    async (p: number) => {
+      if (poolStatus === 'loading' || poolStatus === 'idle') {
+        setLoading(true);
+        setRows([]);
+        return;
+      }
+      if (!canUsePool) {
+        setLoading(false);
+        setRows([]);
+        setTotalPages(1);
+        return;
+      }
+
+      setLoading(true);
+      try {
+        const res = await taskService.list({
+          page: p,
+          page_size: PAGE_SIZE,
+          sort_order: 'desc',
+          region: poolName,
+        });
+        setRows(res.data.data ?? []);
+        setTotalPages(Math.max(1, res.data.total_pages ?? 1));
+      } catch (e) {
+        console.error(e);
+        toast.error('Failed to load tasks');
+        setRows([]);
+      } finally {
+        setLoading(false);
+      }
+    },
+    [poolName, poolStatus, canUsePool],
+  );
 
   useEffect(() => {
     void loadPage(page);
-  }, [page, loadPage]);
+  }, [page, loadPage, listVersion]);
 
   const refresh = () => void loadPage(page);
 
@@ -64,8 +81,11 @@ export default function LeaderTasksPage() {
       await taskService.claim(id);
       toast.success('Task claimed successfully');
       refresh();
-    } catch (e: any) {
-      toast.error(e?.response?.data?.message || 'Failed to claim task');
+    } catch (e: unknown) {
+      const msg = e && typeof e === 'object' && 'response' in e
+        ? (e as { response?: { data?: { message?: string } } }).response?.data?.message
+        : undefined;
+      toast.error(msg || 'Failed to claim task');
     } finally {
       setBusyId(null);
     }
@@ -79,8 +99,11 @@ export default function LeaderTasksPage() {
       toast.success(reviewVote ? 'Task approved' : 'Task refused');
       setReviewTask(null);
       refresh();
-    } catch (e: any) {
-      toast.error(e?.response?.data?.message || 'Review failed');
+    } catch (e: unknown) {
+      const msg = e && typeof e === 'object' && 'response' in e
+        ? (e as { response?: { data?: { message?: string } } }).response?.data?.message
+        : undefined;
+      toast.error(msg || 'Review failed');
     } finally {
       setBusyId(null);
     }
@@ -88,25 +111,28 @@ export default function LeaderTasksPage() {
 
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!description.trim() || !region.trim() || !startPeriod || !endPeriod) {
-      toast.error('All fields are required');
+    if (!canUsePool || !poolName) {
+      toast.error('Your leader region is not loaded yet. Please wait or try again later.');
+      return;
+    }
+    if (!description.trim() || !startPeriod || !endPeriod) {
+      toast.error('Description and date range are required');
       return;
     }
     setSubmitting(true);
     try {
       await taskService.create({
         description: description.trim(),
-        region: region.trim(),
+        region: poolName,
         start_period: startPeriod,
         end_period: endPeriod,
       });
       toast.success('Task created');
       setDescription('');
-      setRegion('');
       setStartPeriod('');
       setEndPeriod('');
       setPage(0);
-      if (page === 0) void loadPage(0);
+      setListVersion((v) => v + 1);
     } catch (err) {
       console.error(err);
       toast.error('Failed to create task');
@@ -115,19 +141,26 @@ export default function LeaderTasksPage() {
     }
   };
 
+  const emptyMsg =
+    poolStatus === 'failed'
+      ? poolError || 'Could not resolve your region for task list.'
+      : canUsePool
+        ? 'No tasks in your region'
+        : 'Loading your region…';
+
   return (
     <div className="space-y-8">
       <PageHeader
         title="Tasks"
         description={
           user?.address
-            ? `View and create regional tasks · ${truncateAddress(user.address)}`
-            : 'View and create regional tasks'
+            ? `Tasks for your assigned region · ${truncateAddress(user.address)}`
+            : 'Tasks for your assigned region'
         }
       />
 
       <section className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
-        <h2 className="mb-4 text-lg font-semibold text-slate-900">All tasks</h2>
+        <h2 className="mb-4 text-lg font-semibold text-slate-900">Tasks in your region</h2>
         <DataTable<Task>
           columns={[
             { key: 'id', label: 'ID', render: (r) => <span className="font-mono text-xs">{truncateAddress(r.id, 4)}</span> },
@@ -169,7 +202,11 @@ export default function LeaderTasksPage() {
                       <button
                         type="button"
                         disabled={busyId === r.id}
-                        onClick={() => { setReviewTask(r); setReviewVote(true); setReviewReason(''); }}
+                        onClick={() => {
+                          setReviewTask(r);
+                          setReviewVote(true);
+                          setReviewReason('');
+                        }}
                         className="inline-flex items-center gap-1 rounded-md border border-blue-200 bg-blue-50 px-2 py-1 text-xs font-medium text-blue-800 hover:bg-blue-100 disabled:opacity-50"
                       >
                         <ClipboardCheck className="h-3 w-3" /> Review
@@ -185,12 +222,19 @@ export default function LeaderTasksPage() {
           page={page}
           totalPages={totalPages}
           onPageChange={setPage}
-          emptyMessage="No tasks"
+          emptyMessage={emptyMsg}
         />
       </section>
 
       <section className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
         <h2 className="mb-4 text-lg font-semibold text-slate-900">Create new task</h2>
+        <p className="mb-4 rounded-lg border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700">
+          <span className="font-medium text-slate-900">Region</span> is fixed to your leader pool:{' '}
+          <span className="font-semibold text-emerald-800">{canUsePool ? poolName : '…'}</span>
+          {poolStatus === 'failed' && (
+            <span className="mt-2 block text-red-700">Pool failed to load — you cannot create tasks until this is fixed.</span>
+          )}
+        </p>
         <form onSubmit={handleCreate} className="max-w-xl space-y-4">
           <div>
             <label htmlFor="task-desc" className="mb-1 block text-xs font-medium text-slate-500">
@@ -203,23 +247,6 @@ export default function LeaderTasksPage() {
               rows={3}
               className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-emerald-600 focus:outline-none focus:ring-1 focus:ring-emerald-600"
             />
-          </div>
-          <div>
-            <label htmlFor="task-region" className="mb-1 block text-xs font-medium text-slate-500">
-              Region
-            </label>
-            <select
-              id="task-region"
-              value={region}
-              onChange={(e) => setRegion(e.target.value)}
-              className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-emerald-600 focus:outline-none focus:ring-1 focus:ring-emerald-600"
-              required
-            >
-              <option value="">Select region…</option>
-              {regions.map((r) => (
-                <option key={r} value={r}>{r}</option>
-              ))}
-            </select>
           </div>
           <div className="grid gap-4 sm:grid-cols-2">
             <div>
@@ -249,7 +276,7 @@ export default function LeaderTasksPage() {
           </div>
           <button
             type="submit"
-            disabled={submitting}
+            disabled={submitting || !canUsePool}
             className="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-emerald-700 disabled:opacity-50"
           >
             {submitting ? 'Creating…' : 'Create task'}
@@ -257,29 +284,36 @@ export default function LeaderTasksPage() {
         </form>
       </section>
 
-      {/* Review Modal */}
       {reviewTask && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
           <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-xl">
             <h3 className="mb-4 text-lg font-bold text-slate-900">Review Task</h3>
-            <div className="rounded-lg bg-slate-50 p-3 mb-4 text-sm">
-              <p><span className="font-medium">Task:</span> {truncateAddress(reviewTask.id, 8)}</p>
-              <p className="mt-1"><span className="font-medium">Description:</span> {reviewTask.description}</p>
-              <p className="mt-1"><span className="font-medium">Region:</span> {reviewTask.region}</p>
+            <div className="mb-4 rounded-lg bg-slate-50 p-3 text-sm">
+              <p>
+                <span className="font-medium">Task:</span> {truncateAddress(reviewTask.id, 8)}
+              </p>
+              <p className="mt-1">
+                <span className="font-medium">Description:</span> {reviewTask.description}
+              </p>
+              <p className="mt-1">
+                <span className="font-medium">Region:</span> {reviewTask.region}
+              </p>
             </div>
 
-            <div className="flex gap-3 mb-4">
+            <div className="mb-4 flex gap-3">
               <button
+                type="button"
                 onClick={() => setReviewVote(true)}
-                className={`flex-1 flex items-center justify-center gap-2 rounded-lg border-2 py-3 text-sm font-medium transition ${
+                className={`flex flex-1 items-center justify-center gap-2 rounded-lg border-2 py-3 text-sm font-medium transition ${
                   reviewVote ? 'border-emerald-500 bg-emerald-50 text-emerald-700' : 'border-slate-200 text-slate-500'
                 }`}
               >
                 <ThumbsUp className="h-4 w-4" /> Approve
               </button>
               <button
+                type="button"
                 onClick={() => setReviewVote(false)}
-                className={`flex-1 flex items-center justify-center gap-2 rounded-lg border-2 py-3 text-sm font-medium transition ${
+                className={`flex flex-1 items-center justify-center gap-2 rounded-lg border-2 py-3 text-sm font-medium transition ${
                   !reviewVote ? 'border-red-500 bg-red-50 text-red-700' : 'border-slate-200 text-slate-500'
                 }`}
               >
@@ -297,14 +331,16 @@ export default function LeaderTasksPage() {
               />
             )}
 
-            <div className="flex gap-3 justify-end">
+            <div className="flex justify-end gap-3">
               <button
+                type="button"
                 onClick={() => setReviewTask(null)}
                 className="rounded-lg border border-slate-200 px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-50"
               >
                 Cancel
               </button>
               <button
+                type="button"
                 onClick={() => void handleReview()}
                 disabled={busyId === reviewTask.id}
                 className={`rounded-lg px-4 py-2 text-sm font-medium text-white disabled:opacity-50 ${

@@ -8,11 +8,14 @@ import type {
   CreateSpecialNeedProposalRequest,
   CreateSpecialNeedWithdrawProposalRequest,
   BuildTransactionResponse,
+  MessageResponse,
   UrlResponse,
   UploadChildRequest,
   VoteRequest,
   PendingSpecialNeedProposal,
 } from '@/src/types/api.types';
+
+type TxOrMessage = BuildTransactionResponse | MessageResponse;
 
 class ChildrenService {
   async list(params?: ChildrenQueryParams) {
@@ -33,7 +36,7 @@ class ChildrenService {
   }
 
   async createMealWithdrawProposal(data: CreateNormalNeedWithdrawProposalRequest) {
-    return apiService.post('/children/meal-need/withdraw-proposal', data);
+    return apiService.post<TxOrMessage>('/children/meal-need/withdraw-proposal', data);
   }
 
   async supportMealNeed(needId: string, months: number) {
@@ -50,7 +53,7 @@ class ChildrenService {
   }
 
   async createBooksWithdrawProposal(data: CreateNormalNeedWithdrawProposalRequest) {
-    return apiService.post('/children/books-need/withdraw-proposal', data);
+    return apiService.post<TxOrMessage>('/children/books-need/withdraw-proposal', data);
   }
 
   async supportBooksNeed(needId: string) {
@@ -63,7 +66,7 @@ class ChildrenService {
   }
 
   async createHealthInsuranceWithdrawProposal(data: CreateNormalNeedWithdrawProposalRequest) {
-    return apiService.post('/children/health-insurance-need/withdraw-proposal', data);
+    return apiService.post<TxOrMessage>('/children/health-insurance-need/withdraw-proposal', data);
   }
 
   async supportHealthInsuranceNeed(needId: string) {
@@ -72,7 +75,7 @@ class ChildrenService {
 
   // ─── Special need ──────────────────────────────────────
   async createSpecialNeedProposal(data: CreateSpecialNeedProposalRequest) {
-    return apiService.post<PendingSpecialNeedProposal>('/children/special-need/proposal', data);
+    return apiService.post<PendingSpecialNeedProposal | TxOrMessage>('/children/special-need/proposal', data);
   }
 
   async voteSpecialNeedProposal(id: string, data: VoteRequest) {
@@ -84,7 +87,7 @@ class ChildrenService {
   }
 
   async createSpecialNeedWithdrawProposal(data: CreateSpecialNeedWithdrawProposalRequest) {
-    return apiService.post('/children/special-need/withdraw-proposal', data);
+    return apiService.post<TxOrMessage>('/children/special-need/withdraw-proposal', data);
   }
 
   async supportSpecialNeed(campaignId: string, data: { amount: number; description: string }) {

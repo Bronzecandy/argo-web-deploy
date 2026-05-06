@@ -265,6 +265,13 @@ export interface WithdrawProposal {
   closed_at: string;
 }
 
+/** GET /pools/leader/{walletAddress} — pool for the leader's assigned region */
+export interface LeaderPoolDetail {
+  id: string;
+  pool_name: string;
+  total_donation: number;
+}
+
 export interface CreateWithdrawProposalRequest {
   pool_id: string;
   description: string;

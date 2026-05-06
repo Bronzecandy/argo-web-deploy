@@ -3,12 +3,27 @@
 import { useCallback, useState } from 'react';
 import { toast } from 'sonner';
 import { transactionService } from '@/src/services/transaction.service';
-import type { BuildTransactionResponse, ExecuteTransactionRequest, MessageResponse } from '@/src/types/api.types';
+import type {
+  BuildTransactionResponse,
+  ExecuteTransactionRequest,
+  MessageResponse,
+  PendingSpecialNeedProposal,
+} from '@/src/types/api.types';
 
-type ExecuteApiPayload = BuildTransactionResponse | MessageResponse;
+type ExecuteApiPayload =
+  | BuildTransactionResponse
+  | MessageResponse
+  | PendingSpecialNeedProposal
+  | Record<string, unknown>;
 
 function hasTxBytes(data: ExecuteApiPayload): data is BuildTransactionResponse {
-  return typeof (data as BuildTransactionResponse).tx_bytes === 'string' && !!(data as BuildTransactionResponse).tx_bytes;
+  return (
+    typeof data === 'object' &&
+    data !== null &&
+    'tx_bytes' in data &&
+    typeof (data as BuildTransactionResponse).tx_bytes === 'string' &&
+    !!(data as BuildTransactionResponse).tx_bytes
+  );
 }
 
 /**

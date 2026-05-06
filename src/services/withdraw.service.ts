@@ -5,7 +5,10 @@ import type {
   CreateWithdrawProposalRequest,
   WithdrawQueryParams,
   BuildTransactionResponse,
+  MessageResponse,
 } from '@/src/types/api.types';
+
+type CreateWithdrawResponse = BuildTransactionResponse | MessageResponse;
 
 class WithdrawService {
   async list(params?: WithdrawQueryParams) {
@@ -17,7 +20,7 @@ class WithdrawService {
   }
 
   async create(data: CreateWithdrawProposalRequest) {
-    return apiService.post<BuildTransactionResponse>('/withdraw-proposals', data);
+    return apiService.post<CreateWithdrawResponse>('/withdraw-proposals', data);
   }
 
   async vote(id: string, is_vote_yes: boolean, refuse_reason?: string) {

@@ -1,10 +1,11 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useAppSelector, useAppDispatch } from '@/src/store/hooks';
 import { logoutUser } from '@/src/store/authSlice';
+import { fetchLeaderPool, resetLeaderPool } from '@/src/store/leaderPoolSlice';
 import { truncateAddress } from '@/src/lib/formatters';
 import {
   LayoutDashboard,
@@ -23,11 +24,13 @@ import {
   X,
   Leaf,
   User,
+  UserPlus,
 } from 'lucide-react';
 
 const NAV_ITEMS = [
   { label: 'Dashboard', href: '/leader', icon: LayoutDashboard },
   { label: 'Bank Account', href: '/leader/bank', icon: Landmark },
+  { label: 'Volunteer registrations', href: '/leader/volunteers', icon: UserPlus },
   { label: 'Children', href: '/leader/children', icon: Baby },
   { label: 'Withdrawals', href: '/leader/withdrawals', icon: Wallet },
   { label: 'Centers', href: '/leader/centers', icon: Building2 },
@@ -45,6 +48,15 @@ export default function LeaderLayout({ children }: { children: React.ReactNode }
   const dispatch = useAppDispatch();
   const { user } = useAppSelector((state) => state.auth);
   const [sidebarOpen, setSidebarOpen] = useState(false);
+
+  useEffect(() => {
+    const addr = user?.address?.trim();
+    if (!addr) {
+      dispatch(resetLeaderPool());
+      return;
+    }
+    void dispatch(fetchLeaderPool(addr));
+  }, [dispatch, user?.address]);
 
   const isActive = (href: string) => {
     if (href === '/leader') return pathname === '/leader';
@@ -111,7 +123,10 @@ export default function LeaderLayout({ children }: { children: React.ReactNode }
             <p className="text-xs text-slate-400">{truncateAddress(user?.address || '')}</p>
           </div>
           <button
-            onClick={() => dispatch(logoutUser())}
+            onClick={() => {
+              dispatch(resetLeaderPool());
+              void dispatch(logoutUser());
+            }}
             className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm text-red-600 transition hover:bg-red-50"
           >
             <LogOut className="h-4 w-4" />
