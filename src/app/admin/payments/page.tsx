@@ -6,6 +6,8 @@ import { Check, CreditCard, X } from 'lucide-react';
 import PageHeader from '@/src/components/ui/PageHeader';
 import DataTable from '@/src/components/ui/DataTable';
 import StatusBadge from '@/src/components/ui/StatusBadge';
+import DetailModal from '@/src/components/ui/DetailModal';
+import BlobImage from '@/src/components/ui/BlobImage';
 import { formatDateTime, formatVND, truncateAddress } from '@/src/lib/formatters';
 import { paymentService } from '@/src/services/payment.service';
 import { useExecuteTransaction } from '@/src/hooks/useExecuteTransaction';
@@ -41,6 +43,10 @@ export default function AdminPaymentsPage() {
   const [busyId, setBusyId] = useState<string | null>(null);
   const [refuseConfirm, setRefuseConfirm] = useState<Payment | null>(null);
 
+  const [detailId, setDetailId] = useState<string | null>(null);
+  const [detailPayment, setDetailPayment] = useState<Payment | null>(null);
+  const [detailLoading, setDetailLoading] = useState(false);
+
   const load = useCallback(async () => {
     setLoading(true);
     try {
@@ -67,24 +73,31 @@ export default function AdminPaymentsPage() {
     void load();
   }, [load]);
 
+  useEffect(() => {
+    if (!detailId) {
+      setDetailPayment(null);
+      return;
+    }
+    setDetailLoading(true);
+    void paymentService
+      .getById(detailId)
+      .then((res) => setDetailPayment(res.data))
+      .catch(() => setDetailPayment(null))
+      .finally(() => setDetailLoading(false));
+  }, [detailId]);
+
   const refresh = () => void load();
 
   const handleApprove = async (id: string) => {
     setBusyId(id);
-    const ok = await execute(
-      () => paymentService.approve(id),
-      { successMessage: 'Payment approved & executed on-chain' },
-    );
+    const ok = await execute(() => paymentService.approve(id), { successMessage: 'Payment approved & executed on-chain' });
     if (ok) refresh();
     setBusyId(null);
   };
 
   const handleRefuse = async (id: string) => {
     setBusyId(id);
-    const ok = await execute(
-      () => paymentService.refuse(id),
-      { successMessage: 'Payment refused' },
-    );
+    const ok = await execute(() => paymentService.refuse(id), { successMessage: 'Payment refused' });
     if (ok) {
       setRefuseConfirm(null);
       refresh();
@@ -169,6 +182,23 @@ export default function AdminPaymentsPage() {
           },
           { key: 'created_at', label: 'Created', render: (p) => formatDateTime(p.created_at || '') },
           {
+            key: 'detail_btn',
+            label: 'Details',
+            className: 'whitespace-nowrap',
+            render: (p) => (
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setDetailId(p.id);
+                }}
+                className="rounded-lg border border-slate-200 px-2 py-1 text-xs font-medium text-slate-700 hover:bg-slate-50"
+              >
+                Details
+              </button>
+            ),
+          },
+          {
             key: 'actions',
             label: 'Actions',
             className: 'whitespace-nowrap',
@@ -206,6 +236,39 @@ export default function AdminPaymentsPage() {
         onPageChange={setPage}
         emptyMessage="No payments match your filters."
       />
+
+      <DetailModal
+        title="Payment detail"
+        open={detailId !== null}
+        onClose={() => setDetailId(null)}
+        loading={detailLoading}
+        wide
+      >
+        {detailPayment && (
+          <div className="space-y-2 text-sm">
+            <p className="font-mono text-xs break-all">{detailPayment.id}</p>
+            <p>
+              <span className="text-slate-500">Actor:</span> {truncateAddress(detailPayment.actor || '—')}
+            </p>
+            <p>
+              <span className="text-slate-500">Amount:</span>{' '}
+              {typeof detailPayment.amount === 'number' ? formatVND(detailPayment.amount) : '—'}
+            </p>
+            <p>
+              <span className="text-slate-500">Status:</span> <StatusBadge status={detailPayment.status || '—'} />
+            </p>
+            <p>
+              <span className="text-slate-500">Method:</span> {detailPayment.method || '—'}
+            </p>
+            {detailPayment.proof_blob_id && (
+              <div>
+                <p className="mb-1 text-xs text-slate-500">Proof</p>
+                <BlobImage blobId={detailPayment.proof_blob_id} source="api" className="max-h-48 rounded-lg border" />
+              </div>
+            )}
+          </div>
+        )}
+      </DetailModal>
 
       {refuseConfirm && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 p-4">

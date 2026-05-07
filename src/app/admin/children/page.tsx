@@ -5,6 +5,9 @@ import { Baby } from 'lucide-react';
 import { toast } from 'sonner';
 import PageHeader from '@/src/components/ui/PageHeader';
 import DataTable from '@/src/components/ui/DataTable';
+import DetailModal from '@/src/components/ui/DetailModal';
+import BlobImage from '@/src/components/ui/BlobImage';
+import { BLOB_URL } from '@/src/lib/constants';
 import { formatDate, truncateAddress } from '@/src/lib/formatters';
 import { childrenService } from '@/src/services/children.service';
 import type { Child } from '@/src/types/api.types';
@@ -25,6 +28,12 @@ export default function AdminChildrenPage() {
   const [childTotalPages, setChildTotalPages] = useState(1);
   const [childRegion, setChildRegion] = useState('');
   const [childGender, setChildGender] = useState('');
+
+  const [detailOpen, setDetailOpen] = useState(false);
+  const [detailId, setDetailId] = useState<string | null>(null);
+  const [detailLoading, setDetailLoading] = useState(false);
+  const [detailChild, setDetailChild] = useState<Child | null>(null);
+  const [detailErr, setDetailErr] = useState<string | null>(null);
 
   const loadChildren = useCallback(async () => {
     setChildLoading(true);
@@ -53,6 +62,32 @@ export default function AdminChildrenPage() {
   useEffect(() => {
     void loadChildren();
   }, [loadChildren]);
+
+  useEffect(() => {
+    if (!detailOpen || !detailId) {
+      setDetailChild(null);
+      setDetailErr(null);
+      return;
+    }
+    setDetailLoading(true);
+    setDetailErr(null);
+    void childrenService
+      .getById(detailId)
+      .then((res) => setDetailChild(res.data))
+      .catch((e: unknown) => {
+        const msg =
+          e && typeof e === 'object' && 'response' in e
+            ? String((e as { response?: { data?: { message?: string } } }).response?.data?.message ?? '')
+            : 'Failed to load';
+        setDetailErr(msg);
+      })
+      .finally(() => setDetailLoading(false));
+  }, [detailOpen, detailId]);
+
+  function openDetail(id: string) {
+    setDetailId(id);
+    setDetailOpen(true);
+  }
 
   return (
     <div className="p-6">
@@ -119,6 +154,23 @@ export default function AdminChildrenPage() {
               label: 'Identity',
               render: (c) => <span className="font-mono text-xs">{truncateAddress(c.identity_code, 10)}</span>,
             },
+            {
+              key: 'actions',
+              label: 'Actions',
+              className: 'whitespace-nowrap',
+              render: (c) => (
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    openDetail(c.id);
+                  }}
+                  className="rounded-lg border border-emerald-200 px-2 py-1 text-xs font-medium text-emerald-700 hover:bg-emerald-50"
+                >
+                  Details
+                </button>
+              ),
+            },
           ]}
           data={children}
           loading={childLoading}
@@ -128,6 +180,70 @@ export default function AdminChildrenPage() {
           emptyMessage="No children found for the selected filters."
         />
       </div>
+
+      <DetailModal
+        title="Child profile"
+        open={detailOpen}
+        onClose={() => {
+          setDetailOpen(false);
+          setDetailId(null);
+        }}
+        loading={detailLoading}
+        error={detailErr}
+        wide
+      >
+        {detailChild && (
+          <div className="space-y-3 text-sm">
+            <div className="flex flex-wrap gap-4">
+              {detailChild.avatar_blob_id && (
+                <div>
+                  <p className="mb-1 text-xs font-medium text-slate-500">Avatar</p>
+                  <BlobImage
+                    blobId={detailChild.avatar_blob_id}
+                    source="api"
+                    className="h-24 w-24 rounded-lg border border-slate-200 object-cover"
+                  />
+                </div>
+              )}
+            </div>
+            <p>
+              <span className="text-slate-500">Name:</span>{' '}
+              <span className="font-medium">
+                {detailChild.first_name} {detailChild.last_name}
+              </span>
+            </p>
+            <p>
+              <span className="text-slate-500">ID:</span>{' '}
+              <span className="font-mono text-xs break-all">{detailChild.id}</span>
+            </p>
+            <p>
+              <span className="text-slate-500">Region:</span> {detailChild.region}
+            </p>
+            <p>
+              <span className="text-slate-500">DOB:</span> {formatDate(detailChild.date_of_birth)}
+            </p>
+            <p>
+              <span className="text-slate-500">Home:</span> {detailChild.home_address || '—'}
+            </p>
+            {detailChild.image_blob_ids && detailChild.image_blob_ids.length > 0 && (
+              <div>
+                <p className="mb-2 text-xs font-medium text-slate-500">Gallery</p>
+                <div className="flex flex-wrap gap-2">
+                  {detailChild.image_blob_ids.map((bid) => (
+                    /* eslint-disable-next-line @next/next/no-img-element */
+                    <img
+                      key={bid}
+                      src={BLOB_URL(bid)}
+                      alt=""
+                      className="h-20 w-20 rounded-md border border-slate-200 object-cover"
+                    />
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+      </DetailModal>
     </div>
   );
 }

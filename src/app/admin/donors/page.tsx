@@ -163,7 +163,16 @@ export default function AdminDonorsPage() {
               </div>
             ) : selectedDonor ? (
               <div className="space-y-4">
-                <div className="grid grid-cols-2 gap-4 text-sm">
+                <div className="flex items-start gap-4">
+                  {selectedDonor.url ? (
+                    /* eslint-disable-next-line @next/next/no-img-element */
+                    <img
+                      src={selectedDonor.url}
+                      alt=""
+                      className="h-20 w-20 shrink-0 rounded-full border border-slate-200 object-cover"
+                    />
+                  ) : null}
+                  <div className="grid flex-1 grid-cols-2 gap-4 text-sm">
                   <div>
                     <p className="text-slate-500">Name</p>
                     <p className="font-medium">{selectedDonor.first_name} {selectedDonor.last_name}</p>
@@ -184,6 +193,7 @@ export default function AdminDonorsPage() {
                     <p className="text-slate-500">Total Donated</p>
                     <p className="text-xl font-bold text-emerald-700">{formatVND(selectedDonor.total_donation)}</p>
                   </div>
+                </div>
                 </div>
 
                 {selectedDonor.contributions?.length > 0 && (

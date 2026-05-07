@@ -1,8 +1,9 @@
 'use client';
 
-import { useRef, useState, useCallback } from 'react';
+import { useMemo, useRef, useState, useCallback } from 'react';
 import { Upload, X, CheckCircle } from 'lucide-react';
 import { blobService } from '@/src/services/blob.service';
+import { BLOB_URL } from '@/src/lib/constants';
 import { toast } from 'sonner';
 
 interface FileUploadInputProps {
@@ -12,6 +13,8 @@ interface FileUploadInputProps {
   accept?: string;
   placeholder?: string;
   disabled?: boolean;
+  /** Where uploaded blobs resolve for preview (Walrus aggregator vs API /blobs). */
+  previewSource?: 'walrus' | 'api';
 }
 
 export default function FileUploadInput({
@@ -21,9 +24,17 @@ export default function FileUploadInput({
   accept = 'image/*',
   placeholder = 'Upload file or paste blob ID',
   disabled = false,
+  previewSource = 'walrus',
 }: FileUploadInputProps) {
   const fileRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
+
+  const previewUrl = useMemo(() => {
+    if (!value.trim()) return '';
+    const isImageAccept = accept.includes('image') || accept === 'image/*';
+    if (!isImageAccept) return '';
+    return previewSource === 'api' ? BLOB_URL(value.trim()) : blobService.getUrl(value.trim());
+  }, [value, accept, previewSource]);
 
   const handleFileChange = useCallback(
     async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -92,6 +103,17 @@ export default function FileUploadInput({
         onChange={handleFileChange}
         className="hidden"
       />
+      {previewUrl && (
+        <div className="mt-3 rounded-lg border border-slate-200 bg-slate-50 p-2">
+          <p className="mb-2 text-[10px] font-medium uppercase tracking-wide text-slate-500">Preview</p>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={previewUrl}
+            alt=""
+            className="max-h-48 max-w-full rounded-md object-contain"
+          />
+        </div>
+      )}
     </div>
   );
 }

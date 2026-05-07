@@ -5,6 +5,8 @@ import { toast } from 'sonner';
 import PageHeader from '@/src/components/ui/PageHeader';
 import DataTable from '@/src/components/ui/DataTable';
 import StatusBadge from '@/src/components/ui/StatusBadge';
+import DetailModal from '@/src/components/ui/DetailModal';
+import BlobImage from '@/src/components/ui/BlobImage';
 import { formatDate, formatVND, truncateAddress } from '@/src/lib/formatters';
 import { useAppSelector } from '@/src/store/hooks';
 import { withdrawService } from '@/src/services/withdraw.service';
@@ -79,6 +81,11 @@ export default function LeaderWithdrawalsPage() {
 
   const [submitting, setSubmitting] = useState(false);
 
+  const [proposalDetailOpen, setProposalDetailOpen] = useState(false);
+  const [proposalDetailId, setProposalDetailId] = useState<string | null>(null);
+  const [proposalDetail, setProposalDetail] = useState<WithdrawProposal | null>(null);
+  const [proposalDetailLoading, setProposalDetailLoading] = useState(false);
+
   const loadProposals = useCallback(async () => {
     const addr = user?.address;
     if (!addr) {
@@ -108,6 +115,19 @@ export default function LeaderWithdrawalsPage() {
     if (tab !== 'mine') return;
     void loadProposals();
   }, [tab, loadProposals]);
+
+  useEffect(() => {
+    if (!proposalDetailOpen || !proposalDetailId) {
+      setProposalDetail(null);
+      return;
+    }
+    setProposalDetailLoading(true);
+    void withdrawService
+      .getById(proposalDetailId)
+      .then((res) => setProposalDetail(res.data))
+      .catch(() => setProposalDetail(null))
+      .finally(() => setProposalDetailLoading(false));
+  }, [proposalDetailOpen, proposalDetailId]);
 
   const loadChildrenPage = useCallback(
     async (p: number) => {
@@ -308,6 +328,23 @@ export default function LeaderWithdrawalsPage() {
       label: 'Created',
       render: (row: WithdrawProposal) => formatDate(row.created_at),
     },
+    {
+      key: 'details',
+      label: 'Details',
+      render: (row: WithdrawProposal) => (
+        <button
+          type="button"
+          onClick={(e) => {
+            e.stopPropagation();
+            setProposalDetailId(row.id);
+            setProposalDetailOpen(true);
+          }}
+          className="rounded-lg border border-slate-200 px-2 py-1 text-xs font-medium text-slate-700 hover:bg-slate-50"
+        >
+          Details
+        </button>
+      ),
+    },
   ];
 
   const regionBlocked = !canUseRegion;
@@ -353,7 +390,7 @@ export default function LeaderWithdrawalsPage() {
         </button>
       </div>
 
-      {tab === 'mine' ? (
+      {tab === 'mine' && (
         !user?.address ? (
           <div className="rounded-xl border border-slate-200 bg-white p-8 text-center text-sm text-slate-500">
             Connect your wallet to see your withdrawal proposals.
@@ -369,10 +406,23 @@ export default function LeaderWithdrawalsPage() {
             emptyMessage="No proposals yet"
           />
         )
-      ) : (
+      )}
+      {tab === 'create' && (
+        <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-slate-900/40 p-4 py-10">
+          <div className="w-full max-w-2xl rounded-xl border border-slate-200 bg-white p-6 shadow-xl">
+            <div className="mb-4 flex items-center justify-between gap-2">
+              <h2 className="text-lg font-semibold text-slate-900">Create withdrawal</h2>
+              <button
+                type="button"
+                onClick={() => setTab('mine')}
+                className="rounded-lg px-3 py-1.5 text-sm text-slate-600 hover:bg-slate-100"
+              >
+                Close
+              </button>
+            </div>
         <form
           onSubmit={handleCreate}
-          className="space-y-4 rounded-xl border border-slate-200 bg-white p-6 shadow-sm"
+          className="space-y-4"
         >
           {poolStatus === 'failed' && (
             <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
@@ -646,7 +696,38 @@ export default function LeaderWithdrawalsPage() {
             {submitting ? 'Submitting…' : 'Submit'}
           </button>
         </form>
+          </div>
+        </div>
       )}
+
+      <DetailModal
+        title="Withdrawal proposal"
+        open={proposalDetailOpen}
+        onClose={() => {
+          setProposalDetailOpen(false);
+          setProposalDetailId(null);
+        }}
+        loading={proposalDetailLoading}
+        wide
+      >
+        {proposalDetail && (
+          <div className="space-y-2 text-sm">
+            <p className="font-mono text-xs break-all">{proposalDetail.id}</p>
+            <p>
+              <span className="text-slate-500">Pool:</span> {proposalDetail.pool_name}
+            </p>
+            <p>
+              <span className="text-slate-500">Amount:</span> {formatVND(proposalDetail.withdraw_amount)}
+            </p>
+            <p>
+              <span className="text-slate-500">Description:</span> {proposalDetail.description}
+            </p>
+            {proposalDetail.proof_blob_id && (
+              <BlobImage blobId={proposalDetail.proof_blob_id} className="max-h-56 rounded-lg border object-contain" />
+            )}
+          </div>
+        )}
+      </DetailModal>
     </div>
   );
 }

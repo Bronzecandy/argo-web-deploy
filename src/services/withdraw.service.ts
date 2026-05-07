@@ -6,6 +6,7 @@ import type {
   WithdrawQueryParams,
   BuildTransactionResponse,
   MessageResponse,
+  WithdrawProposalConfirmResponse,
 } from '@/src/types/api.types';
 
 type CreateWithdrawResponse = BuildTransactionResponse | MessageResponse;
@@ -34,7 +35,7 @@ class WithdrawService {
   }
 
   async confirm(id: string) {
-    return apiService.post<any>(`/withdraw-proposals/${id}/confirm`, null);
+    return apiService.post<WithdrawProposalConfirmResponse>(`/withdraw-proposals/${id}/confirm`, null);
   }
 
   async mainPoolConfirm(id: string, imageBlobId: string) {

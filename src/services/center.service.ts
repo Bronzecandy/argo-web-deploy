@@ -23,6 +23,10 @@ class CenterService {
     return apiService.get<PaginationResponse>(`/centers/${id}`);
   }
 
+  async getCenterRequestById(id: string) {
+    return apiService.get<CenterRequest>(`/center-reqs/${id}`);
+  }
+
   async getByWallet(walletAddress: string, params?: { page?: number; page_size?: number }) {
     return apiService.get<PaginationResponse<CenterRequest[]>>(`/centers/user/${walletAddress}`, { params });
   }

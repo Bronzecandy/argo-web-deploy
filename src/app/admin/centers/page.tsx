@@ -6,6 +6,8 @@ import { toast } from 'sonner';
 import PageHeader from '@/src/components/ui/PageHeader';
 import DataTable from '@/src/components/ui/DataTable';
 import StatusBadge from '@/src/components/ui/StatusBadge';
+import DetailModal from '@/src/components/ui/DetailModal';
+import BlobImage from '@/src/components/ui/BlobImage';
 import { formatDate, formatVND, truncateAddress } from '@/src/lib/formatters';
 import { centerService } from '@/src/services/center.service';
 import { useExecuteTransaction } from '@/src/hooks/useExecuteTransaction';
@@ -70,6 +72,10 @@ export default function AdminCentersPage() {
   const [refuseModal, setRefuseModal] = useState<{ id: string } | null>(null);
   const [refuseReason, setRefuseReason] = useState('');
 
+  const [detail, setDetail] = useState<{ type: 'center' | 'request'; row: CenterRequest } | null>(null);
+  const [detailFetched, setDetailFetched] = useState<CenterRequest | null>(null);
+  const [detailLoading, setDetailLoading] = useState(false);
+
   const loadCenters = useCallback(async () => {
     setLoading(true);
     try {
@@ -130,6 +136,23 @@ export default function AdminCentersPage() {
     void loadCenterRequests();
   }, [tab, loadCenterRequests]);
 
+  useEffect(() => {
+    if (!detail) {
+      setDetailFetched(null);
+      return;
+    }
+    if (detail.type === 'center') {
+      setDetailFetched(detail.row);
+      return;
+    }
+    setDetailLoading(true);
+    void centerService
+      .getCenterRequestById(detail.row.id)
+      .then((res) => setDetailFetched(res.data))
+      .catch(() => setDetailFetched(detail.row))
+      .finally(() => setDetailLoading(false));
+  }, [detail]);
+
   async function handleVote(id: string, isYes: boolean) {
     if (!isYes) {
       setRefuseModal({ id });
@@ -185,8 +208,27 @@ export default function AdminCentersPage() {
     setConfirmBusyId(null);
   }
 
+  const detailsCol = (kind: 'center' | 'request') => ({
+    key: 'details',
+    label: 'Details',
+    className: 'whitespace-nowrap',
+    render: (c: CenterRequest) => (
+      <button
+        type="button"
+        onClick={(e) => {
+          e.stopPropagation();
+          setDetail({ type: kind, row: c });
+        }}
+        className="rounded-lg border border-slate-200 px-2 py-1 text-xs font-medium text-slate-700 hover:bg-slate-50"
+      >
+        Details
+      </button>
+    ),
+  });
+
   const requestColumns = [
     ...CENTER_TABLE_BASE,
+    detailsCol('request'),
     {
       key: 'actions',
       label: 'Actions',
@@ -300,7 +342,7 @@ export default function AdminCentersPage() {
           </div>
 
           <DataTable<CenterRequest>
-            columns={[...CENTER_TABLE_BASE]}
+            columns={[...CENTER_TABLE_BASE, detailsCol('center')]}
             data={centers}
             loading={loading}
             page={page}
@@ -370,6 +412,44 @@ export default function AdminCentersPage() {
           />
         </>
       )}
+
+      <DetailModal
+        title={detail?.type === 'request' ? 'Center request' : 'Support center'}
+        open={!!detail}
+        onClose={() => setDetail(null)}
+        loading={detailLoading && detail?.type === 'request'}
+        wide
+      >
+        {detailFetched && (
+          <div className="space-y-3 text-sm">
+            {detailFetched.image_blob_id && (
+              <div>
+                <p className="mb-1 text-xs font-medium text-slate-500">Image</p>
+                <BlobImage
+                  blobId={detailFetched.image_blob_id}
+                  source="api"
+                  className="max-h-56 max-w-full rounded-lg border border-slate-200 object-contain"
+                />
+              </div>
+            )}
+            <p>
+              <span className="text-slate-500">Region:</span> {detailFetched.region}
+            </p>
+            <p>
+              <span className="text-slate-500">Address:</span> {detailFetched.address}
+            </p>
+            <p>
+              <span className="text-slate-500">Phone:</span> {detailFetched.phone_number}
+            </p>
+            <p>
+              <span className="text-slate-500">Status:</span> <StatusBadge status={detailFetched.status} />
+            </p>
+            <p className="font-mono text-xs break-all">
+              <span className="text-slate-500">ID:</span> {detailFetched.id}
+            </p>
+          </div>
+        )}
+      </DetailModal>
 
       {refuseModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 p-4">

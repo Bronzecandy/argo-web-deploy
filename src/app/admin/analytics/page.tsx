@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { toast } from 'sonner';
 import PageHeader from '@/src/components/ui/PageHeader';
 import DataTable from '@/src/components/ui/DataTable';
+import DetailModal from '@/src/components/ui/DetailModal';
 import { formatDate, formatVND, truncateAddress } from '@/src/lib/formatters';
 import { transactionService } from '@/src/services/transaction.service';
 import type { TransactionRecord } from '@/src/types/api.types';
@@ -32,6 +33,10 @@ export default function AdminAnalyticsPage() {
   const [totalPages, setTotalPages] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
   const [loading, setLoading] = useState(true);
+
+  const [detailId, setDetailId] = useState<string | null>(null);
+  const [detailRow, setDetailRow] = useState<TransactionRecord | null>(null);
+  const [detailLoading, setDetailLoading] = useState(false);
 
   const applyActorFilter = () => {
     setAppliedActor(actorSearch.trim());
@@ -65,12 +70,22 @@ export default function AdminAnalyticsPage() {
     void load();
   }, [load]);
 
+  useEffect(() => {
+    if (!detailId) {
+      setDetailRow(null);
+      return;
+    }
+    setDetailLoading(true);
+    void transactionService
+      .getById(detailId)
+      .then((res) => setDetailRow(res.data))
+      .catch(() => setDetailRow(null))
+      .finally(() => setDetailLoading(false));
+  }, [detailId]);
+
   return (
     <div>
-      <PageHeader
-        title="Transaction records"
-        description="On-chain and platform transaction history"
-      />
+      <PageHeader title="Transaction records" description="On-chain and platform transaction history" />
 
       <div className="mb-4 flex flex-col gap-4 rounded-xl border border-slate-200 bg-white p-4 sm:flex-row sm:flex-wrap sm:items-end">
         <div>
@@ -90,7 +105,7 @@ export default function AdminAnalyticsPage() {
             ))}
           </select>
         </div>
-        <div className="flex-1 min-w-[200px]">
+        <div className="min-w-[200px] flex-1">
           <label className="mb-1 block text-xs font-medium text-slate-500">Actor address</label>
           <input
             type="text"
@@ -138,8 +153,57 @@ export default function AdminAnalyticsPage() {
           { key: 'pool_name', label: 'Pool', render: (r) => r.pool_name || '-' },
           { key: 'message', label: 'Message', render: (r) => <span className="max-w-xs truncate">{r.message || '-'}</span> },
           { key: 'created_at', label: 'Created', render: (r) => formatDate(r.created_at) },
+          {
+            key: 'details',
+            label: 'Details',
+            render: (r) => (
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setDetailId(r.id);
+                }}
+                className="rounded-lg border border-slate-200 px-2 py-1 text-xs font-medium text-slate-700 hover:bg-slate-50"
+              >
+                Details
+              </button>
+            ),
+          },
         ]}
       />
+
+      <DetailModal
+        title="Transaction"
+        open={detailId !== null}
+        onClose={() => setDetailId(null)}
+        loading={detailLoading}
+        wide
+      >
+        {detailRow && (
+          <div className="space-y-2 text-sm">
+            <p className="font-mono text-xs break-all">{detailRow.id}</p>
+            <p>
+              <span className="text-slate-500">Actor:</span> {truncateAddress(detailRow.actor_address)}
+            </p>
+            <p>
+              <span className="text-slate-500">Action:</span> {detailRow.action_type}
+            </p>
+            <p>
+              <span className="text-slate-500">Amount:</span>{' '}
+              {detailRow.amount != null ? formatVND(detailRow.amount) : '—'}
+            </p>
+            <p>
+              <span className="text-slate-500">Pool:</span> {detailRow.pool_name || '—'}
+            </p>
+            <p>
+              <span className="text-slate-500">Message:</span> {detailRow.message || '—'}
+            </p>
+            <p>
+              <span className="text-slate-500">Created:</span> {formatDate(detailRow.created_at)}
+            </p>
+          </div>
+        )}
+      </DetailModal>
     </div>
   );
 }

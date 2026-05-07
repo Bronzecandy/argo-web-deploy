@@ -6,6 +6,7 @@ import { X, Check } from 'lucide-react';
 import PageHeader from '@/src/components/ui/PageHeader';
 import DataTable from '@/src/components/ui/DataTable';
 import StatusBadge from '@/src/components/ui/StatusBadge';
+import DetailModal from '@/src/components/ui/DetailModal';
 import { formatDate, truncateAddress } from '@/src/lib/formatters';
 import { regionService } from '@/src/services/region.service';
 import type { SupportedRegionSuggestion } from '@/src/types/api.types';
@@ -39,6 +40,10 @@ export default function AdminRegionsPage() {
   const [refuseModal, setRefuseModal] = useState<{ id: string } | null>(null);
   const [refuseReason, setRefuseReason] = useState('');
 
+  const [detailId, setDetailId] = useState<string | null>(null);
+  const [detailRow, setDetailRow] = useState<SupportedRegionSuggestion | null>(null);
+  const [detailLoading, setDetailLoading] = useState(false);
+
   const load = useCallback(async () => {
     setLoading(true);
     try {
@@ -65,6 +70,19 @@ export default function AdminRegionsPage() {
   useEffect(() => {
     void load();
   }, [load]);
+
+  useEffect(() => {
+    if (!detailId) {
+      setDetailRow(null);
+      return;
+    }
+    setDetailLoading(true);
+    void regionService
+      .getSuggestionById(detailId)
+      .then((res) => setDetailRow(res.data))
+      .catch(() => setDetailRow(null))
+      .finally(() => setDetailLoading(false));
+  }, [detailId]);
 
   const refresh = () => void load();
 
@@ -189,6 +207,22 @@ export default function AdminRegionsPage() {
           { key: 'reviewed_by', label: 'Người duyệt', render: (r) => (r.reviewed_by ? truncateAddress(r.reviewed_by) : '-') },
           { key: 'created_at', label: 'Ngày tạo', render: (r) => formatDate(r.created_at) },
           {
+            key: 'detail_btn',
+            label: 'Chi tiết',
+            render: (r) => (
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setDetailId(r.id);
+                }}
+                className="rounded-lg border border-slate-200 px-2 py-1 text-xs font-medium text-slate-700 hover:bg-slate-50"
+              >
+                Details
+              </button>
+            ),
+          },
+          {
             key: 'actions',
             label: 'Thao tác',
             className: 'whitespace-nowrap',
@@ -218,6 +252,35 @@ export default function AdminRegionsPage() {
           },
         ]}
       />
+
+      <DetailModal
+        title="Đề xuất vùng"
+        open={detailId !== null}
+        onClose={() => setDetailId(null)}
+        loading={detailLoading}
+        wide
+      >
+        {detailRow && (
+          <div className="space-y-2 text-sm">
+            <p className="font-mono text-xs break-all">{detailRow.id}</p>
+            <p>
+              <span className="text-slate-500">Vùng:</span> {detailRow.region}
+            </p>
+            <p>
+              <span className="text-slate-500">Nội dung:</span> {detailRow.content}
+            </p>
+            <p>
+              <span className="text-slate-500">Người tạo:</span> {truncateAddress(detailRow.created_by)}
+            </p>
+            <p>
+              <span className="text-slate-500">Trạng thái:</span> <StatusBadge status={detailRow.status || 'pending'} />
+            </p>
+            <p>
+              <span className="text-slate-500">Ngày tạo:</span> {formatDate(detailRow.created_at)}
+            </p>
+          </div>
+        )}
+      </DetailModal>
 
       {refuseModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 p-4">

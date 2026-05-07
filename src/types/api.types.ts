@@ -14,6 +14,13 @@ export interface UrlResponse {
   url: string;
 }
 
+/** PayOS / donate-style redirect responses (may include payment id for polling). */
+export interface PaymentRedirectResponse extends UrlResponse {
+  payment_id?: string | number;
+  order_code?: string | number;
+  id?: string | number;
+}
+
 export interface BuildTransactionResponse {
   tx_bytes: string;
   center_req?: string;
@@ -260,10 +267,18 @@ export interface WithdrawProposal {
   refused_periods: string[];
   is_executed: boolean;
   is_from_local_pool: boolean;
+  /** Proof attachment when leader submits pool withdrawal (Walrus blob id). */
+  proof_blob_id?: string;
   created_at: string;
   updated_at: string;
   closed_at: string;
 }
+
+/** POST /withdraw-proposals/{id}/confirm — PayOS URL, on-chain tx bytes, or plain message. */
+export type WithdrawProposalConfirmResponse =
+  | BuildTransactionResponse
+  | MessageResponse
+  | PaymentRedirectResponse;
 
 /** GET /pools/leader/{walletAddress} — pool for the leader's assigned region */
 export interface LeaderPoolDetail {
@@ -611,6 +626,8 @@ export interface WithdrawQueryParams extends PaginationParams {
   is_executed?: boolean;
   min_amount?: number;
   max_amount?: number;
+  /** If supported by BE, filter proposals from local leader pools. */
+  is_from_local_pool?: boolean;
 }
 
 export interface PaymentQueryParams extends PaginationParams {

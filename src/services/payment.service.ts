@@ -4,14 +4,14 @@ import type {
   Payment,
   PaymentQueryParams,
   DonateRequest,
-  UrlResponse,
+  PaymentRedirectResponse,
   BuildTransactionResponse,
   MessageResponse,
 } from '@/src/types/api.types';
 
 class PaymentService {
   async donate(data: DonateRequest) {
-    return apiService.post<UrlResponse>('/payments/donate', data);
+    return apiService.post<PaymentRedirectResponse>('/payments/donate', data);
   }
 
   async list(params?: PaymentQueryParams) {
@@ -19,6 +19,11 @@ class PaymentService {
   }
 
   async getById(id: string) {
+    return apiService.get<Payment>(`/payments/${id}`);
+  }
+
+  /** Poll PayOS / payment status (same as GET /payments/:id). */
+  async getPaymentStatus(id: string | number) {
     return apiService.get<Payment>(`/payments/${id}`);
   }
 
