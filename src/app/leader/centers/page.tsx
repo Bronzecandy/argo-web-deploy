@@ -4,14 +4,13 @@ import { useCallback, useEffect, useState } from 'react';
 import { toast } from 'sonner';
 import PageHeader from '@/src/components/ui/PageHeader';
 import DataTable from '@/src/components/ui/DataTable';
-import StatusBadge from '@/src/components/ui/StatusBadge';
 import { formatDate } from '@/src/lib/formatters';
 import { useAppSelector } from '@/src/store/hooks';
 import { centerService } from '@/src/services/center.service';
 import { regionService } from '@/src/services/region.service';
 import FileUploadInput from '@/src/components/ui/FileUploadInput';
 import { Plus } from 'lucide-react';
-import type { CenterRequest, CreateCenterRequest } from '@/src/types/api.types';
+import type { CreateCenterRequest, SupportCenter } from '@/src/types/api.types';
 
 const PAGE_SIZE = 20;
 
@@ -23,10 +22,10 @@ function getErrorMessage(e: unknown, fallback: string) {
   return fallback;
 }
 
-function normalizeCenterList(body: { data?: unknown }): CenterRequest[] {
+function normalizeCenterList(body: { data?: unknown }): SupportCenter[] {
   const raw = body.data;
-  if (Array.isArray(raw)) return raw as CenterRequest[];
-  if (raw && typeof raw === 'object') return [raw as CenterRequest];
+  if (Array.isArray(raw)) return raw as SupportCenter[];
+  if (raw && typeof raw === 'object') return [raw as SupportCenter];
   return [];
 }
 
@@ -35,7 +34,7 @@ export default function LeaderCentersPage() {
   const [createOpen, setCreateOpen] = useState(false);
 
   const [loading, setLoading] = useState(false);
-  const [centers, setCenters] = useState<CenterRequest[]>([]);
+  const [centers, setCenters] = useState<SupportCenter[]>([]);
   const [page, setPage] = useState(0);
   const [totalPages, setTotalPages] = useState(1);
 
@@ -107,18 +106,17 @@ export default function LeaderCentersPage() {
 
   const columns = [
     { key: 'region', label: 'Region' },
-    { key: 'address', label: 'Address' },
-    { key: 'phone_number', label: 'Phone' },
-    { key: 'image_blob_id', label: 'Image blob' },
+    { key: 'center_address', label: 'Address' },
+    { key: 'center_phone_number', label: 'Phone' },
     {
-      key: 'status',
-      label: 'Status',
-      render: (row: CenterRequest) => <StatusBadge status={row.status || 'unknown'} />,
+      key: 'uploaded_at',
+      label: 'Uploaded',
+      render: (row: SupportCenter) => formatDate(row.uploaded_at),
     },
     {
-      key: 'created_at',
-      label: 'Created',
-      render: (row: CenterRequest) => formatDate(row.created_at),
+      key: 'updated_at',
+      label: 'Updated',
+      render: (row: SupportCenter) => formatDate(row.updated_at),
     },
   ];
 
@@ -147,7 +145,7 @@ export default function LeaderCentersPage() {
           Connect your wallet to load your centers.
         </div>
       ) : (
-        <DataTable<CenterRequest>
+        <DataTable<SupportCenter>
           columns={columns}
           data={centers}
           loading={loading}

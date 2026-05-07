@@ -2,6 +2,7 @@ import { apiService } from './api.service';
 import type {
   PaginationResponse,
   CenterRequest,
+  SupportCenter,
   CreateCenterRequest,
   CenterQueryParams,
   CenterReqQueryParams,
@@ -12,7 +13,7 @@ import type {
 
 class CenterService {
   async list(params?: CenterQueryParams) {
-    return apiService.get<PaginationResponse<CenterRequest[]>>('/centers', { params });
+    return apiService.get<PaginationResponse<SupportCenter[]>>('/centers', { params });
   }
 
   async listCenterRequests(params?: CenterReqQueryParams) {
@@ -20,7 +21,7 @@ class CenterService {
   }
 
   async getById(id: string) {
-    return apiService.get<PaginationResponse>(`/centers/${id}`);
+    return apiService.get<SupportCenter>(`/centers/${id}`);
   }
 
   async getCenterRequestById(id: string) {
@@ -28,7 +29,7 @@ class CenterService {
   }
 
   async getByWallet(walletAddress: string, params?: { page?: number; page_size?: number }) {
-    return apiService.get<PaginationResponse<CenterRequest[]>>(`/centers/user/${walletAddress}`, { params });
+    return apiService.get<PaginationResponse<SupportCenter[]>>(`/centers/user/${walletAddress}`, { params });
   }
 
   /** Submit a new center registration request (Local Leader “Register new center”). */

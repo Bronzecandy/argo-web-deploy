@@ -112,6 +112,16 @@ export interface CreateRegistrationRequest {
 }
 
 // ─── Center ──────────────────────────────────────────────
+/** On-chain support center (GET /centers, GET /centers/:id, GET /centers/user/:wallet). */
+export interface SupportCenter {
+  id: string;
+  region: string;
+  center_address: string;
+  center_phone_number: string;
+  uploaded_at: string;
+  updated_at: string;
+}
+
 export interface CenterRequest {
   id: string;
   profile_id: string;

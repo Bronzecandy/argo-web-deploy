@@ -19,7 +19,7 @@ import { taskService } from '@/src/services/task.service';
 import { formatVND, formatDate } from '@/src/lib/formatters';
 import type {
   TransactionRecord, WithdrawProposal, RegistrationRequest,
-  Child, CenterRequest, UploadChildRequestEntity, Task,
+  Child, SupportCenter, UploadChildRequestEntity, Task,
 } from '@/src/types/api.types';
 import {
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
@@ -80,7 +80,7 @@ export default function AdminDashboard() {
   const [withdrawals, setWithdrawals] = useState<WithdrawProposal[]>([]);
   const [registrations, setRegistrations] = useState<RegistrationRequest[]>([]);
   const [childrenList, setChildrenList] = useState<Child[]>([]);
-  const [centers, setCenters] = useState<CenterRequest[]>([]);
+  const [centers, setCenters] = useState<SupportCenter[]>([]);
   const [childUploads, setChildUploads] = useState<UploadChildRequestEntity[]>([]);
   const [tasks, setTasks] = useState<Task[]>([]);
 
@@ -137,7 +137,7 @@ export default function AdminDashboard() {
   }, [withdrawals]);
   const regByStatus = useMemo(() => statusSummary(registrations), [registrations]);
   const childrenByRegion = useMemo(() => groupByField(childrenList, 'region'), [childrenList]);
-  const centersByStatus = useMemo(() => statusSummary(centers), [centers]);
+  const centersByRegion = useMemo(() => groupByField(centers, 'region'), [centers]);
   const uploadsByStatus = useMemo(() => statusSummary(childUploads), [childUploads]);
   const tasksByStatus = useMemo(() => statusSummary(tasks), [tasks]);
 
@@ -280,12 +280,12 @@ export default function AdminDashboard() {
         </div>
 
         <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
-          <h2 className="mb-4 text-base font-semibold text-slate-900">Center Requests by Status</h2>
-          {centersByStatus.length === 0 ? (
+          <h2 className="mb-4 text-base font-semibold text-slate-900">Support Centers by Region</h2>
+          {centersByRegion.length === 0 ? (
             <p className="py-8 text-center text-sm text-slate-400">No data</p>
           ) : (
             <ResponsiveContainer width="100%" height={260}>
-              <BarChart data={centersByStatus} layout="vertical">
+              <BarChart data={centersByRegion} layout="vertical">
                 <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
                 <XAxis type="number" tick={{ fontSize: 11 }} stroke="#94a3b8" allowDecimals={false} />
                 <YAxis dataKey="name" type="category" tick={{ fontSize: 11 }} stroke="#94a3b8" width={100} />

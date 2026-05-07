@@ -7,14 +7,14 @@ import { regionService } from '@/src/services/region.service';
 import { childrenService } from '@/src/services/children.service';
 import { BLOB_URL } from '@/src/lib/constants';
 import PageHeader from '@/src/components/ui/PageHeader';
-import type { CenterRequest, Child } from '@/src/types/api.types';
+import type { SupportCenter, Child } from '@/src/types/api.types';
 import { Building2, MapPin, Baby, Search } from 'lucide-react';
 
 export default function DonorDiscoverPage() {
   const searchParams = useSearchParams();
   const initialTab = searchParams.get('tab') === 'children' ? 'children' : 'centers';
   const [tab, setTab] = useState<'centers' | 'children'>(initialTab);
-  const [centers, setCenters] = useState<CenterRequest[]>([]);
+  const [centers, setCenters] = useState<SupportCenter[]>([]);
   const [children, setChildren] = useState<Child[]>([]);
   const [regions, setRegions] = useState<string[]>([]);
   const [selectedRegion, setSelectedRegion] = useState('');
@@ -33,7 +33,6 @@ export default function DonorDiscoverPage() {
       const res = await centerService.list({
         page,
         page_size: 20,
-        status: 'approved',
         region: selectedRegion || undefined,
         keyword: keyword || undefined,
       });
@@ -138,24 +137,17 @@ export default function DonorDiscoverPage() {
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
               {centers.map((center) => (
                 <div key={center.id} className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm transition hover:shadow-md">
-                  {center.image_blob_id && (
-                    <div className="h-40 overflow-hidden bg-slate-100">
-                      <img
-                        src={BLOB_URL(center.image_blob_id)}
-                        alt="Center"
-                        className="h-full w-full object-cover"
-                      />
-                    </div>
-                  )}
                   <div className="p-4">
                     <div className="flex items-start gap-2">
                       <MapPin className="mt-0.5 h-4 w-4 flex-shrink-0 text-blue-800" />
                       <div>
                         <p className="font-semibold text-slate-900">{center.region}</p>
-                        <p className="mt-0.5 text-sm text-slate-500">{center.address}</p>
+                        <p className="mt-0.5 text-sm text-slate-600">{center.center_address}</p>
                       </div>
                     </div>
-                    <p className="mt-2 text-xs text-slate-400">Phone: {center.phone_number || '-'}</p>
+                    <p className="mt-2 text-xs text-slate-500">
+                      Phone: {center.center_phone_number || '—'}
+                    </p>
                   </div>
                 </div>
               ))}

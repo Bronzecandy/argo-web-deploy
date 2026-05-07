@@ -11,7 +11,7 @@ import BlobImage from '@/src/components/ui/BlobImage';
 import { formatDate, formatVND, truncateAddress } from '@/src/lib/formatters';
 import { centerService } from '@/src/services/center.service';
 import { useExecuteTransaction } from '@/src/hooks/useExecuteTransaction';
-import type { CenterRequest } from '@/src/types/api.types';
+import type { CenterRequest, SupportCenter } from '@/src/types/api.types';
 
 const PAGE_SIZE = 20;
 
@@ -25,8 +25,43 @@ const STATUS_OPTIONS = [
 
 type CentersTab = 'centers' | 'requests';
 
-const CENTER_TABLE_BASE = [
-  { key: 'id', label: 'ID', render: (c: CenterRequest) => <span className="font-mono text-xs">{truncateAddress(c.id, 8)}</span> },
+/** GET /centers — on-chain support centers */
+const SUPPORT_CENTER_COLUMNS = [
+  {
+    key: 'id',
+    label: 'ID',
+    render: (c: SupportCenter) => <span className="font-mono text-xs">{truncateAddress(c.id, 8)}</span>,
+  },
+  { key: 'region', label: 'Region' },
+  {
+    key: 'center_address',
+    label: 'Address',
+    render: (c: SupportCenter) => (
+      <span className="max-w-[240px] truncate text-slate-700" title={c.center_address}>
+        {c.center_address}
+      </span>
+    ),
+  },
+  { key: 'center_phone_number', label: 'Phone' },
+  {
+    key: 'uploaded_at',
+    label: 'Uploaded',
+    render: (c: SupportCenter) => formatDate(c.uploaded_at),
+  },
+  {
+    key: 'updated_at',
+    label: 'Updated',
+    render: (c: SupportCenter) => formatDate(c.updated_at),
+  },
+];
+
+/** GET /center-reqs — registration / review pipeline */
+const CENTER_REQUEST_COLUMNS = [
+  {
+    key: 'id',
+    label: 'ID',
+    render: (c: CenterRequest) => <span className="font-mono text-xs">{truncateAddress(c.id, 8)}</span>,
+  },
   { key: 'region', label: 'Region' },
   {
     key: 'address',
@@ -47,16 +82,19 @@ const CENTER_TABLE_BASE = [
   { key: 'created_at', label: 'Created', render: (c: CenterRequest) => formatDate(c.created_at) },
 ];
 
+function isSupportCenter(row: SupportCenter | CenterRequest): row is SupportCenter {
+  return 'center_address' in row;
+}
+
 export default function AdminCentersPage() {
   const { execute } = useExecuteTransaction();
   const [tab, setTab] = useState<CentersTab>('centers');
 
   const [loading, setLoading] = useState(true);
-  const [centers, setCenters] = useState<CenterRequest[]>([]);
+  const [centers, setCenters] = useState<SupportCenter[]>([]);
   const [page, setPage] = useState(0);
   const [totalPages, setTotalPages] = useState(1);
   const [totalAmount, setTotalAmount] = useState(0);
-  const [status, setStatus] = useState('');
 
   const [reqLoading, setReqLoading] = useState(false);
   const [reqs, setReqs] = useState<CenterRequest[]>([]);
@@ -72,8 +110,10 @@ export default function AdminCentersPage() {
   const [refuseModal, setRefuseModal] = useState<{ id: string } | null>(null);
   const [refuseReason, setRefuseReason] = useState('');
 
-  const [detail, setDetail] = useState<{ type: 'center' | 'request'; row: CenterRequest } | null>(null);
-  const [detailFetched, setDetailFetched] = useState<CenterRequest | null>(null);
+  const [detail, setDetail] = useState<
+    { type: 'center'; row: SupportCenter } | { type: 'request'; row: CenterRequest } | null
+  >(null);
+  const [detailFetched, setDetailFetched] = useState<SupportCenter | CenterRequest | null>(null);
   const [detailLoading, setDetailLoading] = useState(false);
 
   const loadCenters = useCallback(async () => {
@@ -82,7 +122,7 @@ export default function AdminCentersPage() {
       const res = await centerService.list({
         page,
         page_size: PAGE_SIZE,
-        status: status || undefined,
+        sort_order: 'desc',
       });
       const body = res.data;
       setCenters(Array.isArray(body.data) ? body.data : []);
@@ -98,7 +138,7 @@ export default function AdminCentersPage() {
     } finally {
       setLoading(false);
     }
-  }, [page, status]);
+  }, [page]);
 
   const loadCenterRequests = useCallback(async () => {
     setReqLoading(true);
@@ -142,7 +182,12 @@ export default function AdminCentersPage() {
       return;
     }
     if (detail.type === 'center') {
-      setDetailFetched(detail.row);
+      setDetailLoading(true);
+      void centerService
+        .getById(detail.row.id)
+        .then((res) => setDetailFetched(res.data))
+        .catch(() => setDetailFetched(detail.row))
+        .finally(() => setDetailLoading(false));
       return;
     }
     setDetailLoading(true);
@@ -208,8 +253,26 @@ export default function AdminCentersPage() {
     setConfirmBusyId(null);
   }
 
-  const detailsCol = (kind: 'center' | 'request') => ({
-    key: 'details',
+  const centerDetailsCol = {
+    key: 'details' as const,
+    label: 'Details',
+    className: 'whitespace-nowrap',
+    render: (c: SupportCenter) => (
+      <button
+        type="button"
+        onClick={(e) => {
+          e.stopPropagation();
+          setDetail({ type: 'center', row: c });
+        }}
+        className="rounded-lg border border-slate-200 px-2 py-1 text-xs font-medium text-slate-700 hover:bg-slate-50"
+      >
+        Details
+      </button>
+    ),
+  };
+
+  const requestDetailsCol = {
+    key: 'details' as const,
     label: 'Details',
     className: 'whitespace-nowrap',
     render: (c: CenterRequest) => (
@@ -217,18 +280,18 @@ export default function AdminCentersPage() {
         type="button"
         onClick={(e) => {
           e.stopPropagation();
-          setDetail({ type: kind, row: c });
+          setDetail({ type: 'request', row: c });
         }}
         className="rounded-lg border border-slate-200 px-2 py-1 text-xs font-medium text-slate-700 hover:bg-slate-50"
       >
         Details
       </button>
     ),
-  });
+  };
 
   const requestColumns = [
-    ...CENTER_TABLE_BASE,
-    detailsCol('request'),
+    ...CENTER_REQUEST_COLUMNS,
+    requestDetailsCol,
     {
       key: 'actions',
       label: 'Actions',
@@ -317,38 +380,14 @@ export default function AdminCentersPage() {
 
       {tab === 'centers' ? (
         <>
-          <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <div className="flex flex-wrap items-center gap-2">
-              <MapPin className="h-4 w-4 text-slate-400" />
-              <label htmlFor="center-status" className="text-sm text-slate-600">
-                Status
-              </label>
-              <select
-                id="center-status"
-                value={status}
-                onChange={(e) => {
-                  setStatus(e.target.value);
-                  setPage(0);
-                }}
-                className="rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none ring-blue-800/20 focus:ring-2"
-              >
-                {STATUS_OPTIONS.map((o) => (
-                  <option key={o.value || 'all-c'} value={o.value}>
-                    {o.label}
-                  </option>
-                ))}
-              </select>
-            </div>
-          </div>
-
-          <DataTable<CenterRequest>
-            columns={[...CENTER_TABLE_BASE, detailsCol('center')]}
+          <DataTable<SupportCenter>
+            columns={[...SUPPORT_CENTER_COLUMNS, centerDetailsCol]}
             data={centers}
             loading={loading}
             page={page}
             totalPages={totalPages}
             onPageChange={(p) => setPage(p)}
-            emptyMessage="No centers match the selected status."
+            emptyMessage="No support centers found."
           />
         </>
       ) : (
@@ -417,36 +456,61 @@ export default function AdminCentersPage() {
         title={detail?.type === 'request' ? 'Center request' : 'Support center'}
         open={!!detail}
         onClose={() => setDetail(null)}
-        loading={detailLoading && detail?.type === 'request'}
+        loading={detailLoading}
         wide
       >
         {detailFetched && (
           <div className="space-y-3 text-sm">
-            {detailFetched.image_blob_id && (
-              <div>
-                <p className="mb-1 text-xs font-medium text-slate-500">Image</p>
-                <BlobImage
-                  blobId={detailFetched.image_blob_id}
-                  source="api"
-                  className="max-h-56 max-w-full rounded-lg border border-slate-200 object-contain"
-                />
-              </div>
+            {isSupportCenter(detailFetched) ? (
+              <>
+                <p>
+                  <span className="text-slate-500">Region:</span> {detailFetched.region}
+                </p>
+                <p>
+                  <span className="text-slate-500">Address:</span> {detailFetched.center_address}
+                </p>
+                <p>
+                  <span className="text-slate-500">Phone:</span> {detailFetched.center_phone_number}
+                </p>
+                <p>
+                  <span className="text-slate-500">Uploaded:</span> {formatDate(detailFetched.uploaded_at)}
+                </p>
+                <p>
+                  <span className="text-slate-500">Updated:</span> {formatDate(detailFetched.updated_at)}
+                </p>
+                <p className="font-mono text-xs break-all">
+                  <span className="text-slate-500">ID:</span> {detailFetched.id}
+                </p>
+              </>
+            ) : (
+              <>
+                {detailFetched.image_blob_id && (
+                  <div>
+                    <p className="mb-1 text-xs font-medium text-slate-500">Image</p>
+                    <BlobImage
+                      blobId={detailFetched.image_blob_id}
+                      source="api"
+                      className="max-h-56 max-w-full rounded-lg border border-slate-200 object-contain"
+                    />
+                  </div>
+                )}
+                <p>
+                  <span className="text-slate-500">Region:</span> {detailFetched.region}
+                </p>
+                <p>
+                  <span className="text-slate-500">Address:</span> {detailFetched.address}
+                </p>
+                <p>
+                  <span className="text-slate-500">Phone:</span> {detailFetched.phone_number}
+                </p>
+                <p>
+                  <span className="text-slate-500">Status:</span> <StatusBadge status={detailFetched.status} />
+                </p>
+                <p className="font-mono text-xs break-all">
+                  <span className="text-slate-500">ID:</span> {detailFetched.id}
+                </p>
+              </>
             )}
-            <p>
-              <span className="text-slate-500">Region:</span> {detailFetched.region}
-            </p>
-            <p>
-              <span className="text-slate-500">Address:</span> {detailFetched.address}
-            </p>
-            <p>
-              <span className="text-slate-500">Phone:</span> {detailFetched.phone_number}
-            </p>
-            <p>
-              <span className="text-slate-500">Status:</span> <StatusBadge status={detailFetched.status} />
-            </p>
-            <p className="font-mono text-xs break-all">
-              <span className="text-slate-500">ID:</span> {detailFetched.id}
-            </p>
           </div>
         )}
       </DetailModal>
