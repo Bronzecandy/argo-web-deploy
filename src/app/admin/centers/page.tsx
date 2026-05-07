@@ -239,7 +239,7 @@ export default function AdminCentersPage() {
             type="button"
             disabled={voteBusyId === c.id}
             onClick={() => handleVote(c.id, true)}
-            className="inline-flex items-center gap-1 rounded-md border border-emerald-200 bg-emerald-50 px-2 py-1 text-xs font-medium text-emerald-800 hover:bg-emerald-100 disabled:opacity-50"
+            className="inline-flex items-center gap-1 rounded-md border border-blue-200 bg-blue-50 px-2 py-1 text-xs font-medium text-blue-900 hover:bg-blue-100 disabled:opacity-50"
             title="Approve vote"
           >
             <ThumbsUp className="h-3.5 w-3.5" />
@@ -281,7 +281,7 @@ export default function AdminCentersPage() {
             : 'New center submissions from Local Leaders (GET /center-reqs)'
         }
         actions={
-          <span className="inline-flex items-center gap-1.5 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-1.5 text-xs font-medium text-emerald-800">
+          <span className="inline-flex items-center gap-1.5 rounded-lg border border-blue-200 bg-blue-50 px-3 py-1.5 text-xs font-medium text-blue-900">
             <Building2 className="h-3.5 w-3.5" />
             {headerTotal.toLocaleString('vi-VN')} total
           </span>
@@ -294,7 +294,7 @@ export default function AdminCentersPage() {
           onClick={() => setTab('centers')}
           className={`flex flex-1 items-center justify-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition ${
             tab === 'centers'
-              ? 'bg-white text-emerald-700 shadow-sm ring-1 ring-emerald-600/20'
+              ? 'bg-white text-blue-900 shadow-sm ring-1 ring-blue-800/20'
               : 'text-slate-600 hover:text-slate-900'
           }`}
         >
@@ -306,7 +306,7 @@ export default function AdminCentersPage() {
           onClick={() => setTab('requests')}
           className={`flex flex-1 items-center justify-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition ${
             tab === 'requests'
-              ? 'bg-white text-emerald-700 shadow-sm ring-1 ring-emerald-600/20'
+              ? 'bg-white text-blue-900 shadow-sm ring-1 ring-blue-800/20'
               : 'text-slate-600 hover:text-slate-900'
           }`}
         >
@@ -330,7 +330,7 @@ export default function AdminCentersPage() {
                   setStatus(e.target.value);
                   setPage(0);
                 }}
-                className="rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none ring-emerald-600/20 focus:ring-2"
+                className="rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none ring-blue-800/20 focus:ring-2"
               >
                 {STATUS_OPTIONS.map((o) => (
                   <option key={o.value || 'all-c'} value={o.value}>
@@ -366,7 +366,7 @@ export default function AdminCentersPage() {
                   setReqStatus(e.target.value);
                   setReqPage(0);
                 }}
-                className="rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none ring-emerald-600/20 focus:ring-2"
+                className="rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none ring-blue-800/20 focus:ring-2"
               >
                 {STATUS_OPTIONS.map((o) => (
                   <option key={o.value || 'all-r'} value={o.value}>
@@ -386,7 +386,7 @@ export default function AdminCentersPage() {
                 onChange={(e) => setReqKeywordDraft(e.target.value)}
                 onKeyDown={(e) => e.key === 'Enter' && (setReqKeyword(reqKeywordDraft), setReqPage(0))}
                 placeholder="Search…"
-                className="rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none ring-emerald-600/20 focus:ring-2"
+                className="rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none ring-blue-800/20 focus:ring-2"
               />
             </div>
             <button
@@ -395,7 +395,7 @@ export default function AdminCentersPage() {
                 setReqKeyword(reqKeywordDraft);
                 setReqPage(0);
               }}
-              className="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-emerald-700"
+              className="rounded-lg bg-blue-800 px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-blue-900"
             >
               Search
             </button>
@@ -470,7 +470,7 @@ export default function AdminCentersPage() {
               value={refuseReason}
               onChange={(e) => setRefuseReason(e.target.value)}
               rows={3}
-              className="mb-4 w-full rounded-lg border border-slate-200 p-2 text-sm outline-none ring-emerald-600/20 focus:ring-2"
+              className="mb-4 w-full rounded-lg border border-slate-200 p-2 text-sm outline-none ring-blue-800/20 focus:ring-2"
               placeholder="Reason…"
             />
             <div className="flex justify-end gap-2">

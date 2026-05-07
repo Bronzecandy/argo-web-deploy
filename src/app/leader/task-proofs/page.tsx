@@ -160,7 +160,7 @@ export default function LeaderTaskProofsPage() {
               type="text"
               value={taskId}
               onChange={(e) => setTaskId(e.target.value)}
-              className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-emerald-600 focus:outline-none focus:ring-1 focus:ring-emerald-600"
+              className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-blue-800 focus:outline-none focus:ring-1 focus:ring-blue-800"
             />
           </div>
           <FileUploadInput
@@ -173,7 +173,7 @@ export default function LeaderTaskProofsPage() {
           <button
             type="submit"
             disabled={submitting}
-            className="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-emerald-700 disabled:opacity-50"
+            className="rounded-lg bg-blue-800 px-4 py-2 text-sm font-medium text-white transition hover:bg-blue-900 disabled:opacity-50"
           >
             {submitting ? 'Submitting…' : 'Submit proof'}
           </button>
@@ -190,7 +190,7 @@ export default function LeaderTaskProofsPage() {
               setStatus(e.target.value);
               setPage(0);
             }}
-            className="min-w-[200px] rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500"
+            className="min-w-[200px] rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-blue-700 focus:outline-none focus:ring-1 focus:ring-blue-700"
           >
             {STATUS_OPTIONS.map((o) => (
               <option key={o.value || 'all'} value={o.value}>
@@ -248,7 +248,7 @@ export default function LeaderTaskProofsPage() {
                         if (!actionable) return;
                         void handleApprove(r.id);
                       }}
-                      className="rounded-lg border border-emerald-200 px-2 py-1 text-xs font-medium text-emerald-700 hover:bg-emerald-50 disabled:pointer-events-none disabled:opacity-40 disabled:grayscale"
+                      className="rounded-lg border border-blue-200 px-2 py-1 text-xs font-medium text-blue-900 hover:bg-blue-50 disabled:pointer-events-none disabled:opacity-40 disabled:grayscale"
                     >
                       Approve
                     </button>

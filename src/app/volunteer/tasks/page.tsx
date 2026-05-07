@@ -92,7 +92,7 @@ export default function VolunteerTasksPage() {
                   type="button"
                   disabled={busyId === r.id}
                   onClick={(e) => { e.stopPropagation(); void handleClaim(r.id); }}
-                  className="inline-flex items-center gap-1 rounded-md border border-emerald-200 bg-emerald-50 px-3 py-1 text-xs font-medium text-emerald-800 hover:bg-emerald-100 disabled:opacity-50"
+                  className="inline-flex items-center gap-1 rounded-md border border-blue-200 bg-blue-50 px-3 py-1 text-xs font-medium text-blue-900 hover:bg-blue-100 disabled:opacity-50"
                 >
                   <Hand className="h-3 w-3" /> Claim
                 </button>

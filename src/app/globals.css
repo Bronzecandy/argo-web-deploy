@@ -1,10 +1,12 @@
 @import "tailwindcss";
 
 @theme inline {
-  --color-primary: #16a34a;
-  --color-primary-light: #22c55e;
-  --color-primary-dark: #15803d;
-  --color-accent: #f59e0b;
+  /* Mobile app palette (HomeScreen / Login): primary blue #1E40AF */
+  --color-primary: #1e40af;
+  --color-primary-light: #3b82f6;
+  --color-primary-dark: #1e3a8a;
+  --color-primary-muted: #eff6ff;
+  --color-accent: #ea580c;
   --color-surface: #ffffff;
   --color-surface-secondary: #f8fafc;
   --color-border: #e2e8f0;

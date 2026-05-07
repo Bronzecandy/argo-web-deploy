@@ -9,7 +9,7 @@ import { toast } from 'sonner';
 import { useAppSelector } from '@/src/store/hooks';
 import { taskService } from '@/src/services/task.service';
 import type { Task } from '@/src/types/api.types';
-import { Hand, ClipboardCheck, ThumbsUp, ThumbsDown } from 'lucide-react';
+import { Hand, ClipboardCheck, ThumbsUp, ThumbsDown, Plus } from 'lucide-react';
 
 const PAGE_SIZE = 20;
 
@@ -31,6 +31,8 @@ export default function LeaderTasksPage() {
   const [reviewTask, setReviewTask] = useState<Task | null>(null);
   const [reviewVote, setReviewVote] = useState(true);
   const [reviewReason, setReviewReason] = useState('');
+
+  const [createOpen, setCreateOpen] = useState(false);
 
   const canUsePool = poolStatus === 'succeeded' && !!poolName;
 
@@ -131,6 +133,7 @@ export default function LeaderTasksPage() {
       setDescription('');
       setStartPeriod('');
       setEndPeriod('');
+      setCreateOpen(false);
       setPage(0);
       setListVersion((v) => v + 1);
     } catch (err) {
@@ -156,6 +159,16 @@ export default function LeaderTasksPage() {
           user?.address
             ? `Tasks for your assigned region · ${truncateAddress(user.address)}`
             : 'Tasks for your assigned region'
+        }
+        actions={
+          <button
+            type="button"
+            onClick={() => setCreateOpen(true)}
+            className="inline-flex items-center gap-2 rounded-lg bg-blue-800 px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-blue-900"
+          >
+            <Plus className="h-4 w-4" />
+            Create
+          </button>
         }
       />
 
@@ -193,7 +206,7 @@ export default function LeaderTasksPage() {
                         type="button"
                         disabled={busyId === r.id}
                         onClick={() => void handleClaim(r.id)}
-                        className="inline-flex items-center gap-1 rounded-md border border-emerald-200 bg-emerald-50 px-2 py-1 text-xs font-medium text-emerald-800 hover:bg-emerald-100 disabled:opacity-50"
+                        className="inline-flex items-center gap-1 rounded-md border border-blue-200 bg-blue-50 px-2 py-1 text-xs font-medium text-blue-800 hover:bg-blue-100 disabled:opacity-50"
                       >
                         <Hand className="h-3 w-3" /> Claim
                       </button>
@@ -226,63 +239,85 @@ export default function LeaderTasksPage() {
         />
       </section>
 
-      <section className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
-        <h2 className="mb-4 text-lg font-semibold text-slate-900">Create new task</h2>
-        <p className="mb-4 rounded-lg border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700">
-          <span className="font-medium text-slate-900">Region</span> is fixed to your leader pool:{' '}
-          <span className="font-semibold text-emerald-800">{canUsePool ? poolName : '…'}</span>
-          {poolStatus === 'failed' && (
-            <span className="mt-2 block text-red-700">Pool failed to load — you cannot create tasks until this is fixed.</span>
-          )}
-        </p>
-        <form onSubmit={handleCreate} className="max-w-xl space-y-4">
-          <div>
-            <label htmlFor="task-desc" className="mb-1 block text-xs font-medium text-slate-500">
-              Description
-            </label>
-            <textarea
-              id="task-desc"
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              rows={3}
-              className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-emerald-600 focus:outline-none focus:ring-1 focus:ring-emerald-600"
-            />
-          </div>
-          <div className="grid gap-4 sm:grid-cols-2">
-            <div>
-              <label htmlFor="start" className="mb-1 block text-xs font-medium text-slate-500">
-                Start period
-              </label>
-              <input
-                id="start"
-                type="date"
-                value={startPeriod}
-                onChange={(e) => setStartPeriod(e.target.value)}
-                className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-emerald-600 focus:outline-none focus:ring-1 focus:ring-emerald-600"
-              />
-            </div>
-            <div>
-              <label htmlFor="end" className="mb-1 block text-xs font-medium text-slate-500">
-                End period
-              </label>
-              <input
-                id="end"
-                type="date"
-                value={endPeriod}
-                onChange={(e) => setEndPeriod(e.target.value)}
-                className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-emerald-600 focus:outline-none focus:ring-1 focus:ring-emerald-600"
-              />
-            </div>
-          </div>
-          <button
-            type="submit"
-            disabled={submitting || !canUsePool}
-            className="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-emerald-700 disabled:opacity-50"
+      {createOpen && (
+        <div
+          className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-slate-900/40 p-4 py-10"
+          onClick={() => setCreateOpen(false)}
+          role="presentation"
+        >
+          <div
+            className="relative w-full max-w-xl rounded-xl border border-slate-200 bg-white p-6 shadow-xl"
+            onClick={(e) => e.stopPropagation()}
           >
-            {submitting ? 'Creating…' : 'Create task'}
-          </button>
-        </form>
-      </section>
+            <div className="mb-4 flex items-center justify-between gap-2">
+              <h2 className="text-lg font-semibold text-slate-900">Create new task</h2>
+              <button
+                type="button"
+                onClick={() => setCreateOpen(false)}
+                className="rounded-lg px-3 py-1.5 text-sm text-slate-600 hover:bg-slate-100"
+              >
+                Close
+              </button>
+            </div>
+            <p className="mb-4 rounded-lg border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700">
+              <span className="font-medium text-slate-900">Region</span> is fixed to your leader pool:{' '}
+              <span className="font-semibold text-blue-900">{canUsePool ? poolName : '…'}</span>
+              {poolStatus === 'failed' && (
+                <span className="mt-2 block text-red-700">
+                  Pool failed to load — you cannot create tasks until this is fixed.
+                </span>
+              )}
+            </p>
+            <form onSubmit={handleCreate} className="max-w-xl space-y-4">
+              <div>
+                <label htmlFor="task-desc" className="mb-1 block text-xs font-medium text-slate-500">
+                  Description
+                </label>
+                <textarea
+                  id="task-desc"
+                  value={description}
+                  onChange={(e) => setDescription(e.target.value)}
+                  rows={3}
+                  className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-blue-800 focus:outline-none focus:ring-1 focus:ring-blue-800"
+                />
+              </div>
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div>
+                  <label htmlFor="start" className="mb-1 block text-xs font-medium text-slate-500">
+                    Start period
+                  </label>
+                  <input
+                    id="start"
+                    type="date"
+                    value={startPeriod}
+                    onChange={(e) => setStartPeriod(e.target.value)}
+                    className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-blue-800 focus:outline-none focus:ring-1 focus:ring-blue-800"
+                  />
+                </div>
+                <div>
+                  <label htmlFor="end" className="mb-1 block text-xs font-medium text-slate-500">
+                    End period
+                  </label>
+                  <input
+                    id="end"
+                    type="date"
+                    value={endPeriod}
+                    onChange={(e) => setEndPeriod(e.target.value)}
+                    className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-blue-800 focus:outline-none focus:ring-1 focus:ring-blue-800"
+                  />
+                </div>
+              </div>
+              <button
+                type="submit"
+                disabled={submitting || !canUsePool}
+                className="rounded-lg bg-blue-800 px-4 py-2 text-sm font-medium text-white transition hover:bg-blue-900 disabled:opacity-50"
+              >
+                {submitting ? 'Creating…' : 'Create task'}
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
 
       {reviewTask && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
@@ -305,7 +340,7 @@ export default function LeaderTasksPage() {
                 type="button"
                 onClick={() => setReviewVote(true)}
                 className={`flex flex-1 items-center justify-center gap-2 rounded-lg border-2 py-3 text-sm font-medium transition ${
-                  reviewVote ? 'border-emerald-500 bg-emerald-50 text-emerald-700' : 'border-slate-200 text-slate-500'
+                  reviewVote ? 'border-blue-600 bg-blue-50 text-blue-800' : 'border-slate-200 text-slate-500'
                 }`}
               >
                 <ThumbsUp className="h-4 w-4" /> Approve
@@ -327,7 +362,7 @@ export default function LeaderTasksPage() {
                 onChange={(e) => setReviewReason(e.target.value)}
                 placeholder="Reason for refusal..."
                 rows={2}
-                className="mb-4 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                className="mb-4 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-blue-800 focus:outline-none focus:ring-1 focus:ring-blue-800"
               />
             )}
 
@@ -344,7 +379,7 @@ export default function LeaderTasksPage() {
                 onClick={() => void handleReview()}
                 disabled={busyId === reviewTask.id}
                 className={`rounded-lg px-4 py-2 text-sm font-medium text-white disabled:opacity-50 ${
-                  reviewVote ? 'bg-emerald-600 hover:bg-emerald-700' : 'bg-red-600 hover:bg-red-700'
+                  reviewVote ? 'bg-blue-800 hover:bg-blue-900' : 'bg-red-600 hover:bg-red-700'
                 }`}
               >
                 {busyId === reviewTask.id ? 'Submitting...' : 'Confirm'}

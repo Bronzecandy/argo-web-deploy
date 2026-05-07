@@ -11,7 +11,7 @@ export default function UnauthorizedPage() {
       <p className="text-slate-500">You don&apos;t have permission to view this page.</p>
       <Link
         href="/"
-        className="mt-4 rounded-lg bg-emerald-600 px-6 py-2.5 text-sm font-medium text-white transition hover:bg-emerald-700"
+        className="mt-4 rounded-lg bg-blue-800 px-6 py-2.5 text-sm font-medium text-white transition hover:bg-blue-900"
       >
         Go Home
       </Link>

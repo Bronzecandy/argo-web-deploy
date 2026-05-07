@@ -146,7 +146,7 @@ export default function AdminRegionsPage() {
               value={keywordDraft}
               onChange={(e) => setKeywordDraft(e.target.value)}
               placeholder="Tìm theo nội dung / vùng…"
-              className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500"
+              className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-blue-700 focus:outline-none focus:ring-1 focus:ring-blue-700"
             />
           </div>
           <div>
@@ -155,7 +155,7 @@ export default function AdminRegionsPage() {
               value={createdByDraft}
               onChange={(e) => setCreatedByDraft(e.target.value)}
               placeholder="Địa chỉ ví đầy đủ"
-              className="w-full rounded-lg border border-slate-200 px-3 py-2 font-mono text-xs focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500"
+              className="w-full rounded-lg border border-slate-200 px-3 py-2 font-mono text-xs focus:border-blue-700 focus:outline-none focus:ring-1 focus:ring-blue-700"
             />
           </div>
           <div className="flex items-end gap-2">
@@ -166,7 +166,7 @@ export default function AdminRegionsPage() {
                 setAppliedCreatedBy(createdByDraft);
                 setPage(0);
               }}
-              className="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-700"
+              className="rounded-lg bg-blue-800 px-4 py-2 text-sm font-medium text-white hover:bg-blue-900"
             >
               Tìm kiếm
             </button>
@@ -234,7 +234,7 @@ export default function AdminRegionsPage() {
                     type="button"
                     disabled={!can}
                     onClick={() => void handleApprove(r.id)}
-                    className="rounded-lg border border-emerald-200 px-2 py-1 text-xs font-medium text-emerald-700 hover:bg-emerald-50 disabled:cursor-not-allowed disabled:opacity-40"
+                    className="rounded-lg border border-blue-200 px-2 py-1 text-xs font-medium text-blue-900 hover:bg-blue-50 disabled:cursor-not-allowed disabled:opacity-40"
                   >
                     Đồng ý
                   </button>
@@ -300,7 +300,7 @@ export default function AdminRegionsPage() {
               value={refuseReason}
               onChange={(e) => setRefuseReason(e.target.value)}
               rows={3}
-              className="mb-4 w-full rounded-lg border border-slate-200 p-2 text-sm outline-none ring-emerald-600/20 focus:ring-2"
+              className="mb-4 w-full rounded-lg border border-slate-200 p-2 text-sm outline-none ring-blue-800/20 focus:ring-2"
               placeholder="Lý do…"
             />
             <div className="flex justify-end gap-2">

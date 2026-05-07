@@ -60,7 +60,7 @@ export default function VolunteerDashboardPage() {
   if (loading) {
     return (
       <div className="flex h-48 items-center justify-center">
-        <div className="h-8 w-8 animate-spin rounded-full border-4 border-emerald-600 border-t-transparent" />
+        <div className="h-8 w-8 animate-spin rounded-full border-4 border-blue-800 border-t-transparent" />
       </div>
     );
   }

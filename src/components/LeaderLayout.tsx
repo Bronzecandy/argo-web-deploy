@@ -78,7 +78,7 @@ export default function LeaderLayout({ children }: { children: React.ReactNode }
         }`}
       >
         <div className="flex h-16 items-center gap-3 border-b border-slate-200 px-5">
-          <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-emerald-600">
+          <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-blue-800">
             <Leaf className="h-5 w-5 text-white" />
           </div>
           <div>
@@ -104,11 +104,11 @@ export default function LeaderLayout({ children }: { children: React.ReactNode }
                     onClick={() => setSidebarOpen(false)}
                     className={`flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition ${
                       active
-                        ? 'bg-emerald-50 text-emerald-700'
+                        ? 'bg-blue-50 text-blue-900'
                         : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
                     }`}
                   >
-                    <Icon className={`h-[18px] w-[18px] ${active ? 'text-emerald-600' : 'text-slate-400'}`} />
+                    <Icon className={`h-[18px] w-[18px] ${active ? 'text-blue-800' : 'text-slate-400'}`} />
                     {item.label}
                   </Link>
                 </li>
@@ -142,7 +142,7 @@ export default function LeaderLayout({ children }: { children: React.ReactNode }
           </button>
           <div className="flex-1" />
           <div className="flex items-center gap-2 text-sm text-slate-500">
-            <div className="h-2 w-2 rounded-full bg-emerald-500" />
+            <div className="h-2 w-2 rounded-full bg-blue-600" />
             Connected
           </div>
         </header>

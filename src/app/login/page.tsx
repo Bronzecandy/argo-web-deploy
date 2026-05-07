@@ -35,7 +35,7 @@ export default function LoginPage() {
     <GoogleOAuthProvider clientId={GOOGLE_CLIENT_ID}>
     <div className="flex min-h-screen">
       {/* Left Panel */}
-      <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-emerald-600 to-emerald-800 items-center justify-center p-12">
+      <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-blue-800 to-blue-900 items-center justify-center p-12">
         <div className="max-w-md text-white">
           <div className="mb-8 flex items-center gap-3">
             <div className="flex h-14 w-14 items-center justify-center rounded-xl bg-white/20 backdrop-blur-sm">
@@ -46,22 +46,22 @@ export default function LoginPage() {
           <h2 className="mb-4 text-2xl font-semibold">
             Transparent Child Support Platform
           </h2>
-          <p className="text-emerald-100 leading-relaxed">
+          <p className="text-blue-100 leading-relaxed">
             Powered by blockchain technology. Every donation is traceable, every action is transparent.
             Together, we build trust for a better future.
           </p>
           <div className="mt-8 grid grid-cols-3 gap-4 text-center">
             <div className="rounded-xl bg-white/10 p-4 backdrop-blur-sm">
               <div className="text-2xl font-bold">100%</div>
-              <div className="text-xs text-emerald-200 mt-1">Transparent</div>
+              <div className="text-xs text-blue-200 mt-1">Transparent</div>
             </div>
             <div className="rounded-xl bg-white/10 p-4 backdrop-blur-sm">
               <div className="text-2xl font-bold">On-chain</div>
-              <div className="text-xs text-emerald-200 mt-1">Verified</div>
+              <div className="text-xs text-blue-200 mt-1">Verified</div>
             </div>
             <div className="rounded-xl bg-white/10 p-4 backdrop-blur-sm">
               <div className="text-2xl font-bold">Sui</div>
-              <div className="text-xs text-emerald-200 mt-1">Blockchain</div>
+              <div className="text-xs text-blue-200 mt-1">Blockchain</div>
             </div>
           </div>
         </div>
@@ -71,10 +71,10 @@ export default function LoginPage() {
       <div className="flex w-full lg:w-1/2 items-center justify-center p-8">
         <div className="w-full max-w-md">
           <div className="mb-8 text-center lg:hidden">
-            <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-xl bg-emerald-600">
+            <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-xl bg-blue-800">
               <Leaf className="h-8 w-8 text-white" />
             </div>
-            <h1 className="text-2xl font-bold text-emerald-700">AgroTrust</h1>
+            <h1 className="text-2xl font-bold text-blue-900">AgroTrust</h1>
           </div>
 
           <div className="rounded-2xl border border-slate-200 bg-white p-8 shadow-sm">
@@ -85,7 +85,7 @@ export default function LoginPage() {
 
             {isLoading ? (
               <div className="flex items-center justify-center py-4">
-                <div className="h-8 w-8 animate-spin rounded-full border-4 border-emerald-600 border-t-transparent" />
+                <div className="h-8 w-8 animate-spin rounded-full border-4 border-blue-800 border-t-transparent" />
                 <span className="ml-3 text-sm text-slate-500">Signing in...</span>
               </div>
             ) : (

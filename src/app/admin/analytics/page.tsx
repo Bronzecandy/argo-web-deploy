@@ -96,7 +96,7 @@ export default function AdminAnalyticsPage() {
               setActionType(e.target.value);
               setPage(0);
             }}
-            className="min-w-[180px] rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500"
+            className="min-w-[180px] rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-blue-700 focus:outline-none focus:ring-1 focus:ring-blue-700"
           >
             {ACTION_TYPE_OPTIONS.map((o) => (
               <option key={o.value || 'all'} value={o.value}>
@@ -113,20 +113,20 @@ export default function AdminAnalyticsPage() {
             onChange={(e) => setActorSearch(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && applyActorFilter()}
             placeholder="Search by wallet / actor"
-            className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500"
+            className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-blue-700 focus:outline-none focus:ring-1 focus:ring-blue-700"
           />
         </div>
         <button
           type="button"
           onClick={applyActorFilter}
-          className="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-700"
+          className="rounded-lg bg-blue-800 px-4 py-2 text-sm font-medium text-white hover:bg-blue-900"
         >
           Search actor
         </button>
       </div>
 
       <p className="mb-3 text-sm text-slate-600">
-        Total matching records: <span className="font-semibold text-emerald-700">{totalCount}</span>
+        Total matching records: <span className="font-semibold text-blue-900">{totalCount}</span>
       </p>
 
       <DataTable<TransactionRecord>

@@ -74,7 +74,7 @@ export default function DonorProfilePage() {
   if (loading) {
     return (
       <div className="flex h-64 items-center justify-center">
-        <div className="h-8 w-8 animate-spin rounded-full border-4 border-emerald-600 border-t-transparent" />
+        <div className="h-8 w-8 animate-spin rounded-full border-4 border-blue-800 border-t-transparent" />
       </div>
     );
   }
@@ -88,7 +88,7 @@ export default function DonorProfilePage() {
           !editing ? (
             <button
               onClick={() => setEditing(true)}
-              className="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-700"
+              className="rounded-lg bg-blue-800 px-4 py-2 text-sm font-medium text-white hover:bg-blue-900"
             >
               Edit Profile
             </button>
@@ -100,8 +100,8 @@ export default function DonorProfilePage() {
         {/* Wallet overview card */}
         <div className="rounded-xl border border-slate-200 bg-white p-6">
           <div className="flex items-center gap-3 mb-4">
-            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-emerald-50">
-              <Wallet className="h-5 w-5 text-emerald-600" />
+            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-blue-50">
+              <Wallet className="h-5 w-5 text-blue-800" />
             </div>
             <h3 className="font-semibold text-slate-900">Wallet</h3>
           </div>
@@ -112,7 +112,7 @@ export default function DonorProfilePage() {
             </div>
             <div>
               <p className="text-slate-500">Total Donated</p>
-              <p className="text-xl font-bold text-emerald-700">{formatVND(profile?.total_donation || 0)}</p>
+              <p className="text-xl font-bold text-blue-900">{formatVND(profile?.total_donation || 0)}</p>
             </div>
             <div>
               <p className="text-slate-500">Total Transactions</p>
@@ -139,7 +139,7 @@ export default function DonorProfilePage() {
                     type="text"
                     value={form.first_name}
                     onChange={(e) => setForm({ ...form, first_name: e.target.value })}
-                    className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                    className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-blue-700 focus:outline-none focus:ring-1 focus:ring-blue-700"
                   />
                 </div>
                 <div>
@@ -148,7 +148,7 @@ export default function DonorProfilePage() {
                     type="text"
                     value={form.last_name}
                     onChange={(e) => setForm({ ...form, last_name: e.target.value })}
-                    className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                    className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-blue-700 focus:outline-none focus:ring-1 focus:ring-blue-700"
                   />
                 </div>
                 <div>
@@ -156,7 +156,7 @@ export default function DonorProfilePage() {
                   <select
                     value={form.gender}
                     onChange={(e) => setForm({ ...form, gender: e.target.value })}
-                    className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                    className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-blue-700 focus:outline-none focus:ring-1 focus:ring-blue-700"
                   >
                     <option value="">Select</option>
                     <option value="Male">Male</option>
@@ -170,7 +170,7 @@ export default function DonorProfilePage() {
                     type="date"
                     value={form.date_of_birth}
                     onChange={(e) => setForm({ ...form, date_of_birth: e.target.value })}
-                    className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                    className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-blue-700 focus:outline-none focus:ring-1 focus:ring-blue-700"
                   />
                 </div>
                 <div>
@@ -179,7 +179,7 @@ export default function DonorProfilePage() {
                     type="tel"
                     value={form.phone_number}
                     onChange={(e) => setForm({ ...form, phone_number: e.target.value })}
-                    className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                    className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-blue-700 focus:outline-none focus:ring-1 focus:ring-blue-700"
                   />
                 </div>
                 <div>
@@ -188,7 +188,7 @@ export default function DonorProfilePage() {
                     type="email"
                     value={form.email}
                     onChange={(e) => setForm({ ...form, email: e.target.value })}
-                    className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                    className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-blue-700 focus:outline-none focus:ring-1 focus:ring-blue-700"
                   />
                 </div>
                 <div className="sm:col-span-2">
@@ -197,7 +197,7 @@ export default function DonorProfilePage() {
                     type="text"
                     value={form.identity_code}
                     onChange={(e) => setForm({ ...form, identity_code: e.target.value })}
-                    className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                    className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-blue-700 focus:outline-none focus:ring-1 focus:ring-blue-700"
                   />
                 </div>
               </div>
@@ -212,7 +212,7 @@ export default function DonorProfilePage() {
                 <button
                   onClick={() => void handleSave()}
                   disabled={saving}
-                  className="flex items-center gap-2 rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-700 disabled:opacity-50"
+                  className="flex items-center gap-2 rounded-lg bg-blue-800 px-4 py-2 text-sm font-medium text-white hover:bg-blue-900 disabled:opacity-50"
                 >
                   <Save className="h-4 w-4" />
                   {saving ? 'Saving...' : 'Save Changes'}
@@ -246,7 +246,7 @@ export default function DonorProfilePage() {
                   <span className="ml-2 text-slate-400">{tx.pool_name}</span>
                 </div>
                 <div className="text-right">
-                  <p className="font-semibold text-emerald-700">{formatVND(tx.amount)}</p>
+                  <p className="font-semibold text-blue-900">{formatVND(tx.amount)}</p>
                   <p className="text-xs text-slate-400">{formatDateTime(tx.created_at)}</p>
                 </div>
               </div>

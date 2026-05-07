@@ -74,7 +74,7 @@ export default function FileUploadInput({
             onChange={(e) => onChange(e.target.value)}
             placeholder={placeholder}
             disabled={disabled || uploading}
-            className="w-full rounded-lg border border-slate-200 px-3 py-2 pr-8 text-sm focus:border-emerald-600 focus:outline-none focus:ring-1 focus:ring-emerald-600 disabled:opacity-50"
+            className="w-full rounded-lg border border-slate-200 px-3 py-2 pr-8 text-sm focus:border-blue-800 focus:outline-none focus:ring-1 focus:ring-blue-800 disabled:opacity-50"
           />
           {value && (
             <button
@@ -93,9 +93,9 @@ export default function FileUploadInput({
           className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-50"
         >
           {uploading ? (
-            <div className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-emerald-600 border-t-transparent" />
+            <div className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-blue-800 border-t-transparent" />
           ) : value ? (
-            <CheckCircle className="h-3.5 w-3.5 text-emerald-600" />
+            <CheckCircle className="h-3.5 w-3.5 text-blue-800" />
           ) : (
             <Upload className="h-3.5 w-3.5" />
           )}

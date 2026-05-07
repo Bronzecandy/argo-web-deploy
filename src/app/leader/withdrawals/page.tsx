@@ -13,9 +13,9 @@ import { withdrawService } from '@/src/services/withdraw.service';
 import { childrenService } from '@/src/services/children.service';
 import { useExecuteTransaction } from '@/src/hooks/useExecuteTransaction';
 import FileUploadInput from '@/src/components/ui/FileUploadInput';
+import { Plus } from 'lucide-react';
 import type { Child, WithdrawProposal } from '@/src/types/api.types';
 
-type Tab = 'mine' | 'create';
 type NeedKind = 'meal' | 'books' | 'health' | 'special';
 type WithdrawMode = 'child' | 'pool';
 
@@ -51,7 +51,7 @@ export default function LeaderWithdrawalsPage() {
   const { execute } = useExecuteTransaction();
   const { user } = useAppSelector((state) => state.auth);
   const { poolId, poolName, status: poolStatus, error: poolError } = useAppSelector((state) => state.leaderPool);
-  const [tab, setTab] = useState<Tab>('mine');
+  const [createOpen, setCreateOpen] = useState(false);
 
   const [listLoading, setListLoading] = useState(false);
   const [rows, setRows] = useState<WithdrawProposal[]>([]);
@@ -112,9 +112,8 @@ export default function LeaderWithdrawalsPage() {
   }, [user?.address, page]);
 
   useEffect(() => {
-    if (tab !== 'mine') return;
     void loadProposals();
-  }, [tab, loadProposals]);
+  }, [loadProposals]);
 
   useEffect(() => {
     if (!proposalDetailOpen || !proposalDetailId) {
@@ -162,9 +161,9 @@ export default function LeaderWithdrawalsPage() {
   }, [poolName]);
 
   useEffect(() => {
-    if (tab !== 'create' || withdrawMode !== 'child') return;
+    if (!createOpen || withdrawMode !== 'child') return;
     void loadChildrenPage(childrenPage);
-  }, [tab, withdrawMode, childrenPage, loadChildrenPage]);
+  }, [createOpen, withdrawMode, childrenPage, loadChildrenPage]);
 
   useEffect(() => {
     if (!selectedChildId) {
@@ -250,8 +249,9 @@ export default function LeaderWithdrawalsPage() {
         setPoolTaskDescription('');
         setPoolWithdrawAmount('');
         setProofBlobId('');
-        setTab('mine');
+        setCreateOpen(false);
         setPage(0);
+        void loadProposals();
       }
       setSubmitting(false);
       return;
@@ -299,8 +299,9 @@ export default function LeaderWithdrawalsPage() {
       setSpecialDescription('');
       setSpecialTarget('');
       setProofBlobId('');
-      setTab('mine');
+      setCreateOpen(false);
       setPage(0);
+      void loadProposals();
     }
     setSubmitting(false);
   }
@@ -356,65 +357,55 @@ export default function LeaderWithdrawalsPage() {
   const showPoolProofUpload = withdrawMode === 'pool' && canUseRegion && !!poolId?.trim();
 
   const inputClass =
-    'w-full rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none ring-emerald-600/20 transition focus:border-emerald-600 focus:ring-2';
+    'w-full rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none ring-blue-800/20 transition focus:border-blue-800 focus:ring-2';
 
   return (
     <div>
       <PageHeader
         title="Withdrawals"
         description="Review proposals, withdraw for a child need, or request a regional pool withdrawal for other tasks"
+        actions={
+          <button
+            type="button"
+            onClick={() => setCreateOpen(true)}
+            className="inline-flex items-center gap-2 rounded-lg bg-blue-800 px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-blue-900"
+          >
+            <Plus className="h-4 w-4" />
+            Create
+          </button>
+        }
       />
 
-      <div className="mb-6 flex gap-1 rounded-lg border border-slate-200 bg-slate-50 p-1">
-        <button
-          type="button"
-          onClick={() => setTab('mine')}
-          className={`flex flex-1 items-center justify-center rounded-md px-3 py-2 text-sm font-medium transition ${
-            tab === 'mine'
-              ? 'bg-white text-emerald-700 shadow-sm ring-1 ring-emerald-600/20'
-              : 'text-slate-600 hover:text-slate-900'
-          }`}
-        >
-          My proposals
-        </button>
-        <button
-          type="button"
-          onClick={() => setTab('create')}
-          className={`flex flex-1 items-center justify-center rounded-md px-3 py-2 text-sm font-medium transition ${
-            tab === 'create'
-              ? 'bg-white text-emerald-700 shadow-sm ring-1 ring-emerald-600/20'
-              : 'text-slate-600 hover:text-slate-900'
-          }`}
-        >
-          Create new
-        </button>
-      </div>
-
-      {tab === 'mine' && (
-        !user?.address ? (
-          <div className="rounded-xl border border-slate-200 bg-white p-8 text-center text-sm text-slate-500">
-            Connect your wallet to see your withdrawal proposals.
-          </div>
-        ) : (
-          <DataTable<WithdrawProposal>
-            columns={columns}
-            data={rows}
-            loading={listLoading}
-            page={page}
-            totalPages={totalPages}
-            onPageChange={setPage}
-            emptyMessage="No proposals yet"
-          />
-        )
+      {!user?.address ? (
+        <div className="rounded-xl border border-slate-200 bg-white p-8 text-center text-sm text-slate-500">
+          Connect your wallet to see your withdrawal proposals.
+        </div>
+      ) : (
+        <DataTable<WithdrawProposal>
+          columns={columns}
+          data={rows}
+          loading={listLoading}
+          page={page}
+          totalPages={totalPages}
+          onPageChange={setPage}
+          emptyMessage="No proposals yet"
+        />
       )}
-      {tab === 'create' && (
-        <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-slate-900/40 p-4 py-10">
-          <div className="w-full max-w-2xl rounded-xl border border-slate-200 bg-white p-6 shadow-xl">
+      {createOpen && (
+        <div
+          className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-slate-900/40 p-4 py-10"
+          onClick={() => setCreateOpen(false)}
+          role="presentation"
+        >
+          <div
+            className="relative w-full max-w-2xl rounded-xl border border-slate-200 bg-white p-6 shadow-xl"
+            onClick={(e) => e.stopPropagation()}
+          >
             <div className="mb-4 flex items-center justify-between gap-2">
               <h2 className="text-lg font-semibold text-slate-900">Create withdrawal</h2>
               <button
                 type="button"
-                onClick={() => setTab('mine')}
+                onClick={() => setCreateOpen(false)}
                 className="rounded-lg px-3 py-1.5 text-sm text-slate-600 hover:bg-slate-100"
               >
                 Close
@@ -472,7 +463,7 @@ export default function LeaderWithdrawalsPage() {
           </fieldset>
 
           {withdrawMode === 'pool' && canUseRegion && poolId && (
-            <div className="rounded-lg border border-emerald-100 bg-emerald-50/60 px-4 py-3 text-xs text-emerald-900">
+            <div className="rounded-lg border border-blue-100 bg-blue-50/60 px-4 py-3 text-xs text-blue-900">
               Withdrawal request for your leader pool (not linked to a child). Pool ID:{' '}
               <span className="font-mono break-all">{poolId}</span>
             </div>
@@ -691,7 +682,7 @@ export default function LeaderWithdrawalsPage() {
           <button
             type="submit"
             disabled={submitting || !canSubmit}
-            className="rounded-lg bg-emerald-600 px-5 py-2.5 text-sm font-medium text-white shadow-sm transition hover:bg-emerald-700 disabled:opacity-60"
+            className="rounded-lg bg-blue-800 px-5 py-2.5 text-sm font-medium text-white shadow-sm transition hover:bg-blue-900 disabled:opacity-60"
           >
             {submitting ? 'Submitting…' : 'Submit'}
           </button>

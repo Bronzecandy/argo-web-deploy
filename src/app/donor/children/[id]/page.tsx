@@ -192,7 +192,7 @@ export default function DonorChildDetailPage() {
   if (loading) {
     return (
       <div className="flex h-64 items-center justify-center">
-        <div className="h-8 w-8 animate-spin rounded-full border-4 border-emerald-600 border-t-transparent" />
+        <div className="h-8 w-8 animate-spin rounded-full border-4 border-blue-800 border-t-transparent" />
       </div>
     );
   }
@@ -350,12 +350,12 @@ export default function DonorChildDetailPage() {
           {(gifts.length > 0 || giftsLoading) && (
             <div className="rounded-xl border border-slate-200 bg-white p-5">
               <div className="flex items-center gap-2 mb-3">
-                <GiftIcon className="h-5 w-5 text-emerald-600" />
+                <GiftIcon className="h-5 w-5 text-blue-800" />
                 <h3 className="font-semibold text-slate-900">Gifts Received</h3>
               </div>
               {giftsLoading ? (
                 <div className="flex justify-center py-8">
-                  <div className="h-8 w-8 animate-spin rounded-full border-4 border-emerald-600 border-t-transparent" />
+                  <div className="h-8 w-8 animate-spin rounded-full border-4 border-blue-800 border-t-transparent" />
                 </div>
               ) : (
                 <>
@@ -370,7 +370,7 @@ export default function DonorChildDetailPage() {
                           <p className="text-xs text-slate-400">{formatDate(g.uploaded_at)}</p>
                         </div>
                         <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${
-                          g.status === 'delivered' ? 'bg-emerald-50 text-emerald-700' : 'bg-amber-50 text-amber-700'
+                          g.status === 'delivered' ? 'bg-blue-50 text-blue-900' : 'bg-amber-50 text-amber-700'
                         }`}>
                           {g.status}
                         </span>
@@ -422,7 +422,7 @@ export default function DonorChildDetailPage() {
             {mealNeed?.pool_id && (
               <Link
                 href={`/donor/donate?poolId=${mealNeed.pool_id}`}
-                className="flex items-center gap-2 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-2.5 text-sm font-medium text-emerald-700 hover:bg-emerald-100 transition"
+                className="flex items-center gap-2 rounded-lg border border-blue-200 bg-blue-50 px-4 py-2.5 text-sm font-medium text-blue-900 hover:bg-blue-100 transition"
               >
                 <HandCoins className="h-4 w-4" /> Donate to Meal Pool
               </Link>
@@ -468,7 +468,7 @@ export default function DonorChildDetailPage() {
                     max={12}
                     value={mealMonths}
                     onChange={(e) => setMealMonths(Number(e.target.value))}
-                    className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                    className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-blue-700 focus:outline-none focus:ring-1 focus:ring-blue-700"
                   />
                   {mealNeed && (
                     <p className="mt-1 text-xs text-slate-400">
@@ -487,7 +487,7 @@ export default function DonorChildDetailPage() {
                       min={1000}
                       value={specialAmount}
                       onChange={(e) => setSpecialAmount(Number(e.target.value))}
-                      className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                      className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-blue-700 focus:outline-none focus:ring-1 focus:ring-blue-700"
                     />
                   </div>
                   <div>
@@ -495,7 +495,7 @@ export default function DonorChildDetailPage() {
                     <textarea
                       value={specialDescription}
                       onChange={(e) => setSpecialDescription(e.target.value)}
-                      className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                      className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-blue-700 focus:outline-none focus:ring-1 focus:ring-blue-700"
                       rows={2}
                     />
                   </div>
@@ -518,7 +518,7 @@ export default function DonorChildDetailPage() {
                   else if (sponsorType === 'special') void handleSponsorSpecial();
                 }}
                 disabled={submitting}
-                className="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-700 disabled:opacity-50"
+                className="rounded-lg bg-blue-800 px-4 py-2 text-sm font-medium text-white hover:bg-blue-900 disabled:opacity-50"
               >
                 {submitting ? 'Processing...' : 'Confirm & Pay'}
               </button>

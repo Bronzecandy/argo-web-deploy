@@ -83,7 +83,7 @@ export default function VolunteerTaskProofsPage() {
               type="text"
               value={taskId}
               onChange={(e) => setTaskId(e.target.value)}
-              className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-emerald-600 focus:outline-none focus:ring-1 focus:ring-emerald-600"
+              className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-blue-800 focus:outline-none focus:ring-1 focus:ring-blue-800"
               placeholder="Enter the task ID you completed"
             />
           </div>
@@ -97,7 +97,7 @@ export default function VolunteerTaskProofsPage() {
           <button
             type="submit"
             disabled={submitting}
-            className="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-emerald-700 disabled:opacity-50"
+            className="rounded-lg bg-blue-800 px-4 py-2 text-sm font-medium text-white transition hover:bg-blue-900 disabled:opacity-50"
           >
             {submitting ? 'Submitting...' : 'Submit proof'}
           </button>

@@ -46,7 +46,7 @@ export default function VolunteerNotificationsPage() {
 
       {loading ? (
         <div className="flex h-48 items-center justify-center">
-          <div className="h-8 w-8 animate-spin rounded-full border-4 border-emerald-600 border-t-transparent" />
+          <div className="h-8 w-8 animate-spin rounded-full border-4 border-blue-800 border-t-transparent" />
         </div>
       ) : notis.length === 0 ? (
         <div className="rounded-xl border border-slate-200 bg-white p-12 text-center text-sm text-slate-400">

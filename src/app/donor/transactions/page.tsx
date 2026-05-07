@@ -67,7 +67,7 @@ export default function DonorTransactionsPage() {
       key: 'amount',
       label: 'Amount',
       render: (item: TransactionRecord) => (
-        <span className="font-semibold text-emerald-700">{formatVND(item.amount)}</span>
+        <span className="font-semibold text-blue-900">{formatVND(item.amount)}</span>
       ),
     },
     {
@@ -103,7 +103,7 @@ export default function DonorTransactionsPage() {
         <select
           value={actionType}
           onChange={(e) => setActionType(e.target.value)}
-          className="rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500"
+          className="rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-blue-700 focus:outline-none focus:ring-1 focus:ring-blue-700"
         >
           <option value="">All types</option>
           {ACTION_TYPES.filter(Boolean).map((t) => (
@@ -114,7 +114,7 @@ export default function DonorTransactionsPage() {
         <select
           value={sortOrder}
           onChange={(e) => setSortOrder(e.target.value as 'desc' | 'asc')}
-          className="rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500"
+          className="rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-blue-700 focus:outline-none focus:ring-1 focus:ring-blue-700"
         >
           <option value="desc">Newest first</option>
           <option value="asc">Oldest first</option>

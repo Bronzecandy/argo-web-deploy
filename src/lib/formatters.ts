@@ -46,7 +46,7 @@ export function truncateAddress(address: string, chars = 6): string {
 
 export function getStatusColor(status: string): string {
   const s = status?.toLowerCase();
-  if (s === 'approved' || s === 'active' || s === 'verified') return 'text-emerald-700 bg-emerald-50 border-emerald-200';
+  if (s === 'approved' || s === 'active' || s === 'verified') return 'text-blue-900 bg-blue-50 border-blue-200';
   if (s === 'pending' || s === 'pending_review') return 'text-amber-700 bg-amber-50 border-amber-200';
   if (s === 'refused' || s === 'rejected' || s === 'banned') return 'text-red-700 bg-red-50 border-red-200';
   if (s === 'closed' || s === 'executed') return 'text-slate-700 bg-slate-50 border-slate-200';

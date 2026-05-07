@@ -112,14 +112,14 @@ export default function LeaderGiftsPage() {
               type="text"
               value={childId}
               onChange={(e) => setChildId(e.target.value)}
-              className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-emerald-600 focus:outline-none focus:ring-1 focus:ring-emerald-600"
+              className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-blue-800 focus:outline-none focus:ring-1 focus:ring-blue-800"
               placeholder="Child on-chain or system ID"
             />
           </div>
           <button
             type="button"
             onClick={applyChildId}
-            className="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-emerald-700"
+            className="rounded-lg bg-blue-800 px-4 py-2 text-sm font-medium text-white transition hover:bg-blue-900"
           >
             Load gifts
           </button>
@@ -178,7 +178,7 @@ export default function LeaderGiftsPage() {
                         type="button"
                         disabled={confirmingId === r.id}
                         onClick={() => void handleConfirmReceive(r.id)}
-                        className="rounded-lg bg-emerald-600 px-2 py-1 text-xs font-medium text-white hover:bg-emerald-700 disabled:opacity-50"
+                        className="rounded-lg bg-blue-800 px-2 py-1 text-xs font-medium text-white hover:bg-blue-900 disabled:opacity-50"
                       >
                         {confirmingId === r.id ? 'Confirming…' : 'Confirm receive'}
                       </button>

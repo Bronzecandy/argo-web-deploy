@@ -250,7 +250,7 @@ export default function LeaderChildrenPage() {
           onClick={() => setTab('review')}
           className={`flex min-w-0 flex-1 items-center justify-center gap-1 rounded-md px-2 py-2 text-sm font-medium transition sm:px-3 ${
             tab === 'review'
-              ? 'bg-white text-emerald-700 shadow-sm ring-1 ring-emerald-600/20'
+              ? 'bg-white text-blue-900 shadow-sm ring-1 ring-blue-800/20'
               : 'text-slate-600 hover:text-slate-900'
           }`}
         >
@@ -262,7 +262,7 @@ export default function LeaderChildrenPage() {
           onClick={() => setTab('profiles')}
           className={`flex min-w-0 flex-1 items-center justify-center gap-1 rounded-md px-2 py-2 text-sm font-medium transition sm:px-3 ${
             tab === 'profiles'
-              ? 'bg-white text-emerald-700 shadow-sm ring-1 ring-emerald-600/20'
+              ? 'bg-white text-blue-900 shadow-sm ring-1 ring-blue-800/20'
               : 'text-slate-600 hover:text-slate-900'
           }`}
         >
@@ -274,7 +274,7 @@ export default function LeaderChildrenPage() {
           onClick={() => setTab('list')}
           className={`flex min-w-0 flex-1 items-center justify-center rounded-md px-2 py-2 text-sm font-medium transition sm:px-3 ${
             tab === 'list'
-              ? 'bg-white text-emerald-700 shadow-sm ring-1 ring-emerald-600/20'
+              ? 'bg-white text-blue-900 shadow-sm ring-1 ring-blue-800/20'
               : 'text-slate-600 hover:text-slate-900'
           }`}
         >
@@ -292,7 +292,7 @@ export default function LeaderChildrenPage() {
                   setUploadStatus(e.target.value);
                   setUploadPage(0);
                 }}
-                className="rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none ring-emerald-600/20 focus:ring-2"
+                className="rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none ring-blue-800/20 focus:ring-2"
               >
                 {STATUS_OPTIONS.map((o) => (
                   <option key={o.value || 'all-s'} value={o.value}>
@@ -308,7 +308,7 @@ export default function LeaderChildrenPage() {
                   setUploadRegion(e.target.value);
                   setUploadPage(0);
                 }}
-                className="min-w-[140px] rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none ring-emerald-600/20 focus:ring-2"
+                className="min-w-[140px] rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none ring-blue-800/20 focus:ring-2"
               />
               <select
                 value={uploadGender}
@@ -316,7 +316,7 @@ export default function LeaderChildrenPage() {
                   setUploadGender(e.target.value);
                   setUploadPage(0);
                 }}
-                className="rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none ring-emerald-600/20 focus:ring-2"
+                className="rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none ring-blue-800/20 focus:ring-2"
               >
                 {GENDER_OPTIONS.map((o) => (
                   <option key={o.value || 'all-g'} value={o.value}>
@@ -367,7 +367,7 @@ export default function LeaderChildrenPage() {
                       type="button"
                       disabled={busyId === u.id}
                       onClick={() => void runReview(u.id, true)}
-                      className="inline-flex items-center gap-0.5 rounded border border-emerald-200 bg-emerald-50 px-1.5 py-0.5 text-[11px] font-medium text-emerald-800 hover:bg-emerald-100 disabled:opacity-50"
+                      className="inline-flex items-center gap-0.5 rounded border border-blue-200 bg-blue-50 px-1.5 py-0.5 text-[11px] font-medium text-blue-900 hover:bg-blue-100 disabled:opacity-50"
                     >
                       <ClipboardCheck className="h-3 w-3" />
                       OK
@@ -431,7 +431,7 @@ export default function LeaderChildrenPage() {
                       type="button"
                       disabled={voteBusyId === u.id}
                       onClick={() => void handleVoteYes(u.id)}
-                      className="inline-flex items-center gap-0.5 rounded-md border border-emerald-200 bg-emerald-50 px-2 py-1 text-xs font-medium text-emerald-800 hover:bg-emerald-100 disabled:opacity-50"
+                      className="inline-flex items-center gap-0.5 rounded-md border border-blue-200 bg-blue-50 px-2 py-1 text-xs font-medium text-blue-900 hover:bg-blue-100 disabled:opacity-50"
                       title="Vote yes"
                     >
                       <ThumbsUp className="h-3.5 w-3.5" />
@@ -489,7 +489,7 @@ export default function LeaderChildrenPage() {
               value={refuseReason}
               onChange={(e) => setRefuseReason(e.target.value)}
               rows={3}
-              className="mb-4 w-full rounded-lg border border-slate-200 p-2 text-sm outline-none ring-emerald-600/20 focus:ring-2"
+              className="mb-4 w-full rounded-lg border border-slate-200 p-2 text-sm outline-none ring-blue-800/20 focus:ring-2"
               placeholder="Optional reason…"
             />
             <div className="flex justify-end gap-2">

@@ -237,7 +237,7 @@ export default function AdminAccountsPage() {
           onClick={() => setActiveTab('registrations')}
           className={`flex flex-1 items-center justify-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition ${
             activeTab === 'registrations'
-              ? 'bg-white text-emerald-700 shadow-sm ring-1 ring-emerald-600/20'
+              ? 'bg-white text-blue-900 shadow-sm ring-1 ring-blue-800/20'
               : 'text-slate-600 hover:text-slate-900'
           }`}
         >
@@ -249,7 +249,7 @@ export default function AdminAccountsPage() {
           onClick={() => setActiveTab('staff')}
           className={`flex flex-1 items-center justify-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition ${
             activeTab === 'staff'
-              ? 'bg-white text-emerald-700 shadow-sm ring-1 ring-emerald-600/20'
+              ? 'bg-white text-blue-900 shadow-sm ring-1 ring-blue-800/20'
               : 'text-slate-600 hover:text-slate-900'
           }`}
         >
@@ -270,7 +270,7 @@ export default function AdminAccountsPage() {
                   value={regSearchDraft}
                   onChange={(e) => setRegSearchDraft(e.target.value)}
                   onKeyDown={(e) => e.key === 'Enter' && applyRegSearch()}
-                  className="w-full rounded-lg border border-slate-200 py-2 pl-9 pr-3 text-sm outline-none ring-emerald-600/20 focus:ring-2"
+                  className="w-full rounded-lg border border-slate-200 py-2 pl-9 pr-3 text-sm outline-none ring-blue-800/20 focus:ring-2"
                 />
               </div>
               <select
@@ -279,7 +279,7 @@ export default function AdminAccountsPage() {
                   setRegStatus(e.target.value);
                   setRegPage(0);
                 }}
-                className="rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none ring-emerald-600/20 focus:ring-2 sm:w-48"
+                className="rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none ring-blue-800/20 focus:ring-2 sm:w-48"
               >
                 {REG_STATUS_OPTIONS.map((o) => (
                   <option key={o.value || 'all'} value={o.value}>
@@ -290,7 +290,7 @@ export default function AdminAccountsPage() {
               <button
                 type="button"
                 onClick={applyRegSearch}
-                className="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-emerald-700"
+                className="rounded-lg bg-blue-800 px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-blue-900"
               >
                 Search
               </button>
@@ -331,7 +331,7 @@ export default function AdminAccountsPage() {
                         type="button"
                         disabled={approved || voteBusyId === r.id}
                         onClick={() => handleVote(r.id, true)}
-                        className="inline-flex items-center gap-1 rounded-md border border-emerald-200 bg-emerald-50 px-2 py-1 text-xs font-medium text-emerald-800 hover:bg-emerald-100 disabled:cursor-not-allowed disabled:opacity-50"
+                        className="inline-flex items-center gap-1 rounded-md border border-blue-200 bg-blue-50 px-2 py-1 text-xs font-medium text-blue-900 hover:bg-blue-100 disabled:cursor-not-allowed disabled:opacity-50"
                         title="Approve vote"
                       >
                         <ThumbsUp className="h-3.5 w-3.5" />
@@ -383,13 +383,13 @@ export default function AdminAccountsPage() {
                 value={staffSearchDraft}
                 onChange={(e) => setStaffSearchDraft(e.target.value)}
                 onKeyDown={(e) => e.key === 'Enter' && applyStaffSearch()}
-                className="w-full rounded-lg border border-slate-200 py-2 pl-9 pr-3 text-sm outline-none ring-emerald-600/20 focus:ring-2"
+                className="w-full rounded-lg border border-slate-200 py-2 pl-9 pr-3 text-sm outline-none ring-blue-800/20 focus:ring-2"
               />
             </div>
             <button
               type="button"
               onClick={applyStaffSearch}
-              className="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-emerald-700"
+              className="rounded-lg bg-blue-800 px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-blue-900"
             >
               Search
             </button>
@@ -470,7 +470,7 @@ export default function AdminAccountsPage() {
               value={refuseReason}
               onChange={(e) => setRefuseReason(e.target.value)}
               rows={3}
-              className="mb-4 w-full rounded-lg border border-slate-200 p-2 text-sm outline-none ring-emerald-600/20 focus:ring-2"
+              className="mb-4 w-full rounded-lg border border-slate-200 p-2 text-sm outline-none ring-blue-800/20 focus:ring-2"
               placeholder="Reason for refusal…"
             />
             <div className="flex justify-end gap-2">

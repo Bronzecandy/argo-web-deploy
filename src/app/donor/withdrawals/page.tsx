@@ -106,7 +106,7 @@ export default function DonorWithdrawalsPage() {
       label: 'Votes',
       render: (item: WithdrawProposal) => (
         <div className="flex items-center gap-3 text-xs">
-          <span className="flex items-center gap-1 text-emerald-600">
+          <span className="flex items-center gap-1 text-blue-800">
             <ThumbsUp className="h-3 w-3" /> {item.approve_weight || 0}
           </span>
           <span className="flex items-center gap-1 text-red-500">
@@ -127,11 +127,11 @@ export default function DonorWithdrawalsPage() {
       label: 'Action',
       render: (item: WithdrawProposal) => {
         if (item.is_executed) return <span className="text-xs text-slate-400">Closed</span>;
-        if (hasVoted(item)) return <span className="text-xs text-emerald-600 font-medium">Voted</span>;
+        if (hasVoted(item)) return <span className="text-xs text-blue-800 font-medium">Voted</span>;
         return (
           <button
             onClick={(e) => { e.stopPropagation(); setSelectedProposal(item); setVoteType(true); setRefuseReason(''); }}
-            className="rounded-lg bg-emerald-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-emerald-700"
+            className="rounded-lg bg-blue-800 px-3 py-1.5 text-xs font-medium text-white hover:bg-blue-900"
           >
             <Vote className="inline h-3 w-3 mr-1" /> Vote
           </button>
@@ -154,7 +154,7 @@ export default function DonorWithdrawalsPage() {
             key={f}
             onClick={() => setFilter(f)}
             className={`rounded-md px-4 py-2 text-sm font-medium capitalize transition ${
-              filter === f ? 'bg-white text-emerald-700 shadow-sm' : 'text-slate-600 hover:text-slate-900'
+              filter === f ? 'bg-white text-blue-900 shadow-sm' : 'text-slate-600 hover:text-slate-900'
             }`}
           >
             {f}
@@ -194,7 +194,7 @@ export default function DonorWithdrawalsPage() {
               <button
                 onClick={() => setVoteType(true)}
                 className={`flex-1 flex items-center justify-center gap-2 rounded-lg border-2 py-3 text-sm font-medium transition ${
-                  voteType ? 'border-emerald-500 bg-emerald-50 text-emerald-700' : 'border-slate-200 text-slate-500 hover:border-slate-300'
+                  voteType ? 'border-blue-600 bg-blue-50 text-blue-900' : 'border-slate-200 text-slate-500 hover:border-slate-300'
                 }`}
               >
                 <ThumbsUp className="h-4 w-4" /> Approve
@@ -215,7 +215,7 @@ export default function DonorWithdrawalsPage() {
                 <textarea
                   value={refuseReason}
                   onChange={(e) => setRefuseReason(e.target.value)}
-                  className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                  className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-blue-700 focus:outline-none focus:ring-1 focus:ring-blue-700"
                   rows={2}
                   placeholder="Explain why you're refusing..."
                 />
@@ -233,7 +233,7 @@ export default function DonorWithdrawalsPage() {
                 onClick={() => void handleVote()}
                 disabled={voting}
                 className={`rounded-lg px-4 py-2 text-sm font-medium text-white disabled:opacity-50 ${
-                  voteType ? 'bg-emerald-600 hover:bg-emerald-700' : 'bg-red-600 hover:bg-red-700'
+                  voteType ? 'bg-blue-800 hover:bg-blue-900' : 'bg-red-600 hover:bg-red-700'
                 }`}
               >
                 {voting ? 'Submitting...' : voteType ? 'Confirm Approve' : 'Confirm Refuse'}

@@ -63,8 +63,8 @@ export default function DonorDonatePage() {
       <div className="mx-auto max-w-lg">
         <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
           <div className="flex items-center gap-3 mb-6">
-            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-emerald-100">
-              <HandCoins className="h-6 w-6 text-emerald-600" />
+            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-blue-100">
+              <HandCoins className="h-6 w-6 text-blue-800" />
             </div>
             <div>
               <h2 className="text-lg font-bold text-slate-900">General Donation</h2>
@@ -80,7 +80,7 @@ export default function DonorDonatePage() {
                 placeholder="Enter pool ID"
                 value={poolId}
                 onChange={(e) => setPoolId(e.target.value)}
-                className="w-full rounded-lg border border-slate-200 px-3 py-2.5 text-sm focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                className="w-full rounded-lg border border-slate-200 px-3 py-2.5 text-sm focus:border-blue-700 focus:outline-none focus:ring-1 focus:ring-blue-700"
               />
               <p className="mt-1 text-xs text-slate-400">
                 You can find pool IDs on the child detail or campaign pages
@@ -95,7 +95,7 @@ export default function DonorDonatePage() {
                 min={1000}
                 value={amount || ''}
                 onChange={(e) => setAmount(Number(e.target.value))}
-                className="w-full rounded-lg border border-slate-200 px-3 py-2.5 text-sm focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                className="w-full rounded-lg border border-slate-200 px-3 py-2.5 text-sm focus:border-blue-700 focus:outline-none focus:ring-1 focus:ring-blue-700"
               />
 
               <div className="mt-2 flex flex-wrap gap-2">
@@ -106,8 +106,8 @@ export default function DonorDonatePage() {
                     onClick={() => setAmount(preset)}
                     className={`rounded-lg border px-3 py-1.5 text-xs font-medium transition ${
                       amount === preset
-                        ? 'border-emerald-500 bg-emerald-50 text-emerald-700'
-                        : 'border-slate-200 text-slate-600 hover:border-emerald-300 hover:bg-emerald-50'
+                        ? 'border-blue-600 bg-blue-50 text-blue-900'
+                        : 'border-slate-200 text-slate-600 hover:border-blue-300 hover:bg-blue-50'
                     }`}
                   >
                     {formatVND(preset)}
@@ -123,16 +123,16 @@ export default function DonorDonatePage() {
                 value={message}
                 onChange={(e) => setMessage(e.target.value)}
                 rows={3}
-                className="w-full rounded-lg border border-slate-200 px-3 py-2.5 text-sm focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                className="w-full rounded-lg border border-slate-200 px-3 py-2.5 text-sm focus:border-blue-700 focus:outline-none focus:ring-1 focus:ring-blue-700"
               />
             </div>
 
             {amount > 0 && (
-              <div className="rounded-lg bg-emerald-50 p-4 border border-emerald-100">
-                <p className="text-sm text-emerald-800">
+              <div className="rounded-lg bg-blue-50 p-4 border border-blue-100">
+                <p className="text-sm text-blue-900">
                   You are about to donate <span className="font-bold">{formatVND(amount)}</span>
                 </p>
-                <p className="mt-1 text-xs text-emerald-600">
+                <p className="mt-1 text-xs text-blue-800">
                   Payment will be processed securely via PayOS
                 </p>
               </div>
@@ -141,7 +141,7 @@ export default function DonorDonatePage() {
             <button
               onClick={() => void handleDonate()}
               disabled={submitting || !poolId || !amount}
-              className="flex w-full items-center justify-center gap-2 rounded-lg bg-emerald-600 px-4 py-3 text-sm font-semibold text-white hover:bg-emerald-700 disabled:opacity-50 transition"
+              className="flex w-full items-center justify-center gap-2 rounded-lg bg-blue-800 px-4 py-3 text-sm font-semibold text-white hover:bg-blue-900 disabled:opacity-50 transition"
             >
               {submitting ? (
                 <>

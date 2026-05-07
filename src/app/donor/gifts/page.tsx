@@ -122,7 +122,7 @@ export default function DonorGiftsPage() {
         <button
           onClick={() => setTab('send')}
           className={`flex items-center gap-2 rounded-md px-4 py-2 text-sm font-medium transition ${
-            tab === 'send' ? 'bg-white text-emerald-700 shadow-sm' : 'text-slate-600 hover:text-slate-900'
+            tab === 'send' ? 'bg-white text-blue-900 shadow-sm' : 'text-slate-600 hover:text-slate-900'
           }`}
         >
           <Send className="h-4 w-4" /> Send Gift
@@ -130,7 +130,7 @@ export default function DonorGiftsPage() {
         <button
           onClick={() => setTab('track')}
           className={`flex items-center gap-2 rounded-md px-4 py-2 text-sm font-medium transition ${
-            tab === 'track' ? 'bg-white text-emerald-700 shadow-sm' : 'text-slate-600 hover:text-slate-900'
+            tab === 'track' ? 'bg-white text-blue-900 shadow-sm' : 'text-slate-600 hover:text-slate-900'
           }`}
         >
           <Package className="h-4 w-4" /> Track Gifts
@@ -158,7 +158,7 @@ export default function DonorGiftsPage() {
                   value={recipient}
                   onChange={(e) => setRecipient(e.target.value)}
                   placeholder="Enter child ID"
-                  className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                  className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-blue-700 focus:outline-none focus:ring-1 focus:ring-blue-700"
                 />
               </div>
 
@@ -167,7 +167,7 @@ export default function DonorGiftsPage() {
                 <select
                   value={category}
                   onChange={(e) => setCategory(e.target.value)}
-                  className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                  className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-blue-700 focus:outline-none focus:ring-1 focus:ring-blue-700"
                 >
                   <option value="">Select category</option>
                   <option value="clothing">Clothing</option>
@@ -186,7 +186,7 @@ export default function DonorGiftsPage() {
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
                   placeholder="What are you sending?"
-                  className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                  className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-blue-700 focus:outline-none focus:ring-1 focus:ring-blue-700"
                 />
               </div>
 
@@ -197,7 +197,7 @@ export default function DonorGiftsPage() {
                   onChange={(e) => setMessage(e.target.value)}
                   placeholder="Add a message for the child..."
                   rows={2}
-                  className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                  className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-blue-700 focus:outline-none focus:ring-1 focus:ring-blue-700"
                 />
               </div>
 
@@ -208,7 +208,7 @@ export default function DonorGiftsPage() {
                   min={0}
                   value={giftValue || ''}
                   onChange={(e) => setGiftValue(Number(e.target.value))}
-                  className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                  className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-blue-700 focus:outline-none focus:ring-1 focus:ring-blue-700"
                 />
               </div>
 
@@ -220,7 +220,7 @@ export default function DonorGiftsPage() {
                     value={carrier}
                     onChange={(e) => setCarrier(e.target.value)}
                     placeholder="e.g. VNPost, GHN"
-                    className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                    className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-blue-700 focus:outline-none focus:ring-1 focus:ring-blue-700"
                   />
                 </div>
                 <div>
@@ -230,14 +230,14 @@ export default function DonorGiftsPage() {
                     value={trackingCode}
                     onChange={(e) => setTrackingCode(e.target.value)}
                     placeholder="Shipment tracking"
-                    className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                    className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-blue-700 focus:outline-none focus:ring-1 focus:ring-blue-700"
                   />
                 </div>
               </div>
 
               <div>
                 <label className="mb-1 block text-sm font-medium text-slate-700">Gift photo</label>
-                <label className="flex cursor-pointer items-center justify-center gap-2 rounded-lg border-2 border-dashed border-slate-200 p-4 text-sm text-slate-400 hover:border-emerald-300 hover:text-emerald-600 transition">
+                <label className="flex cursor-pointer items-center justify-center gap-2 rounded-lg border-2 border-dashed border-slate-200 p-4 text-sm text-slate-400 hover:border-blue-300 hover:text-blue-800 transition">
                   <Upload className="h-4 w-4" />
                   {imageFile ? imageFile.name : 'Click to upload image'}
                   <input
@@ -267,7 +267,7 @@ export default function DonorGiftsPage() {
               value={trackChildId}
               onChange={(e) => setTrackChildId(e.target.value)}
               placeholder="Enter child ID to see their gifts"
-              className="flex-1 max-w-md rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500"
+              className="flex-1 max-w-md rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-blue-700 focus:outline-none focus:ring-1 focus:ring-blue-700"
             />
             <button
               onClick={() => {
@@ -275,7 +275,7 @@ export default function DonorGiftsPage() {
                 void handleTrackGifts(0);
               }}
               disabled={tracking}
-              className="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-700 disabled:opacity-50"
+              className="rounded-lg bg-blue-800 px-4 py-2 text-sm font-medium text-white hover:bg-blue-900 disabled:opacity-50"
             >
               {tracking ? 'Loading...' : 'Search'}
             </button>
@@ -294,7 +294,7 @@ export default function DonorGiftsPage() {
                       {g.message && <p className="mt-0.5 text-sm text-slate-500 italic">&ldquo;{g.message}&rdquo;</p>}
                     </div>
                     <span className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${
-                      g.status === 'delivered' ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' :
+                      g.status === 'delivered' ? 'bg-blue-50 text-blue-900 border border-blue-200' :
                       g.status === 'cancelled' ? 'bg-red-50 text-red-700 border border-red-200' :
                       'bg-amber-50 text-amber-700 border border-amber-200'
                     }`}>

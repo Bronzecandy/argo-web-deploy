@@ -85,7 +85,7 @@ export default function DonorDiscoverPage() {
         <button
           onClick={() => setTab('centers')}
           className={`flex items-center gap-2 rounded-md px-4 py-2 text-sm font-medium transition ${
-            tab === 'centers' ? 'bg-white text-emerald-700 shadow-sm' : 'text-slate-600 hover:text-slate-900'
+            tab === 'centers' ? 'bg-white text-blue-900 shadow-sm' : 'text-slate-600 hover:text-slate-900'
           }`}
         >
           <Building2 className="h-4 w-4" /> Centers
@@ -93,7 +93,7 @@ export default function DonorDiscoverPage() {
         <button
           onClick={() => setTab('children')}
           className={`flex items-center gap-2 rounded-md px-4 py-2 text-sm font-medium transition ${
-            tab === 'children' ? 'bg-white text-emerald-700 shadow-sm' : 'text-slate-600 hover:text-slate-900'
+            tab === 'children' ? 'bg-white text-blue-900 shadow-sm' : 'text-slate-600 hover:text-slate-900'
           }`}
         >
           <Baby className="h-4 w-4" /> Children
@@ -109,13 +109,13 @@ export default function DonorDiscoverPage() {
             placeholder="Search..."
             value={keyword}
             onChange={(e) => setKeyword(e.target.value)}
-            className="rounded-lg border border-slate-200 py-2 pl-9 pr-3 text-sm focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500"
+            className="rounded-lg border border-slate-200 py-2 pl-9 pr-3 text-sm focus:border-blue-700 focus:outline-none focus:ring-1 focus:ring-blue-700"
           />
         </div>
         <select
           value={selectedRegion}
           onChange={(e) => setSelectedRegion(e.target.value)}
-          className="rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500"
+          className="rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-blue-700 focus:outline-none focus:ring-1 focus:ring-blue-700"
         >
           <option value="">All regions</option>
           {regions.map((r) => (
@@ -126,7 +126,7 @@ export default function DonorDiscoverPage() {
 
       {loading ? (
         <div className="flex h-48 items-center justify-center">
-          <div className="h-8 w-8 animate-spin rounded-full border-4 border-emerald-600 border-t-transparent" />
+          <div className="h-8 w-8 animate-spin rounded-full border-4 border-blue-800 border-t-transparent" />
         </div>
       ) : tab === 'centers' ? (
         <>
@@ -149,7 +149,7 @@ export default function DonorDiscoverPage() {
                   )}
                   <div className="p-4">
                     <div className="flex items-start gap-2">
-                      <MapPin className="mt-0.5 h-4 w-4 flex-shrink-0 text-emerald-600" />
+                      <MapPin className="mt-0.5 h-4 w-4 flex-shrink-0 text-blue-800" />
                       <div>
                         <p className="font-semibold text-slate-900">{center.region}</p>
                         <p className="mt-0.5 text-sm text-slate-500">{center.address}</p>
@@ -184,7 +184,7 @@ export default function DonorDiscoverPage() {
                     )}
                   </div>
                   <div className="p-3">
-                    <p className="font-semibold text-slate-900 group-hover:text-emerald-700">
+                    <p className="font-semibold text-slate-900 group-hover:text-blue-900">
                       {child.first_name} {child.last_name}
                     </p>
                     <p className="mt-0.5 flex items-center gap-1 text-xs text-slate-500">

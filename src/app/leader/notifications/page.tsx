@@ -58,7 +58,7 @@ export default function LeaderNotificationsPage() {
       <div className="relative min-h-[120px] rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
         {loading ? (
           <div className="flex items-center justify-center py-16">
-            <div className="h-8 w-8 animate-spin rounded-full border-4 border-emerald-600 border-t-transparent" />
+            <div className="h-8 w-8 animate-spin rounded-full border-4 border-blue-800 border-t-transparent" />
           </div>
         ) : !user?.address ? (
           <p className="text-center text-sm text-amber-700">Connect your wallet to load notifications.</p>
@@ -66,16 +66,16 @@ export default function LeaderNotificationsPage() {
           <p className="text-center text-sm text-slate-500">No notifications yet.</p>
         ) : (
           <ul className="relative space-y-0">
-            <div className="absolute bottom-0 left-[11px] top-2 w-px bg-emerald-200" aria-hidden />
+            <div className="absolute bottom-0 left-[11px] top-2 w-px bg-blue-200" aria-hidden />
             {items.map((n, i) => (
               <li key={n.id || i} className="relative flex gap-4 pb-8 pl-8 last:pb-0">
-                <span className="absolute left-0 top-1.5 z-10 flex h-6 w-6 items-center justify-center rounded-full border-2 border-emerald-600 bg-white ring-4 ring-white">
-                  <span className="h-2 w-2 rounded-full bg-emerald-600" />
+                <span className="absolute left-0 top-1.5 z-10 flex h-6 w-6 items-center justify-center rounded-full border-2 border-blue-800 bg-white ring-4 ring-white">
+                  <span className="h-2 w-2 rounded-full bg-blue-800" />
                 </span>
-                <article className="flex-1 rounded-xl border border-slate-100 bg-slate-50/80 p-4 shadow-sm transition hover:border-emerald-100 hover:bg-white">
+                <article className="flex-1 rounded-xl border border-slate-100 bg-slate-50/80 p-4 shadow-sm transition hover:border-blue-100 hover:bg-white">
                   <p className="text-sm leading-relaxed text-slate-800">{n.content}</p>
                   <div className="mt-3 flex flex-wrap items-center gap-2 text-xs text-slate-500">
-                    <span className="rounded-full bg-emerald-50 px-2 py-0.5 font-medium text-emerald-800">{n.region || '—'}</span>
+                    <span className="rounded-full bg-blue-50 px-2 py-0.5 font-medium text-blue-900">{n.region || '—'}</span>
                     <span>{formatDate(n.created_at)}</span>
                   </div>
                 </article>

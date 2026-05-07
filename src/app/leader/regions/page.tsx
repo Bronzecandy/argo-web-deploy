@@ -108,7 +108,7 @@ export default function LeaderRegionsPage() {
           <button
             type="button"
             onClick={() => setProposeOpen(true)}
-            className="inline-flex items-center gap-2 rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-emerald-700"
+            className="inline-flex items-center gap-2 rounded-lg bg-blue-800 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-blue-900"
           >
             <Plus className="h-4 w-4" />
             Gửi đề xuất mới
@@ -173,7 +173,7 @@ export default function LeaderRegionsPage() {
                   type="text"
                   value={region}
                   onChange={(e) => setRegion(e.target.value)}
-                  className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-emerald-600 focus:outline-none focus:ring-1 focus:ring-emerald-600"
+                  className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-blue-800 focus:outline-none focus:ring-1 focus:ring-blue-800"
                   placeholder="Chọn từ gợi ý hoặc nhập tên vùng mới"
                 />
                 <datalist id="region-options">
@@ -191,14 +191,14 @@ export default function LeaderRegionsPage() {
                   value={content}
                   onChange={(e) => setContent(e.target.value)}
                   rows={5}
-                  className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-emerald-600 focus:outline-none focus:ring-1 focus:ring-emerald-600"
+                  className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-blue-800 focus:outline-none focus:ring-1 focus:ring-blue-800"
                   placeholder="Lý do vùng này cần được hỗ trợ…"
                 />
               </div>
               <button
                 type="submit"
                 disabled={submitting}
-                className="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-emerald-700 disabled:opacity-50"
+                className="rounded-lg bg-blue-800 px-4 py-2 text-sm font-medium text-white transition hover:bg-blue-900 disabled:opacity-50"
               >
                 {submitting ? 'Đang gửi…' : 'Gửi đề xuất'}
               </button>

@@ -10,11 +10,10 @@ import { useAppSelector } from '@/src/store/hooks';
 import { centerService } from '@/src/services/center.service';
 import { regionService } from '@/src/services/region.service';
 import FileUploadInput from '@/src/components/ui/FileUploadInput';
+import { Plus } from 'lucide-react';
 import type { CenterRequest, CreateCenterRequest } from '@/src/types/api.types';
 
 const PAGE_SIZE = 20;
-
-type Tab = 'mine' | 'register';
 
 function getErrorMessage(e: unknown, fallback: string) {
   if (e && typeof e === 'object' && 'response' in e) {
@@ -33,7 +32,7 @@ function normalizeCenterList(body: { data?: unknown }): CenterRequest[] {
 
 export default function LeaderCentersPage() {
   const { user } = useAppSelector((state) => state.auth);
-  const [tab, setTab] = useState<Tab>('mine');
+  const [createOpen, setCreateOpen] = useState(false);
 
   const [loading, setLoading] = useState(false);
   const [centers, setCenters] = useState<CenterRequest[]>([]);
@@ -76,9 +75,8 @@ export default function LeaderCentersPage() {
   }, [user?.address, page]);
 
   useEffect(() => {
-    if (tab !== 'mine') return;
     void loadCenters();
-  }, [tab, loadCenters]);
+  }, [loadCenters]);
 
   async function handleRegister(e: React.FormEvent) {
     e.preventDefault();
@@ -98,7 +96,8 @@ export default function LeaderCentersPage() {
       toast.success('Center registration submitted');
       setForm({ region: '', address: '', phone_number: '', image_blob_id: '' });
       setPage(0);
-      setTab('mine');
+      setCreateOpen(false);
+      void loadCenters();
     } catch (err: unknown) {
       toast.error(getErrorMessage(err, 'Registration failed'));
     } finally {
@@ -124,95 +123,113 @@ export default function LeaderCentersPage() {
   ];
 
   const inputClass =
-    'w-full rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none ring-emerald-600/20 transition focus:border-emerald-600 focus:ring-2';
+    'w-full rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none ring-blue-800/20 transition focus:border-blue-800 focus:ring-2';
 
   return (
     <div>
-      <PageHeader title="Centers" description="View your center registrations and submit new ones" />
-
-      <div className="mb-6 flex gap-1 rounded-lg border border-slate-200 bg-slate-50 p-1">
-        <button
-          type="button"
-          onClick={() => setTab('mine')}
-          className={`flex flex-1 items-center justify-center rounded-md px-3 py-2 text-sm font-medium transition ${
-            tab === 'mine'
-              ? 'bg-white text-emerald-700 shadow-sm ring-1 ring-emerald-600/20'
-              : 'text-slate-600 hover:text-slate-900'
-          }`}
-        >
-          My centers
-        </button>
-        <button
-          type="button"
-          onClick={() => setTab('register')}
-          className={`flex flex-1 items-center justify-center rounded-md px-3 py-2 text-sm font-medium transition ${
-            tab === 'register'
-              ? 'bg-white text-emerald-700 shadow-sm ring-1 ring-emerald-600/20'
-              : 'text-slate-600 hover:text-slate-900'
-          }`}
-        >
-          Register new center
-        </button>
-      </div>
-
-      {tab === 'mine' ? (
-        !user?.address ? (
-          <div className="rounded-xl border border-slate-200 bg-white p-8 text-center text-sm text-slate-500">
-            Connect your wallet to load your centers.
-          </div>
-        ) : (
-          <DataTable<CenterRequest>
-            columns={columns}
-            data={centers}
-            loading={loading}
-            page={page}
-            totalPages={totalPages}
-            onPageChange={setPage}
-            emptyMessage="No center registrations yet"
-          />
-        )
-      ) : (
-        <form
-          onSubmit={handleRegister}
-          className="space-y-4 rounded-xl border border-slate-200 bg-white p-6 shadow-sm"
-        >
-          <div>
-            <label className="mb-1.5 block text-sm font-medium text-slate-700">Region</label>
-            <select
-              className={inputClass}
-              value={form.region}
-              onChange={(e) => setForm((f) => ({ ...f, region: e.target.value }))}
-              required
-            >
-              <option value="">Select region…</option>
-              {regions.map((r) => (
-                <option key={r} value={r}>{r}</option>
-              ))}
-            </select>
-          </div>
-          <div>
-            <label className="mb-1.5 block text-sm font-medium text-slate-700">Address</label>
-            <input className={inputClass} value={form.address} onChange={(e) => setForm((f) => ({ ...f, address: e.target.value }))} required />
-          </div>
-          <div>
-            <label className="mb-1.5 block text-sm font-medium text-slate-700">Phone number</label>
-            <input className={inputClass} value={form.phone_number} onChange={(e) => setForm((f) => ({ ...f, phone_number: e.target.value }))} required />
-          </div>
-          <FileUploadInput
-            label="Center image"
-            value={form.image_blob_id}
-            onChange={(val) => setForm((f) => ({ ...f, image_blob_id: val }))}
-            accept="image/*"
-            placeholder="Upload center image or paste blob ID"
-          />
+      <PageHeader
+        title="Centers"
+        description="View your center registrations and submit new ones"
+        actions={
           <button
-            type="submit"
-            disabled={submitting}
-            className="rounded-lg bg-emerald-600 px-5 py-2.5 text-sm font-medium text-white shadow-sm transition hover:bg-emerald-700 disabled:opacity-60"
+            type="button"
+            onClick={() => setCreateOpen(true)}
+            className="inline-flex items-center gap-2 rounded-lg bg-blue-800 px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-blue-900"
           >
-            {submitting ? 'Submitting…' : 'Register center'}
+            <Plus className="h-4 w-4" />
+            Create
           </button>
-        </form>
+        }
+      />
+
+      {!user?.address ? (
+        <div className="rounded-xl border border-slate-200 bg-white p-8 text-center text-sm text-slate-500">
+          Connect your wallet to load your centers.
+        </div>
+      ) : (
+        <DataTable<CenterRequest>
+          columns={columns}
+          data={centers}
+          loading={loading}
+          page={page}
+          totalPages={totalPages}
+          onPageChange={setPage}
+          emptyMessage="No center registrations yet"
+        />
+      )}
+
+      {createOpen && (
+        <div
+          className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-slate-900/40 p-4 py-10"
+          onClick={() => setCreateOpen(false)}
+          role="presentation"
+        >
+          <div
+            className="relative w-full max-w-lg rounded-xl border border-slate-200 bg-white p-6 shadow-xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="mb-4 flex items-center justify-between gap-2">
+              <h2 className="text-lg font-semibold text-slate-900">Register center</h2>
+              <button
+                type="button"
+                onClick={() => setCreateOpen(false)}
+                className="rounded-lg px-3 py-1.5 text-sm text-slate-600 hover:bg-slate-100"
+              >
+                Close
+              </button>
+            </div>
+            <form onSubmit={handleRegister} className="space-y-4">
+              <div>
+                <label className="mb-1.5 block text-sm font-medium text-slate-700">Region</label>
+                <select
+                  className={inputClass}
+                  value={form.region}
+                  onChange={(e) => setForm((f) => ({ ...f, region: e.target.value }))}
+                  required
+                >
+                  <option value="">Select region…</option>
+                  {regions.map((r) => (
+                    <option key={r} value={r}>
+                      {r}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="mb-1.5 block text-sm font-medium text-slate-700">Address</label>
+                <input
+                  className={inputClass}
+                  value={form.address}
+                  onChange={(e) => setForm((f) => ({ ...f, address: e.target.value }))}
+                  required
+                />
+              </div>
+              <div>
+                <label className="mb-1.5 block text-sm font-medium text-slate-700">Phone number</label>
+                <input
+                  className={inputClass}
+                  value={form.phone_number}
+                  onChange={(e) => setForm((f) => ({ ...f, phone_number: e.target.value }))}
+                  required
+                />
+              </div>
+              <FileUploadInput
+                label="Center image"
+                value={form.image_blob_id}
+                onChange={(val) => setForm((f) => ({ ...f, image_blob_id: val }))}
+                accept="image/*"
+                placeholder="Upload center image or paste blob ID"
+              />
+              <button
+                type="submit"
+                disabled={submitting}
+                className="rounded-lg bg-blue-800 px-5 py-2.5 text-sm font-medium text-white shadow-sm transition hover:bg-blue-900 disabled:opacity-60"
+              >
+                {submitting ? 'Submitting…' : 'Register center'}
+              </button>
+            </form>
+          </div>
+        </div>
       )}
     </div>
   );

@@ -147,7 +147,7 @@ export default function AdminDashboard() {
   if (loading) {
     return (
       <div className="flex items-center justify-center p-12">
-        <div className="h-8 w-8 animate-spin rounded-full border-4 border-emerald-600 border-t-transparent" />
+        <div className="h-8 w-8 animate-spin rounded-full border-4 border-blue-800 border-t-transparent" />
       </div>
     );
   }
@@ -359,7 +359,7 @@ export default function AdminDashboard() {
             <h2 className="font-semibold text-slate-900">Recent Transactions</h2>
             <p className="text-xs text-slate-500">Latest platform activity</p>
           </div>
-          <a href="/admin/analytics" className="flex items-center gap-1 text-sm text-emerald-600 hover:underline">
+          <a href="/admin/analytics" className="flex items-center gap-1 text-sm text-blue-800 hover:underline">
             View all <ArrowUpRight className="h-3.5 w-3.5" />
           </a>
         </div>
@@ -377,7 +377,7 @@ export default function AdminDashboard() {
               {allTx.slice(0, 10).map((tx) => (
                 <tr key={tx.id} className="hover:bg-slate-50/40 transition">
                   <td className="px-5 py-3">
-                    <span className="inline-block rounded-full bg-emerald-50 px-2.5 py-0.5 text-xs font-medium text-emerald-700">
+                    <span className="inline-block rounded-full bg-blue-50 px-2.5 py-0.5 text-xs font-medium text-blue-900">
                       {tx.action_type}
                     </span>
                   </td>
@@ -405,7 +405,7 @@ export default function AdminDashboard() {
             <h2 className="font-semibold text-slate-900">Recent Withdrawal Proposals</h2>
             <p className="text-xs text-slate-500">Latest proposals across all pools</p>
           </div>
-          <a href="/admin/treasury" className="flex items-center gap-1 text-sm text-emerald-600 hover:underline">
+          <a href="/admin/treasury" className="flex items-center gap-1 text-sm text-blue-800 hover:underline">
             View all <ArrowUpRight className="h-3.5 w-3.5" />
           </a>
         </div>
@@ -428,13 +428,13 @@ export default function AdminDashboard() {
                   <td className="max-w-[200px] truncate px-5 py-3 text-slate-600">{w.description}</td>
                   <td className="px-5 py-3 text-right font-semibold text-slate-900">{formatVND(w.withdraw_amount)}</td>
                   <td className="px-5 py-3 text-center">
-                    <span className="text-emerald-600 font-medium">{w.approve_weight}</span>
+                    <span className="text-blue-800 font-medium">{w.approve_weight}</span>
                     {' / '}
                     <span className="text-red-500 font-medium">{w.refuse_weight}</span>
                   </td>
                   <td className="px-5 py-3 text-center">
                     <span className={`inline-block rounded-full px-2.5 py-0.5 text-xs font-medium ${
-                      w.is_executed ? 'bg-emerald-50 text-emerald-700' : 'bg-amber-50 text-amber-700'
+                      w.is_executed ? 'bg-blue-50 text-blue-900' : 'bg-amber-50 text-amber-700'
                     }`}>
                       {w.is_executed ? 'Executed' : 'Pending'}
                     </span>

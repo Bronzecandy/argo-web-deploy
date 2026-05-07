@@ -95,14 +95,14 @@ export default function AdminChildrenPage() {
         title="Children"
         description="Browse on-chain child profiles (upload request review is handled by local leaders)"
         actions={
-          <span className="rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-1.5 text-xs font-medium text-emerald-800">
+          <span className="rounded-lg border border-blue-200 bg-blue-50 px-3 py-1.5 text-xs font-medium text-blue-900">
             Admin
           </span>
         }
       />
 
       <div className="mb-6 flex items-center gap-2 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-600">
-        <Baby className="h-4 w-4 text-emerald-600" />
+        <Baby className="h-4 w-4 text-blue-800" />
         <span>Child profiles list</span>
       </div>
 
@@ -116,7 +116,7 @@ export default function AdminChildrenPage() {
               setChildRegion(e.target.value);
               setChildPage(0);
             }}
-            className="min-w-[160px] rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none ring-emerald-600/20 focus:ring-2"
+            className="min-w-[160px] rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none ring-blue-800/20 focus:ring-2"
           />
           <select
             value={childGender}
@@ -124,7 +124,7 @@ export default function AdminChildrenPage() {
               setChildGender(e.target.value);
               setChildPage(0);
             }}
-            className="rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none ring-emerald-600/20 focus:ring-2"
+            className="rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none ring-blue-800/20 focus:ring-2"
           >
             {GENDER_OPTIONS.map((o) => (
               <option key={o.value || 'all-cg'} value={o.value}>
@@ -165,7 +165,7 @@ export default function AdminChildrenPage() {
                     e.stopPropagation();
                     openDetail(c.id);
                   }}
-                  className="rounded-lg border border-emerald-200 px-2 py-1 text-xs font-medium text-emerald-700 hover:bg-emerald-50"
+                  className="rounded-lg border border-blue-200 px-2 py-1 text-xs font-medium text-blue-900 hover:bg-blue-50"
                 >
                   Details
                 </button>

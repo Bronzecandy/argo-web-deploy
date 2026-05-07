@@ -118,7 +118,7 @@ export default function LeaderBankPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center p-12">
-        <div className="h-8 w-8 animate-spin rounded-full border-4 border-emerald-600 border-t-transparent" />
+        <div className="h-8 w-8 animate-spin rounded-full border-4 border-blue-800 border-t-transparent" />
       </div>
     );
   }
@@ -133,7 +133,7 @@ export default function LeaderBankPage() {
             <button
               type="button"
               onClick={() => setEditing(true)}
-              className="inline-flex items-center gap-2 rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-emerald-700"
+              className="inline-flex items-center gap-2 rounded-lg bg-blue-800 px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-blue-900"
             >
               <Pencil className="h-4 w-4" />
               Edit
@@ -208,7 +208,7 @@ export default function LeaderBankPage() {
             <div>
               <label className="mb-1.5 block text-sm font-medium text-slate-700">Bank code</label>
               <input
-                className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none ring-emerald-600/20 transition focus:border-emerald-600 focus:ring-2"
+                className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none ring-blue-800/20 transition focus:border-blue-800 focus:ring-2"
                 value={form.bank_code}
                 onChange={(ev) => updateField('bank_code', ev.target.value)}
                 required
@@ -217,7 +217,7 @@ export default function LeaderBankPage() {
             <div>
               <label className="mb-1.5 block text-sm font-medium text-slate-700">Bank organization</label>
               <input
-                className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none ring-emerald-600/20 transition focus:border-emerald-600 focus:ring-2"
+                className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none ring-blue-800/20 transition focus:border-blue-800 focus:ring-2"
                 value={form.bank_org}
                 onChange={(ev) => updateField('bank_org', ev.target.value)}
                 required
@@ -226,7 +226,7 @@ export default function LeaderBankPage() {
             <div className="sm:col-span-2">
               <label className="mb-1.5 block text-sm font-medium text-slate-700">Owner name</label>
               <input
-                className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none ring-emerald-600/20 transition focus:border-emerald-600 focus:ring-2"
+                className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none ring-blue-800/20 transition focus:border-blue-800 focus:ring-2"
                 value={form.owner_name}
                 onChange={(ev) => updateField('owner_name', ev.target.value)}
                 required
@@ -235,7 +235,7 @@ export default function LeaderBankPage() {
             <div>
               <label className="mb-1.5 block text-sm font-medium text-slate-700">PayOS client ID (optional)</label>
               <input
-                className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none ring-emerald-600/20 transition focus:border-emerald-600 focus:ring-2"
+                className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none ring-blue-800/20 transition focus:border-blue-800 focus:ring-2"
                 value={form.payos_client_id}
                 onChange={(ev) => updateField('payos_client_id', ev.target.value)}
               />
@@ -245,7 +245,7 @@ export default function LeaderBankPage() {
               <input
                 type="password"
                 autoComplete="off"
-                className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none ring-emerald-600/20 transition focus:border-emerald-600 focus:ring-2"
+                className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none ring-blue-800/20 transition focus:border-blue-800 focus:ring-2"
                 value={form.payos_api_key}
                 onChange={(ev) => updateField('payos_api_key', ev.target.value)}
               />
@@ -255,7 +255,7 @@ export default function LeaderBankPage() {
               <input
                 type="password"
                 autoComplete="off"
-                className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none ring-emerald-600/20 transition focus:border-emerald-600 focus:ring-2"
+                className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none ring-blue-800/20 transition focus:border-blue-800 focus:ring-2"
                 value={form.payos_check_sum_key}
                 onChange={(ev) => updateField('payos_check_sum_key', ev.target.value)}
               />
@@ -265,7 +265,7 @@ export default function LeaderBankPage() {
           <button
             type="submit"
             disabled={saving}
-            className="rounded-lg bg-emerald-600 px-5 py-2.5 text-sm font-medium text-white shadow-sm transition hover:bg-emerald-700 disabled:opacity-60"
+            className="rounded-lg bg-blue-800 px-5 py-2.5 text-sm font-medium text-white shadow-sm transition hover:bg-blue-900 disabled:opacity-60"
           >
             {saving ? 'Saving…' : bank ? 'Save changes' : 'Create profile'}
           </button>

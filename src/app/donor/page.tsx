@@ -95,7 +95,7 @@ export default function DonorDashboardPage() {
       key: 'amount',
       label: 'Amount',
       render: (item: TransactionRecord) => (
-        <span className="font-semibold text-emerald-700">{formatVND(item.amount)}</span>
+        <span className="font-semibold text-blue-900">{formatVND(item.amount)}</span>
       ),
     },
     {
@@ -133,7 +133,7 @@ export default function DonorDashboardPage() {
   if (loading) {
     return (
       <div className="flex h-64 items-center justify-center">
-        <div className="h-8 w-8 animate-spin rounded-full border-4 border-emerald-600 border-t-transparent" />
+        <div className="h-8 w-8 animate-spin rounded-full border-4 border-blue-800 border-t-transparent" />
       </div>
     );
   }
@@ -176,8 +176,8 @@ export default function DonorDashboardPage() {
               <p className="text-sm font-medium text-slate-500">Wallet Address</p>
               <p className="mt-1 font-mono text-sm text-slate-900">{user.address}</p>
             </div>
-            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-emerald-50">
-              <Wallet className="h-5 w-5 text-emerald-600" />
+            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-blue-50">
+              <Wallet className="h-5 w-5 text-blue-800" />
             </div>
           </div>
         </div>
@@ -189,7 +189,7 @@ export default function DonorDashboardPage() {
           <h2 className="text-lg font-semibold text-slate-900">Recent Transactions</h2>
           <Link
             href="/donor/transactions"
-            className="flex items-center gap-1 text-sm font-medium text-emerald-600 hover:text-emerald-700"
+            className="flex items-center gap-1 text-sm font-medium text-blue-800 hover:text-blue-900"
           >
             View all <ArrowRight className="h-4 w-4" />
           </Link>
@@ -210,7 +210,7 @@ export default function DonorDashboardPage() {
           <h2 className="text-lg font-semibold text-slate-900">Active Withdrawal Proposals</h2>
           <Link
             href="/donor/withdrawals"
-            className="flex items-center gap-1 text-sm font-medium text-emerald-600 hover:text-emerald-700"
+            className="flex items-center gap-1 text-sm font-medium text-blue-800 hover:text-blue-900"
           >
             Vote now <ArrowRight className="h-4 w-4" />
           </Link>

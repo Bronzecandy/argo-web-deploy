@@ -111,7 +111,7 @@ export default function AdminPaymentsPage() {
         title="Payments"
         description="Review payment records; approve builds an on-chain transaction (POST /payments/{id}/approve), refuse completes without tx (POST /payments/{id}/refuse)."
         actions={
-          <span className="inline-flex items-center gap-1.5 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-1.5 text-xs font-medium text-emerald-800">
+          <span className="inline-flex items-center gap-1.5 rounded-lg border border-blue-200 bg-blue-50 px-3 py-1.5 text-xs font-medium text-blue-900">
             <CreditCard className="h-3.5 w-3.5" />
             Admin
           </span>
@@ -127,7 +127,7 @@ export default function AdminPaymentsPage() {
               setStatusFilter(e.target.value);
               setPage(0);
             }}
-            className="rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none ring-emerald-600/20 focus:ring-2"
+            className="rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none ring-blue-800/20 focus:ring-2"
           >
             <option value="">All</option>
             <option value="Pending">Pending</option>
@@ -143,7 +143,7 @@ export default function AdminPaymentsPage() {
             onChange={(e) => setKeywordDraft(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && (setKeyword(keywordDraft), setPage(0))}
             placeholder="Search…"
-            className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none ring-emerald-600/20 focus:ring-2"
+            className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none ring-blue-800/20 focus:ring-2"
           />
         </div>
         <button
@@ -152,7 +152,7 @@ export default function AdminPaymentsPage() {
             setKeyword(keywordDraft);
             setPage(0);
           }}
-          className="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-emerald-700"
+          className="rounded-lg bg-blue-800 px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-blue-900"
         >
           Search
         </button>
@@ -210,7 +210,7 @@ export default function AdminPaymentsPage() {
                     type="button"
                     disabled={done || busyId === p.id}
                     onClick={() => void handleApprove(p.id)}
-                    className="inline-flex items-center gap-1 rounded-md border border-emerald-200 bg-emerald-50 px-2 py-1 text-xs font-medium text-emerald-800 hover:bg-emerald-100 disabled:cursor-not-allowed disabled:opacity-40"
+                    className="inline-flex items-center gap-1 rounded-md border border-blue-200 bg-blue-50 px-2 py-1 text-xs font-medium text-blue-900 hover:bg-blue-100 disabled:cursor-not-allowed disabled:opacity-40"
                   >
                     <Check className="h-3.5 w-3.5" />
                     Approve

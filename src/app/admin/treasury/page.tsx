@@ -321,7 +321,7 @@ function TreasuryPageContent() {
       type="button"
       onClick={() => setTab(id)}
       className={`rounded-lg px-4 py-2 text-sm font-medium transition ${
-        tab === id ? 'bg-emerald-600 text-white shadow-sm' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+        tab === id ? 'bg-blue-800 text-white shadow-sm' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
       }`}
     >
       {label}
@@ -334,7 +334,7 @@ function TreasuryPageContent() {
         ? 'border-red-200 text-red-700 hover:bg-red-50'
         : variant === 'muted'
           ? 'border-slate-200 text-slate-600 hover:bg-slate-50'
-          : 'border-emerald-200 text-emerald-700 hover:bg-emerald-50';
+          : 'border-blue-200 text-blue-900 hover:bg-blue-50';
     return (
       <button
         type="button"
@@ -357,7 +357,7 @@ function TreasuryPageContent() {
           type="number"
           value={minInput}
           onChange={(e) => setMinInput(e.target.value)}
-          className="w-36 rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500"
+          className="w-36 rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-blue-700 focus:outline-none focus:ring-1 focus:ring-blue-700"
           placeholder="Any"
         />
       </div>
@@ -367,14 +367,14 @@ function TreasuryPageContent() {
           type="number"
           value={maxInput}
           onChange={(e) => setMaxInput(e.target.value)}
-          className="w-36 rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500"
+          className="w-36 rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-blue-700 focus:outline-none focus:ring-1 focus:ring-blue-700"
           placeholder="Any"
         />
       </div>
       <button
         type="button"
         onClick={applyAmountFilter}
-        className="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-700"
+        className="rounded-lg bg-blue-800 px-4 py-2 text-sm font-medium text-white hover:bg-blue-900"
       >
         Apply filter
       </button>
@@ -616,7 +616,7 @@ function TreasuryPageContent() {
                     type="button"
                     disabled={busy}
                     onClick={() => wd.id && void handleConfirmWithdraw(wd.id)}
-                    className="rounded-lg bg-emerald-600 px-3 py-2 text-sm font-medium text-white hover:bg-emerald-700 disabled:opacity-50"
+                    className="rounded-lg bg-blue-800 px-3 py-2 text-sm font-medium text-white hover:bg-blue-900 disabled:opacity-50"
                   >
                     {busy ? 'Working…' : 'Confirm (PayOS / on-chain)'}
                   </button>
@@ -726,7 +726,7 @@ function TreasuryPageContent() {
               value={refuseReason}
               onChange={(e) => setRefuseReason(e.target.value)}
               rows={3}
-              className="mb-4 w-full rounded-lg border border-slate-200 p-2 text-sm outline-none ring-emerald-600/20 focus:ring-2"
+              className="mb-4 w-full rounded-lg border border-slate-200 p-2 text-sm outline-none ring-blue-800/20 focus:ring-2"
               placeholder="Reason for refusal…"
             />
             <div className="flex justify-end gap-2">

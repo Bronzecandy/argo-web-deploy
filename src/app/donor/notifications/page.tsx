@@ -39,7 +39,7 @@ export default function DonorNotificationsPage() {
   if (loading) {
     return (
       <div className="flex h-64 items-center justify-center">
-        <div className="h-8 w-8 animate-spin rounded-full border-4 border-emerald-600 border-t-transparent" />
+        <div className="h-8 w-8 animate-spin rounded-full border-4 border-blue-800 border-t-transparent" />
       </div>
     );
   }
@@ -60,8 +60,8 @@ export default function DonorNotificationsPage() {
         <div className="space-y-2">
           {notifications.map((noti) => (
             <div key={noti.id} className="flex gap-3 rounded-xl border border-slate-200 bg-white p-4 transition hover:bg-slate-50">
-              <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-emerald-50">
-                <Bell className="h-5 w-5 text-emerald-600" />
+              <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-blue-50">
+                <Bell className="h-5 w-5 text-blue-800" />
               </div>
               <div className="flex-1 min-w-0">
                 <p className="text-sm text-slate-700">{noti.content}</p>

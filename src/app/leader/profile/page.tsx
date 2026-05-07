@@ -105,7 +105,7 @@ export default function LeaderProfilePage() {
       <div>
         <PageHeader title="Profile" description="Your leader profile" />
         <div className="flex items-center justify-center rounded-xl border border-slate-200 bg-white p-16">
-          <div className="h-8 w-8 animate-spin rounded-full border-4 border-emerald-600 border-t-transparent" />
+          <div className="h-8 w-8 animate-spin rounded-full border-4 border-blue-800 border-t-transparent" />
         </div>
       </div>
     );
@@ -127,7 +127,7 @@ export default function LeaderProfilePage() {
             <button
               type="button"
               onClick={() => setEditMode(true)}
-              className="rounded-lg border border-emerald-200 px-4 py-2 text-sm font-medium text-emerald-700 hover:bg-emerald-50"
+              className="rounded-lg border border-blue-200 px-4 py-2 text-sm font-medium text-blue-900 hover:bg-blue-50"
             >
               Edit
             </button>
@@ -192,7 +192,7 @@ export default function LeaderProfilePage() {
                   required
                   value={form.first_name}
                   onChange={(e) => updateField('first_name', e.target.value)}
-                  className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-emerald-600 focus:outline-none focus:ring-1 focus:ring-emerald-600"
+                  className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-blue-800 focus:outline-none focus:ring-1 focus:ring-blue-800"
                 />
               </div>
               <div>
@@ -201,7 +201,7 @@ export default function LeaderProfilePage() {
                   required
                   value={form.last_name}
                   onChange={(e) => updateField('last_name', e.target.value)}
-                  className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-emerald-600 focus:outline-none focus:ring-1 focus:ring-emerald-600"
+                  className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-blue-800 focus:outline-none focus:ring-1 focus:ring-blue-800"
                 />
               </div>
             </div>
@@ -211,7 +211,7 @@ export default function LeaderProfilePage() {
                 required
                 value={form.gender}
                 onChange={(e) => updateField('gender', e.target.value)}
-                className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-emerald-600 focus:outline-none focus:ring-1 focus:ring-emerald-600"
+                className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-blue-800 focus:outline-none focus:ring-1 focus:ring-blue-800"
               />
             </div>
             <div>
@@ -221,7 +221,7 @@ export default function LeaderProfilePage() {
                 type="date"
                 value={form.date_of_birth?.slice(0, 10) || ''}
                 onChange={(e) => updateField('date_of_birth', e.target.value)}
-                className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-emerald-600 focus:outline-none focus:ring-1 focus:ring-emerald-600"
+                className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-blue-800 focus:outline-none focus:ring-1 focus:ring-blue-800"
               />
             </div>
             <div>
@@ -230,7 +230,7 @@ export default function LeaderProfilePage() {
                 required
                 value={form.phone_number}
                 onChange={(e) => updateField('phone_number', e.target.value)}
-                className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-emerald-600 focus:outline-none focus:ring-1 focus:ring-emerald-600"
+                className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-blue-800 focus:outline-none focus:ring-1 focus:ring-blue-800"
               />
             </div>
             <div>
@@ -240,7 +240,7 @@ export default function LeaderProfilePage() {
                 type="email"
                 value={form.email}
                 onChange={(e) => updateField('email', e.target.value)}
-                className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-emerald-600 focus:outline-none focus:ring-1 focus:ring-emerald-600"
+                className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-blue-800 focus:outline-none focus:ring-1 focus:ring-blue-800"
               />
             </div>
             <div>
@@ -249,13 +249,13 @@ export default function LeaderProfilePage() {
                 required
                 value={form.identity_code}
                 onChange={(e) => updateField('identity_code', e.target.value)}
-                className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-emerald-600 focus:outline-none focus:ring-1 focus:ring-emerald-600"
+                className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-blue-800 focus:outline-none focus:ring-1 focus:ring-blue-800"
               />
             </div>
             <button
               type="submit"
               disabled={saving}
-              className="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-emerald-700 disabled:opacity-50"
+              className="rounded-lg bg-blue-800 px-4 py-2 text-sm font-medium text-white transition hover:bg-blue-900 disabled:opacity-50"
             >
               {saving ? 'Saving…' : profile ? 'Save changes' : 'Upload profile'}
             </button>

@@ -121,7 +121,7 @@ export default function PayOSPaymentDialog({ state, onClose, onPaymentSuccess }:
           <button
             type="button"
             onClick={openPayOS}
-            className="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-700"
+            className="rounded-lg bg-blue-800 px-4 py-2 text-sm font-medium text-white hover:bg-blue-900"
           >
             Mở PayOS
           </button>

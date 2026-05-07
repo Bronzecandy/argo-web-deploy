@@ -92,7 +92,7 @@ export default function AdminDonorsPage() {
       key: 'total_donation',
       label: 'Total Donated',
       render: (d: Donor) => (
-        <span className="font-semibold text-emerald-700">{formatVND(d.total_donation)}</span>
+        <span className="font-semibold text-blue-900">{formatVND(d.total_donation)}</span>
       ),
     },
     {
@@ -102,7 +102,7 @@ export default function AdminDonorsPage() {
         <button
           type="button"
           onClick={(e) => { e.stopPropagation(); void handleViewDetail(d.id); }}
-          className="rounded-lg border border-emerald-200 px-2 py-1 text-xs font-medium text-emerald-700 hover:bg-emerald-50"
+          className="rounded-lg border border-blue-200 px-2 py-1 text-xs font-medium text-blue-900 hover:bg-blue-50"
         >
           View
         </button>
@@ -116,7 +116,7 @@ export default function AdminDonorsPage() {
         title="Donors"
         description="View all registered donors and their contribution history"
         actions={
-          <span className="inline-flex items-center gap-1.5 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-1.5 text-xs font-medium text-emerald-800">
+          <span className="inline-flex items-center gap-1.5 rounded-lg border border-blue-200 bg-blue-50 px-3 py-1.5 text-xs font-medium text-blue-900">
             <HandCoins className="h-3.5 w-3.5" />
             {totalAmount.toLocaleString('vi-VN')} total
           </span>
@@ -131,7 +131,7 @@ export default function AdminDonorsPage() {
             placeholder="Search donors..."
             value={keyword}
             onChange={(e) => { setKeyword(e.target.value); setPage(0); }}
-            className="rounded-lg border border-slate-200 py-2 pl-9 pr-3 text-sm focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500"
+            className="rounded-lg border border-slate-200 py-2 pl-9 pr-3 text-sm focus:border-blue-700 focus:outline-none focus:ring-1 focus:ring-blue-700"
           />
         </div>
       </div>
@@ -159,7 +159,7 @@ export default function AdminDonorsPage() {
 
             {detailLoading ? (
               <div className="flex justify-center py-8">
-                <div className="h-8 w-8 animate-spin rounded-full border-4 border-emerald-600 border-t-transparent" />
+                <div className="h-8 w-8 animate-spin rounded-full border-4 border-blue-800 border-t-transparent" />
               </div>
             ) : selectedDonor ? (
               <div className="space-y-4">
@@ -191,7 +191,7 @@ export default function AdminDonorsPage() {
                   </div>
                   <div className="col-span-2">
                     <p className="text-slate-500">Total Donated</p>
-                    <p className="text-xl font-bold text-emerald-700">{formatVND(selectedDonor.total_donation)}</p>
+                    <p className="text-xl font-bold text-blue-900">{formatVND(selectedDonor.total_donation)}</p>
                   </div>
                 </div>
                 </div>
@@ -206,7 +206,7 @@ export default function AdminDonorsPage() {
                             <span className="font-medium capitalize">{tx.action_type?.replace(/_/g, ' ')}</span>
                             <span className="ml-2 text-slate-400">{tx.pool_name}</span>
                           </div>
-                          <span className="font-semibold text-emerald-700">{formatVND(tx.amount)}</span>
+                          <span className="font-semibold text-blue-900">{formatVND(tx.amount)}</span>
                         </div>
                       ))}
                     </div>
