@@ -9,6 +9,7 @@ import FileUploadInput from '@/src/components/ui/FileUploadInput';
 import { formatDate, truncateAddress } from '@/src/lib/formatters';
 import { taskProofService } from '@/src/services/task-proof.service';
 import { blobService } from '@/src/services/blob.service';
+import WalrusFallbackImg from '@/src/components/ui/WalrusFallbackImg';
 import type { TaskProof } from '@/src/types/api.types';
 
 const PAGE_SIZE = 20;
@@ -121,8 +122,7 @@ export default function VolunteerTaskProofsPage() {
                 if (!url) return '-';
                 return (
                   <a href={url} target="_blank" rel="noopener noreferrer" className="inline-block" onClick={(e) => e.stopPropagation()}>
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src={url} alt="" className="h-12 w-12 rounded-md border border-slate-200 object-cover" />
+                    <WalrusFallbackImg blobId={r.image_blob_id} className="h-12 w-12 rounded-md border border-slate-200 object-cover" />
                   </a>
                 );
               },

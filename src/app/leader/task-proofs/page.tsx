@@ -9,6 +9,7 @@ import { toast } from 'sonner';
 import { useAppSelector } from '@/src/store/hooks';
 import { taskProofService } from '@/src/services/task-proof.service';
 import { blobService } from '@/src/services/blob.service';
+import WalrusFallbackImg from '@/src/components/ui/WalrusFallbackImg';
 import { useExecuteTransaction } from '@/src/hooks/useExecuteTransaction';
 import FileUploadInput from '@/src/components/ui/FileUploadInput';
 import type { TaskProof } from '@/src/types/api.types';
@@ -215,8 +216,7 @@ export default function LeaderTaskProofsPage() {
                 if (!url) return '-';
                 return (
                   <a href={url} target="_blank" rel="noopener noreferrer" className="inline-block" onClick={(e) => e.stopPropagation()}>
-                    {/* eslint-disable-next-line @next/next/no-img-element -- dynamic API blob URL */}
-                    <img src={url} alt="" className="h-12 w-12 rounded-md border border-slate-200 object-cover" />
+                    <WalrusFallbackImg blobId={r.image_blob_id} className="h-12 w-12 rounded-md border border-slate-200 object-cover" />
                   </a>
                 );
               },

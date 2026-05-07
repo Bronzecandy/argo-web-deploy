@@ -11,6 +11,7 @@ import { giftService } from '@/src/services/gift.service';
 import { blobService } from '@/src/services/blob.service';
 import { useExecuteTransaction } from '@/src/hooks/useExecuteTransaction';
 import FileUploadInput from '@/src/components/ui/FileUploadInput';
+import WalrusFallbackImg from '@/src/components/ui/WalrusFallbackImg';
 import type { Gift } from '@/src/types/api.types';
 
 const PAGE_SIZE = 20;
@@ -154,8 +155,7 @@ export default function LeaderGiftsPage() {
                   if (!url) return '-';
                   return (
                     <a href={url} target="_blank" rel="noopener noreferrer" className="inline-block" onClick={(e) => e.stopPropagation()}>
-                      {/* eslint-disable-next-line @next/next/no-img-element -- dynamic API blob URL */}
-                      <img src={url} alt="" className="h-12 w-12 rounded-md border border-slate-200 object-cover" />
+                      <WalrusFallbackImg blobId={r.gift_image_blob_id} className="h-12 w-12 rounded-md border border-slate-200 object-cover" />
                     </a>
                   );
                 },

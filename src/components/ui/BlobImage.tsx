@@ -1,8 +1,9 @@
 'use client';
 
 import { useMemo } from 'react';
-import { blobService } from '@/src/services/blob.service';
 import { BLOB_URL } from '@/src/lib/constants';
+import { blobService } from '@/src/services/blob.service';
+import WalrusFallbackImg from '@/src/components/ui/WalrusFallbackImg';
 
 type BlobSource = 'walrus' | 'api';
 
@@ -20,12 +21,21 @@ export function resolveBlobUrl(blobId: string, source: BlobSource = 'walrus'): s
 }
 
 export default function BlobImage({ blobId, source = 'walrus', alt = '', className = '' }: BlobImageProps) {
-  const url = useMemo(() => (blobId?.trim() ? resolveBlobUrl(blobId, source) : ''), [blobId, source]);
+  const apiUrl = useMemo(() => {
+    if (!blobId?.trim() || source !== 'api') return '';
+    return BLOB_URL(blobId.trim());
+  }, [blobId, source]);
 
-  if (!url) return null;
+  if (!blobId?.trim()) return null;
+
+  if (source === 'walrus') {
+    return <WalrusFallbackImg blobId={blobId} alt={alt} className={className} />;
+  }
+
+  if (!apiUrl) return null;
 
   return (
     /* eslint-disable-next-line @next/next/no-img-element -- dynamic blob URLs */
-    <img src={url} alt={alt} className={className} />
+    <img src={apiUrl} alt={alt} className={className} />
   );
 }

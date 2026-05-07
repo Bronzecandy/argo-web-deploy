@@ -4,6 +4,7 @@ import { useMemo, useRef, useState, useCallback } from 'react';
 import { Upload, X, CheckCircle } from 'lucide-react';
 import { blobService } from '@/src/services/blob.service';
 import { BLOB_URL } from '@/src/lib/constants';
+import WalrusFallbackImg from '@/src/components/ui/WalrusFallbackImg';
 import { toast } from 'sonner';
 
 interface FileUploadInputProps {
@@ -29,12 +30,17 @@ export default function FileUploadInput({
   const fileRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
 
-  const previewUrl = useMemo(() => {
+  const previewUrlApi = useMemo(() => {
     if (!value.trim()) return '';
     const isImageAccept = accept.includes('image') || accept === 'image/*';
     if (!isImageAccept) return '';
-    return previewSource === 'api' ? BLOB_URL(value.trim()) : blobService.getUrl(value.trim());
+    return previewSource === 'api' ? BLOB_URL(value.trim()) : '';
   }, [value, accept, previewSource]);
+
+  const showWalrusPreview =
+    !!value.trim() &&
+    (accept.includes('image') || accept === 'image/*') &&
+    previewSource === 'walrus';
 
   const handleFileChange = useCallback(
     async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -48,7 +54,7 @@ export default function FileUploadInput({
         toast.success('File uploaded');
       } catch (err) {
         console.error(err);
-        toast.error('Upload failed');
+        toast.error(err instanceof Error ? err.message : 'Upload failed');
       } finally {
         setUploading(false);
         if (fileRef.current) fileRef.current.value = '';
@@ -103,12 +109,22 @@ export default function FileUploadInput({
         onChange={handleFileChange}
         className="hidden"
       />
-      {previewUrl && (
+      {showWalrusPreview && (
+        <div className="mt-3 rounded-lg border border-slate-200 bg-slate-50 p-2">
+          <p className="mb-2 text-[10px] font-medium uppercase tracking-wide text-slate-500">Preview</p>
+          <WalrusFallbackImg
+            blobId={value.trim()}
+            alt=""
+            className="max-h-48 max-w-full rounded-md object-contain"
+          />
+        </div>
+      )}
+      {previewUrlApi && (
         <div className="mt-3 rounded-lg border border-slate-200 bg-slate-50 p-2">
           <p className="mb-2 text-[10px] font-medium uppercase tracking-wide text-slate-500">Preview</p>
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
-            src={previewUrl}
+            src={previewUrlApi}
             alt=""
             className="max-h-48 max-w-full rounded-md object-contain"
           />
