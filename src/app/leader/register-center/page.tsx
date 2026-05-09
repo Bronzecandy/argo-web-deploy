@@ -2,14 +2,23 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Building2, CheckCircle2, Circle } from 'lucide-react';
+import { Building2, CheckCircle2, Circle, Check } from 'lucide-react';
+import { toast } from 'sonner';
 import PageHeader from '@/src/components/ui/PageHeader';
 import RegisterCenterModal from '@/src/components/leader/RegisterCenterModal';
+import StatusBadge from '@/src/components/ui/StatusBadge';
+import CopyableTruncated from '@/src/components/ui/CopyableTruncated';
+import WalrusFallbackImg from '@/src/components/ui/WalrusFallbackImg';
 import { useLeaderCenter } from '@/src/contexts/LeaderCenterContext';
 import { registrationService } from '@/src/services/registration.service';
+import { centerService } from '@/src/services/center.service';
 import { useAppSelector } from '@/src/store/hooks';
 import { userHasAnyRole } from '@/src/services/auth.service';
 import { ROLES } from '@/src/lib/constants';
+import { useExecuteTransaction } from '@/src/hooks/useExecuteTransaction';
+import { formatDateTime } from '@/src/lib/formatters';
+import { blobService } from '@/src/services/blob.service';
+import type { CenterRequest } from '@/src/types/api.types';
 
 const MIN_VOLUNTEERS_APPROVED = 1;
 const MIN_LOCAL_LEADERS_APPROVED = 1;
@@ -17,6 +26,7 @@ const MIN_LOCAL_LEADERS_APPROVED = 1;
 export default function LeaderRegisterCenterPage() {
   const router = useRouter();
   const { user } = useAppSelector((s) => s.auth);
+  const { execute, executing } = useExecuteTransaction();
   const {
     refetch: refetchLeaderCenter,
     status: centerStatus,
@@ -28,6 +38,10 @@ export default function LeaderRegisterCenterPage() {
   const [loading, setLoading] = useState(true);
   const [volunteerApproved, setVolunteerApproved] = useState(0);
   const [localLeaderApproved, setLocalLeaderApproved] = useState(0);
+
+  const [centerReqRows, setCenterReqRows] = useState<CenterRequest[]>([]);
+  const [centerReqLoading, setCenterReqLoading] = useState(false);
+  const [confirmBusyId, setConfirmBusyId] = useState<string | null>(null);
 
   /** Cùng nguồn vùng với danh sách TNV: GET /centers/leader → `region`. */
   const canLoadCounts = centerStatus !== 'loading' && !!leaderRegion?.trim();
@@ -71,6 +85,45 @@ export default function LeaderRegisterCenterPage() {
   useEffect(() => {
     void loadCounts();
   }, [loadCounts]);
+
+  const loadCenterReqs = useCallback(async () => {
+    const region = leaderRegion?.trim();
+    if (!region || centerStatus === 'loading') {
+      setCenterReqRows([]);
+      return;
+    }
+    setCenterReqLoading(true);
+    try {
+      const res = await centerService.listCenterRequests({
+        page: 0,
+        page_size: 50,
+        region,
+        sort_order: 'desc',
+      });
+      setCenterReqRows((res.data.data ?? []) as CenterRequest[]);
+    } catch {
+      toast.error('Không tải được đề xuất trung tâm');
+      setCenterReqRows([]);
+    } finally {
+      setCenterReqLoading(false);
+    }
+  }, [leaderRegion, centerStatus]);
+
+  useEffect(() => {
+    void loadCenterReqs();
+  }, [loadCenterReqs]);
+
+  const handleConfirmCenterReq = async (id: string) => {
+    setConfirmBusyId(id);
+    const ok = await execute(() => centerService.confirmCenterRequest(id), {
+      successMessage: 'Đã xác nhận đề xuất trung tâm on-chain',
+    });
+    if (ok) {
+      void loadCenterReqs();
+      void refetchLeaderCenter();
+    }
+    setConfirmBusyId(null);
+  };
 
   const selfIsAssignedLeader = user ? userHasAnyRole(user, [ROLES.LOCAL_LEADER]) : false;
   const volunteersOk = volunteerApproved >= MIN_VOLUNTEERS_APPROVED;
@@ -156,11 +209,106 @@ export default function LeaderRegisterCenterPage() {
       </section>
       ) : null}
 
+      {canLoadCounts ? (
+        <section className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
+          <h2 className="mb-1 text-sm font-semibold text-slate-900">Đề xuất trung tâm trong vùng</h2>
+          <p className="mb-4 text-xs text-slate-500">
+            Dữ liệu từ GET /center-reqs (lọc theo <span className="font-medium">{leaderRegion}</span>).
+          </p>
+          {centerReqLoading ? (
+            <div className="flex justify-center py-8">
+              <div className="h-8 w-8 animate-spin rounded-full border-4 border-blue-800 border-t-transparent" />
+            </div>
+          ) : centerReqRows.length === 0 ? (
+            <p className="text-sm text-slate-500">Chưa có đề xuất nào cho vùng này.</p>
+          ) : (
+            <ul className="space-y-4">
+              {centerReqRows.map((req) => {
+                const imgUrl = blobService.getUrl(req.image_blob_id);
+                return (
+                  <li
+                    key={req.id}
+                    className="rounded-lg border border-slate-100 bg-slate-50/80 p-4 text-sm"
+                  >
+                    <div className="flex flex-col gap-3 sm:flex-row sm:items-start">
+                      {req.image_blob_id?.trim() ? (
+                        <div className="shrink-0">
+                          {imgUrl ? (
+                            <a
+                              href={imgUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="inline-block"
+                            >
+                              <WalrusFallbackImg
+                                blobId={req.image_blob_id}
+                                alt=""
+                                className="h-24 w-24 rounded-md border border-slate-200 object-cover"
+                              />
+                            </a>
+                          ) : (
+                            <WalrusFallbackImg
+                              blobId={req.image_blob_id}
+                              alt=""
+                              className="h-24 w-24 rounded-md border border-slate-200 object-cover"
+                            />
+                          )}
+                        </div>
+                      ) : null}
+                      <div className="min-w-0 flex-1 space-y-2">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <StatusBadge status={req.status} />
+                          <span className="text-xs text-slate-500">
+                            Tạo: {formatDateTime(req.created_at)}
+                          </span>
+                        </div>
+                        <p>
+                          <span className="text-slate-500">Vùng:</span>{' '}
+                          <span className="font-medium">{req.region}</span>
+                        </p>
+                        <p>
+                          <span className="text-slate-500">Địa chỉ:</span>{' '}
+                          <CopyableTruncated value={req.address} chars={12} />
+                        </p>
+                        <p>
+                          <span className="text-slate-500">Điện thoại:</span> {req.phone_number || '—'}
+                        </p>
+                        <p className="flex flex-wrap items-center gap-2 text-xs">
+                          <span className="text-slate-500">Người tạo:</span>
+                          <CopyableTruncated value={req.created_by} chars={8} />
+                        </p>
+                        <p className="font-mono text-[10px] text-slate-400">
+                          ID đề xuất: <CopyableTruncated value={req.id} chars={6} />
+                        </p>
+                        {req.isAvailableToConfirm ? (
+                          <button
+                            type="button"
+                            disabled={executing || confirmBusyId === req.id}
+                            onClick={() => void handleConfirmCenterReq(req.id)}
+                            className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-medium text-blue-900 hover:bg-blue-50 disabled:cursor-not-allowed disabled:opacity-50"
+                          >
+                            <Check className="h-3.5 w-3.5" />
+                            Xác nhận on-chain
+                          </button>
+                        ) : (
+                          <p className="text-xs text-slate-400">Chưa thể xác nhận (trạng thái hoặc quyền).</p>
+                        )}
+                      </div>
+                    </div>
+                  </li>
+                );
+              })}
+            </ul>
+          )}
+        </section>
+      ) : null}
+
       <RegisterCenterModal
         open={modalOpen}
         onClose={() => setModalOpen(false)}
         lockedRegion={leaderRegion?.trim() || undefined}
         onSuccess={() => {
+          void loadCenterReqs();
           void refetchLeaderCenter().then(() => router.push('/leader'));
         }}
       />

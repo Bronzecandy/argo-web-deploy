@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useState, type ReactNode } from 'react';
-import { Check, ClipboardCheck, ListChecks, ThumbsDown, ThumbsUp, X } from 'lucide-react';
+import { Check, ClipboardCheck, ListChecks, Settings2, ThumbsDown, ThumbsUp, X } from 'lucide-react';
 import { toast } from 'sonner';
 import PageHeader from '@/src/components/ui/PageHeader';
 import DataTable from '@/src/components/ui/DataTable';
@@ -15,6 +15,7 @@ import { formatDate } from '@/src/lib/formatters';
 import { childUploadService } from '@/src/services/child-upload.service';
 import { childrenService } from '@/src/services/children.service';
 import { useExecuteTransaction } from '@/src/hooks/useExecuteTransaction';
+import { useLeaderCenter } from '@/src/contexts/LeaderCenterContext';
 import type { Child, UploadChildRequestEntity } from '@/src/types/api.types';
 
 type Tab = 'review' | 'profiles' | 'list';
@@ -30,6 +31,9 @@ function normalizeChildUploadListStatus(status?: string) {
 }
 
 const PAGE_SIZE = 20;
+
+/** Selected need amounts must be strictly greater than this (VND). */
+const MIN_NEED_VND = 9999;
 
 const GENDER_OPTIONS = [
   { value: '', label: 'Tất cả giới tính' },
@@ -70,6 +74,26 @@ function childBlobThumbSource(key: string): 'api' | 'walrus' {
   return 'walrus';
 }
 
+function validateNeedAmounts(
+  needMeal: boolean,
+  needBooks: boolean,
+  needHealth: boolean,
+  mealValue: string,
+  booksValue: string,
+  healthValue: string,
+): string | null {
+  if (!needMeal && !needBooks && !needHealth) {
+    return 'Chọn ít nhất một loại nhu cầu';
+  }
+  const mealOk = !needMeal || (Number.isFinite(Number(mealValue)) && Number(mealValue) > MIN_NEED_VND);
+  const booksOk = !needBooks || (Number.isFinite(Number(booksValue)) && Number(booksValue) > MIN_NEED_VND);
+  const healthOk = !needHealth || (Number.isFinite(Number(healthValue)) && Number(healthValue) > MIN_NEED_VND);
+  if (!mealOk || !booksOk || !healthOk) {
+    return `Mỗi nhu cầu đã chọn phải có số tiền lớn hơn ${MIN_NEED_VND.toLocaleString('vi-VN')} ₫`;
+  }
+  return null;
+}
+
 function uploadBlobEntries(u: UploadChildRequestEntity): { key: string; blobId: string }[] {
   const parts: { key: string; blobId: string }[] = [...collectBlobIdEntries(u)];
   if (u.first_guardian_profile) {
@@ -87,6 +111,9 @@ function uploadBlobEntries(u: UploadChildRequestEntity): { key: string; blobId: 
 
 export default function LeaderChildrenPage() {
   const { execute, executing } = useExecuteTransaction();
+  const { status: centerStatus, leaderRegion, errorMessage: centerError } = useLeaderCenter();
+  const canLoad = centerStatus !== 'loading' && !!leaderRegion;
+
   const [tab, setTab] = useState<Tab>('review');
 
   const [listLoading, setListLoading] = useState(false);
@@ -94,11 +121,10 @@ export default function LeaderChildrenPage() {
   const [page, setPage] = useState(0);
   const [totalPages, setTotalPages] = useState(1);
 
-  const [uploadLoading, setUploadLoading] = useState(true);
+  const [uploadLoading, setUploadLoading] = useState(false);
   const [uploads, setUploads] = useState<UploadChildRequestEntity[]>([]);
   const [uploadPage, setUploadPage] = useState(0);
   const [uploadTotalPages, setUploadTotalPages] = useState(1);
-  const [uploadRegion, setUploadRegion] = useState('');
   const [uploadGender, setUploadGender] = useState('');
   const [busyId, setBusyId] = useState<string | null>(null);
 
@@ -129,10 +155,26 @@ export default function LeaderChildrenPage() {
   const [healthValue, setHealthValue] = useState('');
   const [approveSubmitting, setApproveSubmitting] = useState(false);
 
+  /** Configure needs only (no upload review) — opened from Children list. */
+  const [needsConfigChild, setNeedsConfigChild] = useState<Child | null>(null);
+  const [cfgNeedMeal, setCfgNeedMeal] = useState(false);
+  const [cfgNeedBooks, setCfgNeedBooks] = useState(false);
+  const [cfgNeedHealth, setCfgNeedHealth] = useState(false);
+  const [cfgMealValue, setCfgMealValue] = useState('');
+  const [cfgBooksValue, setCfgBooksValue] = useState('');
+  const [cfgHealthValue, setCfgHealthValue] = useState('');
+  const [configNeedsSubmitting, setConfigNeedsSubmitting] = useState(false);
+
   const loadList = useCallback(async () => {
+    if (!canLoad || !leaderRegion) {
+      setChildren([]);
+      setTotalPages(1);
+      setListLoading(false);
+      return;
+    }
     setListLoading(true);
     try {
-      const res = await childrenService.list({ page, page_size: PAGE_SIZE });
+      const res = await childrenService.list({ page, page_size: PAGE_SIZE, region: leaderRegion });
       const body = res.data;
       setChildren(Array.isArray(body.data) ? body.data : []);
       setTotalPages(Math.max(1, body.total_pages ?? 1));
@@ -142,7 +184,7 @@ export default function LeaderChildrenPage() {
     } finally {
       setListLoading(false);
     }
-  }, [page]);
+  }, [page, leaderRegion, canLoad]);
 
   useEffect(() => {
     if (tab !== 'list') return;
@@ -150,13 +192,19 @@ export default function LeaderChildrenPage() {
   }, [tab, loadList]);
 
   const loadUploads = useCallback(async () => {
+    if (!canLoad || !leaderRegion) {
+      setUploads([]);
+      setUploadTotalPages(1);
+      setUploadLoading(false);
+      return;
+    }
     setUploadLoading(true);
     try {
       const res = await childUploadService.list({
         page: uploadPage,
         page_size: PAGE_SIZE,
         status: 'pending',
-        region: uploadRegion.trim() || undefined,
+        region: leaderRegion,
         gender: uploadGender || undefined,
       });
       const body = res.data;
@@ -169,7 +217,7 @@ export default function LeaderChildrenPage() {
     } finally {
       setUploadLoading(false);
     }
-  }, [uploadPage, uploadRegion, uploadGender]);
+  }, [uploadPage, uploadGender, leaderRegion, canLoad]);
 
   useEffect(() => {
     if (tab !== 'review') return;
@@ -177,6 +225,12 @@ export default function LeaderChildrenPage() {
   }, [tab, loadUploads]);
 
   const loadProfiles = useCallback(async () => {
+    if (!canLoad || !leaderRegion) {
+      setProfileReqs([]);
+      setProfileTotalPages(1);
+      setProfilesLoading(false);
+      return;
+    }
     setProfilesLoading(true);
     try {
       const res = await childUploadService.list({
@@ -184,6 +238,7 @@ export default function LeaderChildrenPage() {
         page_size: PAGE_SIZE,
         sort_order: 'desc',
         review_status: 'approved',
+        region: leaderRegion,
       });
       const body = res.data;
       const raw = Array.isArray(body.data) ? body.data : [];
@@ -195,7 +250,7 @@ export default function LeaderChildrenPage() {
     } finally {
       setProfilesLoading(false);
     }
-  }, [profilePage]);
+  }, [profilePage, leaderRegion, canLoad]);
 
   useEffect(() => {
     if (tab !== 'profiles') return;
@@ -215,6 +270,72 @@ export default function LeaderChildrenPage() {
       .catch(() => setChildDetailData(null))
       .finally(() => setChildDetailLoading(false));
   }, [childDetailOpen, childDetailId]);
+
+  const applyNeedUpdatesToChild = useCallback(
+    async (
+      child: Child,
+      opts: {
+        needMeal: boolean;
+        needBooks: boolean;
+        needHealth: boolean;
+        mealValue: string;
+        booksValue: string;
+        healthValue: string;
+      },
+    ): Promise<boolean> => {
+      const { needMeal, needBooks, needHealth, mealValue, booksValue, healthValue } = opts;
+      const childId = child.id.trim();
+      if (!childId) {
+        toast.error('Resolved child record has no id');
+        return false;
+      }
+
+      const booksNeeds = (child.books_needs || []).map((id) => id.trim());
+      if (needBooks && (!booksNeeds[0] || !booksNeeds[1])) {
+        toast.error(
+          'Books: hồ sơ trẻ cần đủ books_needs[0] và books_needs[1] sau khi duyệt — hiện thiếu một hoặc cả hai need_id',
+        );
+        return false;
+      }
+
+      if (needMeal) {
+        const ok = await execute(
+          () =>
+            childrenService.updateMealNeed({
+              child_id: childId,
+              need_id: (child.meal_need || '').trim(),
+              value: Number(mealValue),
+            }),
+          { quiet: true },
+        );
+        if (!ok) return false;
+      }
+      if (needBooks && booksNeeds[0] && booksNeeds[1]) {
+        const amount = Number(booksValue);
+        for (const need_id of [booksNeeds[0], booksNeeds[1]] as const) {
+          const ok = await execute(
+            () => childrenService.updateBooksNeed({ child_id: childId, need_id, value: amount }),
+            { quiet: true },
+          );
+          if (!ok) return false;
+        }
+      }
+      if (needHealth) {
+        const ok = await execute(
+          () =>
+            childrenService.updateHealthInsuranceNeed({
+              child_id: childId,
+              need_id: (child.health_insurance_need || '').trim(),
+              value: Number(healthValue),
+            }),
+          { quiet: true },
+        );
+        if (!ok) return false;
+      }
+      return true;
+    },
+    [execute],
+  );
 
   function runReview(row: UploadChildRequestEntity, isYes: boolean) {
     if (!isYes) {
@@ -239,15 +360,9 @@ export default function LeaderChildrenPage() {
       return;
     }
 
-    if (!needMeal && !needBooks && !needHealth) {
-      toast.error('Select at least one need type');
-      return;
-    }
-    const mOk = !needMeal || (Number(mealValue) > 0 && Number.isFinite(Number(mealValue)));
-    const bOk = !needBooks || (Number(booksValue) > 0 && Number.isFinite(Number(booksValue)));
-    const hOk = !needHealth || (Number(healthValue) > 0 && Number.isFinite(Number(healthValue)));
-    if (!mOk || !bOk || !hOk) {
-      toast.error('Enter a valid positive amount (VND) for each selected need');
+    const msg = validateNeedAmounts(needMeal, needBooks, needHealth, mealValue, booksValue, healthValue);
+    if (msg) {
+      toast.error(msg);
       return;
     }
 
@@ -267,53 +382,20 @@ export default function LeaderChildrenPage() {
         toast.error('Không tìm thấy child với mã định danh này trong danh sách trẻ');
         return;
       }
-      const childId = child.id.trim();
-      if (!childId) {
-        toast.error('Resolved child record has no id');
-        return;
-      }
 
-      const booksNeeds = (child.books_needs || []).map((id) => id.trim());
-      if (needBooks && (!booksNeeds[0] || !booksNeeds[1])) {
+      const okApply = await applyNeedUpdatesToChild(child, {
+        needMeal,
+        needBooks,
+        needHealth,
+        mealValue,
+        booksValue,
+        healthValue,
+      });
+      if (!okApply) {
         toast.error(
-          'Books: hồ sơ trẻ cần đủ books_needs[0] và books_needs[1] sau khi duyệt — hiện thiếu một hoặc cả hai need_id',
+          'Cập nhật nhu cầu chưa hoàn tất. Vào tab Children list → «Cấu hình nhu cầu» để thử lại (mỗi mức phải > 10.000 ₫).',
         );
         return;
-      }
-
-      if (needMeal) {
-        const ok = await execute(
-          () =>
-            childrenService.updateMealNeed({
-              child_id: childId,
-              need_id: (child.meal_need || '').trim(),
-              value: Number(mealValue),
-            }),
-          { quiet: true },
-        );
-        if (!ok) return;
-      }
-      if (needBooks && booksNeeds[0] && booksNeeds[1]) {
-        const amount = Number(booksValue);
-        for (const need_id of [booksNeeds[0], booksNeeds[1]] as const) {
-          const ok = await execute(
-            () => childrenService.updateBooksNeed({ child_id: childId, need_id, value: amount }),
-            { quiet: true },
-          );
-          if (!ok) return;
-        }
-      }
-      if (needHealth) {
-        const ok = await execute(
-          () =>
-            childrenService.updateHealthInsuranceNeed({
-              child_id: childId,
-              need_id: (child.health_insurance_need || '').trim(),
-              value: Number(healthValue),
-            }),
-          { quiet: true },
-        );
-        if (!ok) return;
       }
 
       toast.success('Đã lưu duyệt và cập nhật nhu cầu trẻ');
@@ -380,6 +462,57 @@ export default function LeaderChildrenPage() {
     }
   }
 
+  function openNeedsConfigFromList(row: Child) {
+    setNeedsConfigChild(row);
+    setCfgNeedMeal(false);
+    setCfgNeedBooks(false);
+    setCfgNeedHealth(false);
+    setCfgMealValue('');
+    setCfgBooksValue('');
+    setCfgHealthValue('');
+  }
+
+  async function submitNeedsConfig() {
+    if (!needsConfigChild) return;
+    const msg = validateNeedAmounts(
+      cfgNeedMeal,
+      cfgNeedBooks,
+      cfgNeedHealth,
+      cfgMealValue,
+      cfgBooksValue,
+      cfgHealthValue,
+    );
+    if (msg) {
+      toast.error(msg);
+      return;
+    }
+    setConfigNeedsSubmitting(true);
+    try {
+      const res = await childrenService.getById(needsConfigChild.id);
+      const child = res.data ?? null;
+      if (!child) {
+        toast.error('Không tải được hồ sơ trẻ — thử lại sau');
+        return;
+      }
+      const okApply = await applyNeedUpdatesToChild(child, {
+        needMeal: cfgNeedMeal,
+        needBooks: cfgNeedBooks,
+        needHealth: cfgNeedHealth,
+        mealValue: cfgMealValue,
+        booksValue: cfgBooksValue,
+        healthValue: cfgHealthValue,
+      });
+      if (!okApply) return;
+      toast.success('Đã cập nhật nhu cầu trẻ');
+      setNeedsConfigChild(null);
+      await loadList();
+    } catch (e: unknown) {
+      toast.error(getErrorMessage(e, 'Không cập nhật được nhu cầu'));
+    } finally {
+      setConfigNeedsSubmitting(false);
+    }
+  }
+
   const listColumns = [
     { key: 'first_name', label: 'First name' },
     { key: 'last_name', label: 'Last name' },
@@ -396,18 +529,28 @@ export default function LeaderChildrenPage() {
       label: 'Actions',
       className: 'whitespace-nowrap',
       render: (row: Child) => (
-        <button
-          type="button"
-          onClick={(e) => {
-            e.stopPropagation();
-            setChildDetailRow(row);
-            setChildDetailId(row.id);
-            setChildDetailOpen(true);
-          }}
-          className="rounded-lg border border-slate-200 bg-white px-2 py-1 text-xs font-medium text-slate-800 hover:bg-slate-50"
-        >
-          Details
-        </button>
+        <div className="flex flex-wrap items-center gap-1" onClick={(e) => e.stopPropagation()}>
+          <button
+            type="button"
+            onClick={() => openNeedsConfigFromList(row)}
+            className="inline-flex items-center gap-0.5 rounded-lg border border-blue-200 bg-blue-50 px-2 py-1 text-xs font-medium text-blue-900 hover:bg-blue-100"
+            title="Cấu hình meal / sách / bảo hiểm (chỉ cập nhật nhu cầu, không duyệt upload)"
+          >
+            <Settings2 className="h-3.5 w-3.5" />
+            Cấu hình nhu cầu
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              setChildDetailRow(row);
+              setChildDetailId(row.id);
+              setChildDetailOpen(true);
+            }}
+            className="rounded-lg border border-slate-200 bg-white px-2 py-1 text-xs font-medium text-slate-800 hover:bg-slate-50"
+          >
+            Details
+          </button>
+        </div>
       ),
     },
   ];
@@ -422,8 +565,24 @@ export default function LeaderChildrenPage() {
     <div>
       <PageHeader
         title="Children"
-        description="Review child upload requests, vote on approved profiles, and browse registered children"
+        description={`Upload / profiles / danh sách trẻ theo vùng trưởng${leaderRegion ? `: ${leaderRegion}` : ''}`}
       />
+
+      {centerStatus === 'loading' && (
+        <div className="mb-4 rounded-lg border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-600">
+          Đang tải trung tâm trưởng vùng (vùng từ GET /centers/leader)…
+        </div>
+      )}
+      {centerStatus === 'error' && centerError && (
+        <div className="mb-4 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+          Không tải được trung tâm trưởng vùng: {centerError}. Các danh sách bên dưới cần vùng từ API này.
+        </div>
+      )}
+      {centerStatus !== 'loading' && !leaderRegion && (
+        <div className="mb-4 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+          Không có trường <code className="rounded bg-white px-1">region</code> từ GET /centers/leader — không lọc được yêu cầu và trẻ theo vùng.
+        </div>
+      )}
 
       <div className="mb-6 flex flex-wrap gap-1 rounded-lg border border-slate-200 bg-slate-50 p-1 sm:flex-nowrap">
         <button
@@ -470,23 +629,18 @@ export default function LeaderChildrenPage() {
               <span className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs font-medium text-amber-900">
                 Pending requests only
               </span>
-              <input
-                type="text"
-                placeholder="Region"
-                value={uploadRegion}
-                onChange={(e) => {
-                  setUploadRegion(e.target.value);
-                  setUploadPage(0);
-                }}
-                className="min-w-[140px] rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none ring-blue-800/20 focus:ring-2"
-              />
+              <span className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs text-slate-700">
+                Vùng (trưởng):{' '}
+                <strong className="text-slate-900">{leaderRegion ?? '—'}</strong>
+              </span>
               <select
                 value={uploadGender}
                 onChange={(e) => {
                   setUploadGender(e.target.value);
                   setUploadPage(0);
                 }}
-                className="rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none ring-blue-800/20 focus:ring-2"
+                disabled={!canLoad}
+                className="rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none ring-blue-800/20 focus:ring-2 disabled:opacity-50"
               >
                 {GENDER_OPTIONS.map((o) => (
                   <option key={o.value || 'all-g'} value={o.value}>
@@ -568,7 +722,11 @@ export default function LeaderChildrenPage() {
             page={uploadPage}
             totalPages={uploadTotalPages}
             onPageChange={(p) => setUploadPage(p)}
-            emptyMessage="No upload requests match your filters."
+            emptyMessage={
+              canLoad
+                ? 'No upload requests match your filters.'
+                : 'Không có vùng trưởng — không tải được yêu cầu upload.'
+            }
           />
         </div>
       )}
@@ -642,7 +800,11 @@ export default function LeaderChildrenPage() {
             page={profilePage}
             totalPages={profileTotalPages}
             onPageChange={(p) => setProfilePage(p)}
-            emptyMessage="No leader-approved child upload requests to vote on."
+            emptyMessage={
+              canLoad
+                ? 'No leader-approved child upload requests to vote on.'
+                : 'Không có vùng trưởng — không tải được hồ sơ để bỏ phiếu.'
+            }
           />
         </div>
       )}
@@ -655,7 +817,9 @@ export default function LeaderChildrenPage() {
           page={page}
           totalPages={totalPages}
           onPageChange={setPage}
-          emptyMessage="Không tìm thấy trẻ em"
+          emptyMessage={
+            canLoad ? 'Không tìm thấy trẻ em' : 'Không có vùng trưởng — không tải được danh sách trẻ.'
+          }
         />
       )}
 
@@ -683,8 +847,8 @@ export default function LeaderChildrenPage() {
             </div>
 
             <p className="mb-4 rounded-lg border border-blue-100 bg-blue-50/80 px-3 py-2 text-xs text-slate-700">
-              Chọn nhu cầu và nhập <strong>số tiền (VND)</strong>. Khi xác nhận: hệ thống có thể ghi nhận review (nếu cần), rồi cập nhật
-              nhu cầu trẻ. <strong>Sách:</strong> một ô tiền áp dụng cho <strong>cả hai</strong> học kỳ (
+              Chọn nhu cầu và nhập <strong>số tiền (VND)</strong>; <strong>mỗi nhu cầu đã chọn phải &gt; {MIN_NEED_VND.toLocaleString('vi-VN')} ₫</strong>. Khi xác nhận:
+              hệ thống ghi nhận duyệt (nếu cần), rồi cập nhật nhu cầu trẻ. <strong>Sách:</strong> một ô tiền áp dụng cho <strong>cả hai</strong> học kỳ (
               <code className="rounded bg-white px-1">books_needs[0]</code> và <code className="rounded bg-white px-1">books_needs[1]</code>)
               sau khi duyệt. <code className="rounded bg-white px-1">child_id</code> được tra theo <code className="rounded bg-white px-1">identity_code</code> trên hồ sơ trẻ.
             </p>
@@ -703,9 +867,9 @@ export default function LeaderChildrenPage() {
                   <span className="mt-0.5 block text-xs text-slate-500">Amount basis: per month (VND/month)</span>
                   {needMeal && (
                     <GroupedNumericInput
-                      min={1}
+                      min={MIN_NEED_VND + 1}
                       className={`${approveInputClass} mt-2`}
-                      placeholder="e.g. 500000"
+                      placeholder={`Ví dụ: ${(MIN_NEED_VND + 50_000).toString()}`}
                       value={mealValue}
                       onChange={setMealValue}
                       disabled={approveSubmitting || executing}
@@ -731,9 +895,9 @@ export default function LeaderChildrenPage() {
                   </span>
                   {needBooks && (
                     <GroupedNumericInput
-                      min={1}
+                      min={MIN_NEED_VND + 1}
                       className={`${approveInputClass} mt-2`}
-                      placeholder="e.g. 800000"
+                      placeholder={`Ví dụ: ${(MIN_NEED_VND + 800_000).toString()}`}
                       value={booksValue}
                       onChange={setBooksValue}
                       disabled={approveSubmitting || executing}
@@ -755,9 +919,9 @@ export default function LeaderChildrenPage() {
                   <span className="mt-0.5 block text-xs text-slate-500">Amount basis: per year (VND/year)</span>
                   {needHealth && (
                     <GroupedNumericInput
-                      min={1}
+                      min={MIN_NEED_VND + 1}
                       className={`${approveInputClass} mt-2`}
-                      placeholder="e.g. 1200000"
+                      placeholder={`Ví dụ: ${(MIN_NEED_VND + 1_200_000).toString()}`}
                       value={healthValue}
                       onChange={setHealthValue}
                       disabled={approveSubmitting || executing}
@@ -788,6 +952,135 @@ export default function LeaderChildrenPage() {
               >
                 <Check className="h-4 w-4" />
                 {approveSubmitting || executing ? 'Processing…' : 'Confirm'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {needsConfigChild && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 p-4">
+          <div className="max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-xl border border-slate-200 bg-white p-5 shadow-xl">
+            <div className="mb-4 flex items-start justify-between gap-2">
+              <div>
+                <h3 className="text-lg font-semibold text-slate-900">Cấu hình nhu cầu</h3>
+                <p className="mt-1 text-sm text-slate-600">
+                  {needsConfigChild.first_name} {needsConfigChild.last_name} · {needsConfigChild.region}
+                </p>
+                <p className="mt-0.5 font-mono text-[11px] text-slate-500">
+                  child_id: {needsConfigChild.id} · identity: {needsConfigChild.identity_code || '—'}
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => !configNeedsSubmitting && !executing && setNeedsConfigChild(null)}
+                className="shrink-0 rounded-lg p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-700 disabled:opacity-50"
+                aria-label="Close"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            <p className="mb-4 rounded-lg border border-blue-100 bg-blue-50/80 px-3 py-2 text-xs text-slate-700">
+              Chỉ cập nhật giá trị nhu cầu on-chain (không gọi duyệt upload).{' '}
+              <strong>Mỗi nhu cầu đã chọn phải &gt; {MIN_NEED_VND.toLocaleString('vi-VN')} ₫</strong>. Dùng khi bước trước duyệt xong nhưng cập nhật need bị lỗi, hoặc
+              khi cần chỉnh lại mức tiền.
+            </p>
+
+            <div className="space-y-4 text-sm">
+              <label className="flex cursor-pointer items-start gap-3 rounded-lg border border-slate-200 p-3 hover:bg-slate-50/80">
+                <input
+                  type="checkbox"
+                  className="mt-1"
+                  checked={cfgNeedMeal}
+                  onChange={(e) => setCfgNeedMeal(e.target.checked)}
+                  disabled={configNeedsSubmitting || executing}
+                />
+                <span className="flex-1">
+                  <span className="font-medium text-slate-900">Meal need</span>
+                  <span className="mt-0.5 block text-xs text-slate-500">VND / tháng</span>
+                  {cfgNeedMeal && (
+                    <GroupedNumericInput
+                      min={MIN_NEED_VND + 1}
+                      className={`${approveInputClass} mt-2`}
+                      placeholder={`Ví dụ: ${(MIN_NEED_VND + 50_000).toString()}`}
+                      value={cfgMealValue}
+                      onChange={setCfgMealValue}
+                      disabled={configNeedsSubmitting || executing}
+                    />
+                  )}
+                </span>
+              </label>
+
+              <label className="flex cursor-pointer items-start gap-3 rounded-lg border border-slate-200 p-3 hover:bg-slate-50/80">
+                <input
+                  type="checkbox"
+                  className="mt-1"
+                  checked={cfgNeedBooks}
+                  onChange={(e) => setCfgNeedBooks(e.target.checked)}
+                  disabled={configNeedsSubmitting || executing}
+                />
+                <span className="flex-1">
+                  <span className="font-medium text-slate-900">Books need</span>
+                  <span className="mt-0.5 block text-xs text-slate-500">
+                    Một mức (VND/kì) cho cả <code className="rounded bg-slate-100 px-0.5">books_needs[0]</code> và{' '}
+                    <code className="rounded bg-slate-100 px-0.5">books_needs[1]</code>.
+                  </span>
+                  {cfgNeedBooks && (
+                    <GroupedNumericInput
+                      min={MIN_NEED_VND + 1}
+                      className={`${approveInputClass} mt-2`}
+                      placeholder={`Ví dụ: ${(MIN_NEED_VND + 800_000).toString()}`}
+                      value={cfgBooksValue}
+                      onChange={setCfgBooksValue}
+                      disabled={configNeedsSubmitting || executing}
+                    />
+                  )}
+                </span>
+              </label>
+
+              <label className="flex cursor-pointer items-start gap-3 rounded-lg border border-slate-200 p-3 hover:bg-slate-50/80">
+                <input
+                  type="checkbox"
+                  className="mt-1"
+                  checked={cfgNeedHealth}
+                  onChange={(e) => setCfgNeedHealth(e.target.checked)}
+                  disabled={configNeedsSubmitting || executing}
+                />
+                <span className="flex-1">
+                  <span className="font-medium text-slate-900">Health insurance need</span>
+                  <span className="mt-0.5 block text-xs text-slate-500">VND / năm</span>
+                  {cfgNeedHealth && (
+                    <GroupedNumericInput
+                      min={MIN_NEED_VND + 1}
+                      className={`${approveInputClass} mt-2`}
+                      placeholder={`Ví dụ: ${(MIN_NEED_VND + 1_200_000).toString()}`}
+                      value={cfgHealthValue}
+                      onChange={setCfgHealthValue}
+                      disabled={configNeedsSubmitting || executing}
+                    />
+                  )}
+                </span>
+              </label>
+            </div>
+
+            <div className="mt-5 flex flex-wrap justify-end gap-2">
+              <button
+                type="button"
+                onClick={() => !configNeedsSubmitting && !executing && setNeedsConfigChild(null)}
+                disabled={configNeedsSubmitting || executing}
+                className="rounded-lg border border-slate-200 px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-50"
+              >
+                Đóng
+              </button>
+              <button
+                type="button"
+                disabled={configNeedsSubmitting || executing}
+                onClick={() => void submitNeedsConfig()}
+                className="inline-flex items-center gap-1 rounded-lg bg-blue-800 px-3 py-2 text-sm font-medium text-white hover:bg-blue-900 disabled:opacity-50"
+              >
+                <Check className="h-4 w-4" />
+                {configNeedsSubmitting || executing ? 'Đang xử lý…' : 'Lưu nhu cầu'}
               </button>
             </div>
           </div>

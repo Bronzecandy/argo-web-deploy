@@ -402,6 +402,8 @@ export interface StaffNft {
 // ─── Donor ───────────────────────────────────────────────
 export interface Donor {
   id: string;
+  /** Wallet / on-chain owner. */
+  owner?: string;
   name: string;
   first_name: string;
   last_name: string;
@@ -410,6 +412,7 @@ export interface Donor {
   email: string;
   total_donation: number;
   url: string;
+  supported_childs?: string[];
   contributions: TransactionRecord[];
 }
 
