@@ -13,6 +13,7 @@ import { formatDate, truncateAddress } from '@/src/lib/formatters';
 import { registrationService } from '@/src/services/registration.service';
 import { useExecuteTransaction } from '@/src/hooks/useExecuteTransaction';
 import { useAppSelector } from '@/src/store/hooks';
+import { useLeaderCenter } from '@/src/contexts/LeaderCenterContext';
 import type { RegistrationRequest } from '@/src/types/api.types';
 
 const PAGE_SIZE = 20;
@@ -42,7 +43,8 @@ function detailField(label: string, value: ReactNode) {
 
 export default function LeaderVolunteersPage() {
   const { execute } = useExecuteTransaction();
-  const { poolName, poolId, status: poolStatus, error: poolError } = useAppSelector((s) => s.leaderPool);
+  const { poolId, status: poolStatus } = useAppSelector((s) => s.leaderPool);
+  const { status: centerStatus, leaderRegion, errorMessage: centerError } = useLeaderCenter();
 
   const [regLoading, setRegLoading] = useState(false);
   const [registrations, setRegistrations] = useState<RegistrationRequest[]>([]);
@@ -64,10 +66,10 @@ export default function LeaderVolunteersPage() {
   const [regDetailData, setRegDetailData] = useState<RegistrationRequest | null>(null);
   const [regDetailLoading, setRegDetailLoading] = useState(false);
 
-  const canLoad = poolStatus === 'succeeded' && !!poolName;
+  const canLoad = centerStatus !== 'loading' && !!leaderRegion;
 
   const loadRegistrations = useCallback(async () => {
-    if (!canLoad) {
+    if (!canLoad || !leaderRegion) {
       setRegistrations([]);
       setRegTotalPages(1);
       setRegTotalAmount(0);
@@ -81,7 +83,7 @@ export default function LeaderVolunteersPage() {
         keyword: regKeyword || undefined,
         status: regStatus || undefined,
         register_role: 'Volunteer',
-        region: poolName,
+        region: leaderRegion,
       });
       const body = res.data;
       setRegistrations(Array.isArray(body.data) ? body.data : []);
@@ -97,7 +99,7 @@ export default function LeaderVolunteersPage() {
     } finally {
       setRegLoading(false);
     }
-  }, [regPage, regKeyword, regStatus, poolName, canLoad]);
+  }, [regPage, regKeyword, regStatus, leaderRegion, canLoad]);
 
   useEffect(() => {
     void loadRegistrations();
@@ -178,17 +180,22 @@ export default function LeaderVolunteersPage() {
     <div className="p-6">
       <PageHeader
         title="Volunteer registrations"
-        description={`Review volunteer signup requests for your region${poolName ? `: ${poolName}` : ''}`}
+        description={`Review volunteer signup requests for your region${leaderRegion ? `: ${leaderRegion}` : ''}`}
       />
 
-      {poolStatus === 'loading' && (
+      {centerStatus === 'loading' && (
         <div className="mb-4 rounded-lg border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-600">
-          Loading region pool…
+          Loading leader center (region from GET /centers/leader)…
         </div>
       )}
-      {poolStatus === 'failed' && (
+      {centerStatus === 'error' && centerError && (
         <div className="mb-4 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
-          Could not load your leader pool{poolError ? `: ${poolError}` : ''}. Volunteer list and region-scoped actions need this data.
+          Could not load leader center: {centerError}. Volunteer list needs region from this API.
+        </div>
+      )}
+      {centerStatus !== 'loading' && !leaderRegion && (
+        <div className="mb-4 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+          No <code className="rounded bg-white px-1">region</code> returned from GET /centers/leader — cannot filter volunteer registrations.
         </div>
       )}
       {poolStatus === 'succeeded' && poolId && (
@@ -315,12 +322,14 @@ export default function LeaderVolunteersPage() {
             },
           ]}
           data={registrations}
-          loading={regLoading || poolStatus === 'loading'}
+          loading={regLoading || centerStatus === 'loading'}
           page={regPage}
           totalPages={regTotalPages}
           onPageChange={(p) => setRegPage(p)}
           emptyMessage={
-            canLoad ? 'No volunteer registration requests match your filters.' : 'Load your leader pool to see volunteer requests for your region.'
+            canLoad
+              ? 'No volunteer registration requests match your filters.'
+              : 'Load your leader center (region) to see volunteer requests for your region.'
           }
         />
       </div>

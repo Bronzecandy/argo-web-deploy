@@ -18,6 +18,8 @@ export type LeaderCenterLoadStatus = 'loading' | 'has_center' | 'no_center' | 'e
 type LeaderCenterContextValue = {
   status: LeaderCenterLoadStatus;
   center: SupportCenter | null;
+  /** `region` from GET /centers/leader (200) — use for API filters even before address/phone are set. */
+  leaderRegion: string | null;
   errorMessage: string | null;
   refetch: () => Promise<void>;
 };
@@ -33,6 +35,15 @@ function isCompleteLeaderCenter(data: unknown): data is SupportCenter {
   return Boolean(addr && phone);
 }
 
+/** Region string from leader center payload (may exist before center is "complete"). */
+function extractLeaderRegion(body: unknown): string | null {
+  if (body == null || typeof body !== 'object') return null;
+  const r = (body as Record<string, unknown>).region;
+  if (typeof r !== 'string') return null;
+  const t = r.trim();
+  return t || null;
+}
+
 function getAxiosStatus(e: unknown): number | undefined {
   if (e && typeof e === 'object' && 'response' in e) {
     const s = (e as { response?: { status?: number } }).response?.status;
@@ -45,12 +56,14 @@ export function LeaderCenterProvider({ children }: { children: ReactNode }) {
   const address = useAppSelector((s) => s.auth.user?.address);
   const [status, setStatus] = useState<LeaderCenterLoadStatus>('loading');
   const [center, setCenter] = useState<SupportCenter | null>(null);
+  const [leaderRegion, setLeaderRegion] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const refetch = useCallback(async () => {
     const addr = address?.trim();
     if (!addr) {
       setCenter(null);
+      setLeaderRegion(null);
       setErrorMessage(null);
       setStatus('loading');
       return;
@@ -60,6 +73,7 @@ export function LeaderCenterProvider({ children }: { children: ReactNode }) {
     try {
       const res = await centerService.getLeaderCenter();
       const body = res.data;
+      setLeaderRegion(extractLeaderRegion(body));
       if (isCompleteLeaderCenter(body)) {
         setCenter(body);
         setStatus('has_center');
@@ -71,6 +85,7 @@ export function LeaderCenterProvider({ children }: { children: ReactNode }) {
       const http = getAxiosStatus(e);
       if (http === 400 || http === 404) {
         setCenter(null);
+        setLeaderRegion(null);
         setStatus('no_center');
         return;
       }
@@ -79,6 +94,7 @@ export function LeaderCenterProvider({ children }: { children: ReactNode }) {
           ? String((e as { response?: { data?: { message?: string } } }).response?.data?.message ?? '')
           : '';
       setCenter(null);
+      setLeaderRegion(null);
       setErrorMessage(msg || 'Failed to load center status');
       setStatus('error');
     }
@@ -92,10 +108,11 @@ export function LeaderCenterProvider({ children }: { children: ReactNode }) {
     () => ({
       status,
       center,
+      leaderRegion,
       errorMessage,
       refetch,
     }),
-    [status, center, errorMessage, refetch],
+    [status, center, leaderRegion, errorMessage, refetch],
   );
 
   return <LeaderCenterContext.Provider value={value}>{children}</LeaderCenterContext.Provider>;
