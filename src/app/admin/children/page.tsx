@@ -7,7 +7,6 @@ import PageHeader from '@/src/components/ui/PageHeader';
 import DataTable from '@/src/components/ui/DataTable';
 import DetailModal from '@/src/components/ui/DetailModal';
 import CopyableTruncated from '@/src/components/ui/CopyableTruncated';
-import BlobImage from '@/src/components/ui/BlobImage';
 import WalrusFallbackImg from '@/src/components/ui/WalrusFallbackImg';
 import { BLOB_URL } from '@/src/lib/constants';
 import { blobService } from '@/src/services/blob.service';
@@ -23,6 +22,37 @@ const GENDER_OPTIONS = [
   { value: 'female', label: 'Female' },
   { value: 'other', label: 'Other' },
 ];
+
+function ChildDetailWalrusImage({
+  label,
+  blobId,
+}: {
+  label: string;
+  blobId: string | null | undefined;
+}) {
+  const bid = blobId?.trim();
+  if (!bid) return null;
+  const openUrl = blobService.getUrl(bid);
+  const img = (
+    <WalrusFallbackImg
+      blobId={bid}
+      alt={label}
+      className="h-24 w-24 rounded-lg border border-slate-200 object-cover"
+    />
+  );
+  return (
+    <div>
+      <p className="mb-1 text-xs font-medium text-slate-500">{label}</p>
+      {openUrl ? (
+        <a href={openUrl} target="_blank" rel="noopener noreferrer" className="inline-block">
+          {img}
+        </a>
+      ) : (
+        img
+      )}
+    </div>
+  );
+}
 
 export default function AdminChildrenPage() {
   const [childLoading, setChildLoading] = useState(true);
@@ -197,39 +227,17 @@ export default function AdminChildrenPage() {
         {detailChild && (
           <div className="space-y-3 text-sm">
             <div className="flex flex-wrap gap-4">
-              {detailChild.avatar_blob_id && (
-                <div>
-                  <p className="mb-1 text-xs font-medium text-slate-500">Avatar</p>
-                  <BlobImage
-                    blobId={detailChild.avatar_blob_id}
-                    source="api"
-                    className="h-24 w-24 rounded-lg border border-slate-200 object-cover"
-                  />
-                </div>
-              )}
-              {(() => {
-                const homeBid = detailChild.home_blob_id?.trim();
-                if (!homeBid) return null;
-                const homeUrl = blobService.getUrl(homeBid);
-                return (
-                  <div>
-                    <p className="mb-1 text-xs font-medium text-slate-500">Home</p>
-                    {homeUrl ? (
-                      <a href={homeUrl} target="_blank" rel="noopener noreferrer" className="inline-block">
-                        <WalrusFallbackImg
-                          blobId={homeBid}
-                          className="h-24 w-24 rounded-lg border border-slate-200 object-cover"
-                        />
-                      </a>
-                    ) : (
-                      <WalrusFallbackImg
-                        blobId={homeBid}
-                        className="h-24 w-24 rounded-lg border border-slate-200 object-cover"
-                      />
-                    )}
-                  </div>
-                );
-              })()}
+              <ChildDetailWalrusImage label="Avatar" blobId={detailChild.avatar_blob_id} />
+              <ChildDetailWalrusImage label="Home" blobId={detailChild.home_blob_id} />
+              <ChildDetailWalrusImage label="Birth certificate" blobId={detailChild.birth_certificate_blob_id} />
+              <ChildDetailWalrusImage
+                label="Guardian ID card"
+                blobId={detailChild.first_guardian?.identity_card_blob_id}
+              />
+              <ChildDetailWalrusImage
+                label="Second guardian ID card"
+                blobId={detailChild.second_guardian?.identity_card_blob_id}
+              />
             </div>
             <p>
               <span className="text-slate-500">Name:</span>{' '}
