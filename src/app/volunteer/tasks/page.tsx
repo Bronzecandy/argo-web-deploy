@@ -45,7 +45,7 @@ export default function VolunteerTasksPage() {
       setTotalPages(Math.max(1, res.data.total_pages ?? 1));
     } catch (e) {
       console.error(e);
-      toast.error('Failed to load tasks');
+      toast.error('Không tải được nhiệm vụ');
       setRows([]);
     } finally {
       setLoading(false);
@@ -86,10 +86,10 @@ export default function VolunteerTasksPage() {
     setBusyId(id);
     try {
       await taskService.claim(id);
-      toast.success('Task claimed successfully');
+      toast.success('Đã nhận nhiệm vụ thành công');
       refresh();
     } catch (e: any) {
-      toast.error(e?.response?.data?.message || 'Failed to claim task');
+      toast.error(e?.response?.data?.message || 'Không nhận được nhiệm vụ');
     } finally {
       setBusyId(null);
     }
@@ -109,7 +109,7 @@ export default function VolunteerTasksPage() {
     setProofSubmitting(true);
     try {
       await taskProofService.submit(proofTaskId, proofBlob.trim());
-      toast.success('Proof submitted');
+      toast.success('Đã gửi bằng chứng');
       setProofOpen(false);
       setProofTaskId(null);
       setProofBlob('');
@@ -119,7 +119,7 @@ export default function VolunteerTasksPage() {
         e && typeof e === 'object' && 'response' in e
           ? String((e as { response?: { data?: { message?: string } } }).response?.data?.message ?? '')
           : '';
-      toast.error(msg || 'Submit failed');
+      toast.error(msg || 'Gửi thất bại');
     } finally {
       setProofSubmitting(false);
     }
@@ -150,7 +150,7 @@ export default function VolunteerTasksPage() {
               label: 'Description',
               render: (r) => <span className="line-clamp-2 max-w-xs">{r.description}</span>,
             },
-            { key: 'region', label: 'Region' },
+            { key: 'region', label: 'Vùng' },
             { key: 'status', label: 'Status', render: (r) => <StatusBadge status={r.status} /> },
             { key: 'end_period', label: 'Due', render: (r) => formatDate(r.end_period) },
             {
@@ -189,7 +189,7 @@ export default function VolunteerTasksPage() {
             label: 'Description',
             render: (r) => <span className="line-clamp-2 max-w-xs">{r.description}</span>,
           },
-          { key: 'region', label: 'Region' },
+          { key: 'region', label: 'Vùng' },
           { key: 'start_period', label: 'Start', render: (r) => formatDate(r.start_period) },
           { key: 'end_period', label: 'End', render: (r) => formatDate(r.end_period) },
           { key: 'status', label: 'Status', render: (r) => <StatusBadge status={r.status} /> },
@@ -198,7 +198,7 @@ export default function VolunteerTasksPage() {
             label: 'Assigned',
             render: (r) => (r.assigned_staff ? truncateAddress(r.assigned_staff) : <span className="text-slate-400">Unassigned</span>),
           },
-          { key: 'created_at', label: 'Created', render: (r) => formatDate(r.created_at) },
+          { key: 'created_at', label: 'Ngày tạo', render: (r) => formatDate(r.created_at) },
           {
             key: 'actions',
             label: 'Actions',

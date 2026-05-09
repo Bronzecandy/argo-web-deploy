@@ -21,12 +21,12 @@ import {
 import { ROLES } from '@/src/lib/constants';
 import { userHasAnyRole } from '@/src/services/auth.service';
 
-/** Aligned with mobile: overview → tasks/welfare → center requests → settings (extras under Settings). */
+/** Theo mobile: tổng quan → nhiệm vụ/phúc lợi → yêu cầu trung tâm → cài đặt. */
 const NAV_PRIMARY: { label: string; href: string; icon: typeof LayoutDashboard }[] = [
-  { label: 'Home', href: '/volunteer', icon: LayoutDashboard },
-  { label: 'Tasks & welfare', href: '/volunteer/tasks', icon: ClipboardList },
-  { label: 'Center requests', href: '/volunteer/center-requests', icon: Building2 },
-  { label: 'Settings', href: '/volunteer/settings', icon: Settings },
+  { label: 'Trang chủ', href: '/volunteer', icon: LayoutDashboard },
+  { label: 'Nhiệm vụ & phúc lợi', href: '/volunteer/tasks', icon: ClipboardList },
+  { label: 'Yêu cầu trung tâm', href: '/volunteer/center-requests', icon: Building2 },
+  { label: 'Cài đặt', href: '/volunteer/settings', icon: Settings },
 ];
 
 const SETTINGS_SUBPATHS = [
@@ -124,7 +124,7 @@ export default function VolunteerLayout({ children }: { children: React.ReactNod
             <span className="min-w-0">
               <span className="block truncate font-bold leading-tight text-slate-900">AgroTrust</span>
               <span className="inline-block rounded-md bg-orange-100 px-1.5 py-0.5 text-[10px] font-semibold text-orange-900">
-                VOLUNTEER
+                Tình nguyện viên
               </span>
             </span>
           </Link>
@@ -135,7 +135,7 @@ export default function VolunteerLayout({ children }: { children: React.ReactNod
               className="hidden items-center gap-1 rounded-lg px-2.5 py-1.5 text-xs font-medium text-slate-600 hover:bg-slate-100 sm:inline-flex"
             >
               <Compass className="h-3.5 w-3.5" />
-              Explore
+              Khám phá
             </Link>
             {showDonorLink && (
               <Link
@@ -143,7 +143,7 @@ export default function VolunteerLayout({ children }: { children: React.ReactNod
                 className="hidden items-center gap-1 rounded-lg border border-blue-200 bg-blue-50 px-2.5 py-1.5 text-xs font-semibold text-blue-900 sm:inline-flex"
               >
                 <Wallet className="h-3.5 w-3.5" />
-                Member
+                Thành viên
               </Link>
             )}
             <span className="hidden max-w-[100px] truncate font-mono text-[11px] text-slate-500 md:inline" title={user?.address}>
@@ -155,7 +155,7 @@ export default function VolunteerLayout({ children }: { children: React.ReactNod
               className="hidden items-center gap-1 rounded-lg border border-slate-200 px-2.5 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50 sm:inline-flex"
             >
               <LogOut className="h-3.5 w-3.5" />
-              <span className="hidden lg:inline">Logout</span>
+              <span className="hidden lg:inline">Đăng xuất</span>
             </button>
 
             <div className="relative sm:hidden" ref={menuRef}>
@@ -164,7 +164,7 @@ export default function VolunteerLayout({ children }: { children: React.ReactNod
                 onClick={() => setMobileMenuOpen((v) => !v)}
                 className="flex h-10 w-10 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-700"
                 aria-expanded={mobileMenuOpen}
-                aria-label="Menu"
+                aria-label="Mở menu"
               >
                 {mobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
               </button>
@@ -176,11 +176,11 @@ export default function VolunteerLayout({ children }: { children: React.ReactNod
                       onClick={closeMobile}
                       className="mb-2 flex items-center gap-2 rounded-lg border border-blue-100 bg-blue-50/80 px-3 py-2 text-xs font-semibold text-blue-900"
                     >
-                      <Wallet className="h-4 w-4" /> Donor / member area
+                      <Wallet className="h-4 w-4" /> Khu vực nhà hảo tâm / thành viên
                     </Link>
                   )}
                   <Link href="/explore" onClick={closeMobile} className="mb-2 flex items-center gap-2 rounded-lg px-3 py-2 text-sm hover:bg-slate-50">
-                    <Compass className="h-4 w-4" /> Public Explore
+                    <Compass className="h-4 w-4" /> Khám phá công khai
                   </Link>
                   <div className="border-t border-slate-100 pt-2">{renderPrimaryNav(closeMobile)}</div>
                   <p className="mt-3 truncate border-t border-slate-100 pt-3 font-mono text-[10px] text-slate-500">{user?.address}</p>
@@ -189,7 +189,7 @@ export default function VolunteerLayout({ children }: { children: React.ReactNod
                     onClick={() => dispatch(logoutUser())}
                     className="mt-2 flex w-full items-center justify-center gap-2 rounded-lg py-2 text-sm font-medium text-red-600 hover:bg-red-50"
                   >
-                    <LogOut className="h-4 w-4" /> Logout
+                    <LogOut className="h-4 w-4" /> Đăng xuất
                   </button>
                 </div>
               )}
@@ -199,7 +199,7 @@ export default function VolunteerLayout({ children }: { children: React.ReactNod
 
         <nav
           className="mx-auto hidden max-w-6xl flex-wrap items-center gap-2 border-t border-slate-100/90 px-4 py-2 sm:flex lg:px-6"
-          aria-label="Volunteer main"
+          aria-label="Điều hướng tình nguyện viên"
         >
           {renderPrimaryNav()}
         </nav>

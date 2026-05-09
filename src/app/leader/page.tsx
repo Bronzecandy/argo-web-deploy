@@ -147,46 +147,46 @@ export default function LeaderDashboardPage() {
   return (
     <div>
       <PageHeader
-        title="Leader dashboard"
-        description="Region pool, local activity, and notifications — scoped to your assigned area when pool data is available"
+        title="Bảng điều khiển trưởng vùng"
+        description="Quỹ vùng, hoạt động địa phương và thông báo — theo khu vực khi đã tải được dữ liệu quỹ"
       />
 
       <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <StatsCard label="Total region pool" value={poolValue} icon={Coins} />
-        <StatsCard label="Your region" value={regionValue} icon={MapPin} />
-        <StatsCard label="Tasks in your region" value={tasksValue} icon={ListChecks} />
-        <StatsCard label="Volunteers pending review" value={volValue} icon={UserPlus} />
+        <StatsCard label="Tổng quỹ vùng" value={poolValue} icon={Coins} />
+        <StatsCard label="Vùng của bạn" value={regionValue} icon={MapPin} />
+        <StatsCard label="Nhiệm vụ trong vùng" value={tasksValue} icon={ListChecks} />
+        <StatsCard label="Tình nguyện viên chờ duyệt" value={volValue} icon={UserPlus} />
       </div>
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <StatsCard
-          label={poolName ? 'Children in your region' : 'Total children (all)'}
+          label={poolName ? 'Trẻ em trong vùng' : 'Tổng trẻ (toàn hệ thống)'}
           value={childrenCount}
           icon={Baby}
         />
-        <StatsCard label="My withdrawal proposals" value={myWithdrawalsCount} icon={Wallet} />
-        <StatsCard label="Center requests (platform)" value={centersCount} icon={Building2} />
-        <StatsCard label="Notifications" value={notificationTotal} icon={Bell} />
+        <StatsCard label="Đề xuất rút của tôi" value={myWithdrawalsCount} icon={Wallet} />
+        <StatsCard label="Yêu cầu trung tâm (nền tảng)" value={centersCount} icon={Building2} />
+        <StatsCard label="Thông báo" value={notificationTotal} icon={Bell} />
       </div>
 
       {poolStatus === 'failed' && (
         <p className="mt-4 rounded-lg border border-amber-200 bg-amber-50 px-4 py-2 text-sm text-amber-900">
-          Region-scoped metrics may be incomplete until your leader pool loads successfully.
+          Chỉ số theo vùng có thể chưa đầy đủ cho đến khi quỹ trưởng vùng tải thành công.
         </p>
       )}
 
       <div className="mt-6 rounded-xl border border-slate-200 bg-white">
         <div className="border-b border-slate-200 px-5 py-4">
-          <h2 className="font-semibold text-slate-900">Recent notifications</h2>
-          <p className="mt-0.5 text-sm text-slate-500">Latest updates for your wallet</p>
+          <h2 className="font-semibold text-slate-900">Thông báo gần đây</h2>
+          <p className="mt-0.5 text-sm text-slate-500">Cập nhật mới cho ví của bạn</p>
         </div>
         <div className="divide-y divide-slate-100">
           {!user?.address ? (
             <div className="px-5 py-8 text-center text-sm text-slate-400">
-              Connect your wallet to load notifications.
+              Kết nối ví để tải thông báo.
             </div>
           ) : notifications.length === 0 ? (
-            <div className="px-5 py-8 text-center text-sm text-slate-400">No recent notifications</div>
+            <div className="px-5 py-8 text-center text-sm text-slate-400">Chưa có thông báo gần đây</div>
           ) : (
             notifications.map((n) => (
               <div key={n.id} className="flex flex-col gap-1 px-5 py-3 sm:flex-row sm:items-start sm:justify-between">

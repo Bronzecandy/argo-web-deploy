@@ -9,12 +9,14 @@ import StatusBadge from '@/src/components/ui/StatusBadge';
 import DetailModal from '@/src/components/ui/DetailModal';
 import BlobImage from '@/src/components/ui/BlobImage';
 import FileUploadInput from '@/src/components/ui/FileUploadInput';
+import GroupedNumericInput from '@/src/components/ui/GroupedNumericInput';
 import PayOSPaymentDialog from '@/src/components/ui/PayOSPaymentDialog';
 import {
   formatDate,
   formatDateTimeSeconds,
   formatVND,
   getWithdrawProposalUiStatus,
+  parseDigitsToNumber,
   truncateAddress,
 } from '@/src/lib/formatters';
 import { withdrawService } from '@/src/services/withdraw.service';
@@ -26,6 +28,7 @@ import type {
   PendingSpecialNeedProposal,
   PendingWithdrawProposal,
   WithdrawProposal,
+  ManualBankTransferConfirmResponse,
 } from '@/src/types/api.types';
 
 const PAGE_SIZE = 20;
@@ -44,7 +47,17 @@ function detailField(label: string, value: ReactNode) {
 function TreasuryPageContent() {
   const searchParams = useSearchParams();
   const { execute } = useExecuteTransaction();
-  const { busy, payOS, closePayOS, runConfirmWithProof, runMainPoolConfirm } = useWithdrawProposalConfirm();
+  const {
+    busy,
+    payOS,
+    closePayOS,
+    runConfirmFirstStep,
+    applyPayOSFromResult,
+    runMainPoolConfirm,
+    submitManualBankTransferProof,
+  } = useWithdrawProposalConfirm();
+
+  const [manualBankInfo, setManualBankInfo] = useState<ManualBankTransferConfirmResponse | null>(null);
 
   const [tab, setTab] = useState<TabId>('proposals');
   const [minInput, setMinInput] = useState('');
@@ -106,18 +119,18 @@ function TreasuryPageContent() {
   }, [searchParams]);
 
   const applyAmountFilter = () => {
-    const min = minInput.trim() === '' ? undefined : Number(minInput);
-    const max = maxInput.trim() === '' ? undefined : Number(maxInput);
-    if (minInput.trim() !== '' && Number.isNaN(min!)) {
-      toast.error('Minimum amount must be a number');
+    const min = minInput.trim() === '' ? undefined : parseDigitsToNumber(minInput);
+    const max = maxInput.trim() === '' ? undefined : parseDigitsToNumber(maxInput);
+    if (minInput.trim() !== '' && min == null) {
+      toast.error('Số tiền tối thiểu không hợp lệ');
       return;
     }
-    if (maxInput.trim() !== '' && Number.isNaN(max!)) {
-      toast.error('Maximum amount must be a number');
+    if (maxInput.trim() !== '' && max == null) {
+      toast.error('Số tiền tối đa không hợp lệ');
       return;
     }
-    setMinAmount(min);
-    setMaxAmount(max);
+    setMinAmount(min === null ? undefined : min);
+    setMaxAmount(max === null ? undefined : max);
     setPageProposals(0);
     setPagePending(0);
     setPageSpecial(0);
@@ -156,7 +169,7 @@ function TreasuryPageContent() {
       }
     } catch (e) {
       console.error(e);
-      toast.error('Failed to load treasury data');
+      toast.error('Tải dữ liệu kho bạc thất bại');
       if (tab === 'proposals') setProposals([]);
       if (tab === 'pending') setPendingList([]);
       if (tab === 'special') setSpecialList([]);
@@ -189,7 +202,7 @@ function TreasuryPageContent() {
         const msg =
           e && typeof e === 'object' && 'response' in e
             ? String((e as { response?: { data?: { message?: string } } }).response?.data?.message ?? '')
-            : 'Failed to load';
+            : 'Tải thất bại';
         setWithdrawDetailErr(msg);
         setWithdrawDetailData(withdrawDetail.row ?? null);
       })
@@ -212,7 +225,7 @@ function TreasuryPageContent() {
         const msg =
           e && typeof e === 'object' && 'response' in e
             ? String((e as { response?: { data?: { message?: string } } }).response?.data?.message ?? '')
-            : 'Failed to load';
+            : 'Tải thất bại';
         setPendingDetailErr(msg);
         setPendingDetailData(null);
       })
@@ -235,7 +248,7 @@ function TreasuryPageContent() {
         const msg =
           e && typeof e === 'object' && 'response' in e
             ? String((e as { response?: { data?: { message?: string } } }).response?.data?.message ?? '')
-            : 'Failed to load';
+            : 'Tải thất bại';
         setSpecialDetailErr(msg);
         setSpecialDetailData(null);
       })
@@ -243,37 +256,63 @@ function TreasuryPageContent() {
   }, [specialDetail.open, specialDetail.id]);
 
   const openWithdrawConfirmModal = (id: string) => {
+    setManualBankInfo(null);
     setWithdrawConfirmProofBlob('');
     setWithdrawConfirmModal({ open: true, proposalId: id });
   };
 
   const closeWithdrawConfirmModal = () => {
     if (busy) return;
+    setManualBankInfo(null);
     setWithdrawConfirmModal({ open: false, proposalId: null });
     setWithdrawConfirmProofBlob('');
   };
 
-  const handleWithdrawConfirmModalSubmit = async () => {
+  const handleWithdrawConfirmStep1 = async () => {
     const id = withdrawConfirmModal.proposalId;
     if (!id) return;
-    const ok = await runConfirmWithProof(id, withdrawConfirmProofBlob.trim(), {
-      successMessage: 'Proposal confirmed & executed',
-    });
-    if (ok) {
+    const result = await runConfirmFirstStep(id, { successMessage: 'Đã xác nhận và thực hiện đề xuất' });
+    if (result.kind === 'payos') {
+      applyPayOSFromResult(result.state);
+      closeWithdrawConfirmModal();
+      refresh();
+      setWithdrawDetail((d) => (d.id === id ? { ...d, open: false } : d));
+      return;
+    }
+    if (result.kind === 'manual_pending') {
+      setManualBankInfo(result.data);
+      return;
+    }
+    if (result.kind === 'done' && result.ok) {
       refresh();
       closeWithdrawConfirmModal();
       setWithdrawDetail((d) => (d.id === id ? { ...d, open: false } : d));
     }
   };
 
+  const handleWithdrawConfirmStep2 = async () => {
+    if (!manualBankInfo) return;
+    const ok = await submitManualBankTransferProof(
+      manualBankInfo,
+      withdrawConfirmProofBlob.trim(),
+      'Đã xác nhận và thực hiện đề xuất',
+    );
+    if (ok) {
+      const pid = withdrawConfirmModal.proposalId;
+      refresh();
+      closeWithdrawConfirmModal();
+      if (pid) setWithdrawDetail((d) => (d.id === pid ? { ...d, open: false } : d));
+    }
+  };
+
   const handleMainPoolSubmit = async () => {
     const id = withdrawDetail.id;
     if (!id || !mainPoolBlobId.trim()) {
-      toast.error('Upload proof image (blob ID) for manual transfer confirmation');
+      toast.error('Tải ảnh chứng từ (blob) để xác nhận chuyển khoản thủ công');
       return;
     }
     const ok = await runMainPoolConfirm(id, mainPoolBlobId.trim(), {
-      successMessage: 'Main pool transfer recorded',
+      successMessage: 'Đã ghi nhận chuyển khoản quỹ chính',
     });
     if (ok) {
       setMainPoolBlobId('');
@@ -285,7 +324,7 @@ function TreasuryPageContent() {
   const handlePendingApprove = async (id: string) => {
     const ok = await execute(
       () => pendingWithdrawService.approve(id),
-      { successMessage: 'Pending withdrawal approved & executed' },
+      { successMessage: 'Đã duyệt và thực hiện yêu cầu rút chờ xử lý' },
     );
     if (ok) refresh();
   };
@@ -293,7 +332,7 @@ function TreasuryPageContent() {
   const handlePendingRefuse = async (id: string) => {
     const ok = await execute(
       () => pendingWithdrawService.refuse(id),
-      { successMessage: 'Pending withdrawal refused' },
+      { successMessage: 'Đã từ chối yêu cầu rút chờ xử lý' },
     );
     if (ok) refresh();
   };
@@ -301,7 +340,7 @@ function TreasuryPageContent() {
   const handleSpecialApprove = async (id: string) => {
     const ok = await execute(
       () => pendingSpecialNeedsService.approve(id),
-      { successMessage: 'Special need proposal approved & executed' },
+      { successMessage: 'Đã duyệt và thực hiện đề xuất nhu cầu đặc biệt' },
     );
     if (ok) refresh();
   };
@@ -309,7 +348,7 @@ function TreasuryPageContent() {
   const handleSpecialRefuse = async (id: string) => {
     const ok = await execute(
       () => pendingSpecialNeedsService.refuse(id),
-      { successMessage: 'Special need proposal refused' },
+      { successMessage: 'Đã từ chối đề xuất nhu cầu đặc biệt' },
     );
     if (ok) refresh();
   };
@@ -350,23 +389,21 @@ function TreasuryPageContent() {
   const filterBar: ReactNode = (
     <div className="flex flex-wrap items-end gap-3 rounded-xl border border-slate-200 bg-white p-4">
       <div>
-        <label className="mb-1 block text-xs font-medium text-slate-500">Min amount (VND)</label>
-        <input
-          type="number"
+        <label className="mb-1 block text-xs font-medium text-slate-500">Số tiền tối thiểu (VND)</label>
+        <GroupedNumericInput
           value={minInput}
-          onChange={(e) => setMinInput(e.target.value)}
+          onChange={setMinInput}
           className="w-36 rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-blue-700 focus:outline-none focus:ring-1 focus:ring-blue-700"
-          placeholder="Any"
+          placeholder="Bất kỳ"
         />
       </div>
       <div>
-        <label className="mb-1 block text-xs font-medium text-slate-500">Max amount (VND)</label>
-        <input
-          type="number"
+        <label className="mb-1 block text-xs font-medium text-slate-500">Số tiền tối đa (VND)</label>
+        <GroupedNumericInput
           value={maxInput}
-          onChange={(e) => setMaxInput(e.target.value)}
+          onChange={setMaxInput}
           className="w-36 rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-blue-700 focus:outline-none focus:ring-1 focus:ring-blue-700"
-          placeholder="Any"
+          placeholder="Bất kỳ"
         />
       </div>
       <button
@@ -374,7 +411,7 @@ function TreasuryPageContent() {
         onClick={applyAmountFilter}
         className="rounded-lg bg-blue-800 px-4 py-2 text-sm font-medium text-white hover:bg-blue-900"
       >
-        Apply filter
+        Áp dụng bộ lọc
       </button>
     </div>
   );
@@ -390,11 +427,11 @@ function TreasuryPageContent() {
         ? [
             {
               key: 'local',
-              label: 'Source',
+              label: 'Nguồn',
               render: (r: WithdrawProposal) =>
                 r.is_from_local_pool ? (
                   <span className="rounded bg-amber-100 px-1.5 py-0.5 text-[10px] font-semibold text-amber-800">
-                    Local leader
+                    Leader địa phương
                   </span>
                 ) : (
                   <span className="text-xs text-slate-400">—</span>
@@ -404,47 +441,47 @@ function TreasuryPageContent() {
         : []),
       {
         key: 'creator',
-        label: 'Creator',
+        label: 'Người tạo',
         render: (r: WithdrawProposal) => truncateAddress(r.creator),
       },
       {
         key: 'description',
-        label: 'Description',
+        label: 'Mô tả',
         render: (r: WithdrawProposal) => <span className="max-w-xs truncate">{r.description || '-'}</span>,
       },
-      { key: 'pool_name', label: 'Pool' },
+      { key: 'pool_name', label: 'Quỹ' },
       {
         key: 'withdraw_amount',
-        label: 'Amount',
+        label: 'Số tiền',
         render: (r: WithdrawProposal) => formatVND(r.withdraw_amount),
       },
-      { key: 'approve_weight', label: 'Approve W.' },
-      { key: 'refuse_weight', label: 'Refuse W.' },
+      { key: 'approve_weight', label: 'Tổng duyệt' },
+      { key: 'refuse_weight', label: 'Tổng từ chối' },
       {
         key: 'status_ui',
-        label: 'Status',
+        label: 'Trạng thái',
         render: (r: WithdrawProposal) => (
           <StatusBadge status={getWithdrawProposalUiStatus(r)} />
         ),
       },
       {
         key: 'closed_at',
-        label: 'Vote closes',
+        label: 'Đóng bỏ phiếu',
         render: (r: WithdrawProposal) => (
           <span className="whitespace-nowrap text-xs">{formatDateTimeSeconds(r.closed_at)}</span>
         ),
       },
-      { key: 'created_at', label: 'Created', render: (r: WithdrawProposal) => formatDate(r.created_at) },
+      { key: 'created_at', label: 'Ngày tạo', render: (r: WithdrawProposal) => formatDate(r.created_at) },
       {
         key: 'actions',
-        label: 'Actions',
+        label: 'Thao tác',
         className: 'whitespace-nowrap',
         render: (r: WithdrawProposal) => (
           <div className="flex flex-wrap gap-1">
-            {actionBtn('Details', () =>
+            {actionBtn('Chi tiết', () =>
               setWithdrawDetail({ open: true, id: r.id, row: r }),
             )}
-            {!r.is_executed && actionBtn('Confirm', () => openWithdrawConfirmModal(r.id), 'muted')}
+            {!r.is_executed && actionBtn('Xác nhận', () => openWithdrawConfirmModal(r.id), 'muted')}
           </div>
         ),
       },
@@ -455,14 +492,14 @@ function TreasuryPageContent() {
   return (
     <div>
       <PageHeader
-        title="Treasury"
-        description="Withdraw proposals (all sources), pending withdrawals, and pending special needs"
+        title="Kho bạc"
+        description="Đề xuất rút tiền, yêu cầu rút chờ xử lý, nhu cầu đặc biệt chờ duyệt"
       />
 
       <div className="mb-4 flex flex-wrap gap-2">
-        {tabBtn('proposals', 'Withdraw Proposal')}
-        {tabBtn('pending', 'Pending Withdrawals')}
-        {tabBtn('special', 'Pending Special Needs')}
+        {tabBtn('proposals', 'Đề xuất rút')}
+        {tabBtn('pending', 'Rút tiền chờ duyệt')}
+        {tabBtn('special', 'Nhu cầu đặc biệt')}
       </div>
 
       {filterBar}
@@ -475,7 +512,7 @@ function TreasuryPageContent() {
             page={pageProposals}
             totalPages={totalPagesProposals}
             onPageChange={setPageProposals}
-            emptyMessage="No withdrawal proposals match your filters"
+            emptyMessage="Không có đề xuất rút phù hợp bộ lọc"
             columns={proposalColumns(true) as any}
           />
         )}
@@ -487,36 +524,36 @@ function TreasuryPageContent() {
             page={pagePending}
             totalPages={totalPagesPending}
             onPageChange={setPagePending}
-            emptyMessage="No pending withdrawals match your filters"
+            emptyMessage="Không có yêu cầu rút chờ duyệt phù hợp bộ lọc"
             columns={[
               {
                 key: 'id',
                 label: 'ID',
                 render: (r) => <span className="font-mono text-xs">{truncateAddress(r.id, 4)}</span>,
               },
-              { key: 'poolName', label: 'Pool' },
-              { key: 'creator', label: 'Creator', render: (r) => truncateAddress(r.creator) },
+              { key: 'poolName', label: 'Quỹ' },
+              { key: 'creator', label: 'Người tạo', render: (r) => truncateAddress(r.creator) },
               {
                 key: 'description',
-                label: 'Description',
+                label: 'Mô tả',
                 render: (r) => <span className="max-w-xs truncate">{r.description || '-'}</span>,
               },
               {
                 key: 'withdrawAmount',
-                label: 'Amount',
+                label: 'Số tiền',
                 render: (r) => formatVND(r.withdrawAmount),
               },
-              { key: 'status', label: 'Status', render: (r) => <StatusBadge status={r.status} /> },
-              { key: 'createdAt', label: 'Created', render: (r) => formatDate(r.createdAt) },
+              { key: 'status', label: 'Trạng thái', render: (r) => <StatusBadge status={r.status} /> },
+              { key: 'createdAt', label: 'Ngày tạo', render: (r) => formatDate(r.createdAt) },
               {
                 key: 'actions',
-                label: 'Actions',
+                label: 'Thao tác',
                 className: 'whitespace-nowrap',
                 render: (r) => (
                   <div className="flex flex-wrap gap-1">
-                    {actionBtn('Details', () => setPendingDetail({ open: true, id: r.id }))}
-                    {actionBtn('Approve', () => void handlePendingApprove(r.id))}
-                    {actionBtn('Refuse', () => void handlePendingRefuse(r.id), 'danger')}
+                    {actionBtn('Chi tiết', () => setPendingDetail({ open: true, id: r.id }))}
+                    {actionBtn('Duyệt', () => void handlePendingApprove(r.id))}
+                    {actionBtn('Từ chối', () => void handlePendingRefuse(r.id), 'danger')}
                   </div>
                 ),
               },
@@ -531,41 +568,41 @@ function TreasuryPageContent() {
             page={pageSpecial}
             totalPages={totalPagesSpecial}
             onPageChange={setPageSpecial}
-            emptyMessage="No pending special needs match your filters"
+            emptyMessage="Không có nhu cầu đặc biệt chờ duyệt phù hợp bộ lọc"
             columns={[
               {
                 key: 'id',
                 label: 'ID',
                 render: (r) => <span className="font-mono text-xs">{truncateAddress(r.id, 4)}</span>,
               },
-              { key: 'child_id', label: 'Child', render: (r) => truncateAddress(r.child_id, 4) },
+              { key: 'child_id', label: 'Trẻ', render: (r) => truncateAddress(r.child_id, 4) },
               {
                 key: 'description',
-                label: 'Description',
+                label: 'Mô tả',
                 render: (r) => <span className="max-w-xs truncate">{r.description || '-'}</span>,
               },
-              { key: 'target', label: 'Target', render: (r) => formatVND(r.target) },
-              { key: 'region', label: 'Region' },
+              { key: 'target', label: 'Mục tiêu', render: (r) => formatVND(r.target) },
+              { key: 'region', label: 'Vùng' },
               {
                 key: 'ai_evaluation',
-                label: 'AI eval.',
+                label: 'Đánh giá AI',
                 render: (r) => <span className="max-w-[200px] truncate text-xs">{r.ai_evaluation || '-'}</span>,
               },
               {
                 key: 'review_status',
-                label: 'Review',
+                label: 'Duyệt',
                 render: (r) => <StatusBadge status={r.review_status} />,
               },
-              { key: 'created_at', label: 'Created', render: (r) => formatDate(r.created_at) },
+              { key: 'created_at', label: 'Ngày tạo', render: (r) => formatDate(r.created_at) },
               {
                 key: 'actions',
-                label: 'Actions',
+                label: 'Thao tác',
                 className: 'whitespace-nowrap',
                 render: (r) => (
                   <div className="flex flex-wrap gap-1">
-                    {actionBtn('Details', () => setSpecialDetail({ open: true, id: r.id }))}
-                    {actionBtn('Approve', () => void handleSpecialApprove(r.id))}
-                    {actionBtn('Refuse', () => void handleSpecialRefuse(r.id), 'danger')}
+                    {actionBtn('Chi tiết', () => setSpecialDetail({ open: true, id: r.id }))}
+                    {actionBtn('Duyệt', () => void handleSpecialApprove(r.id))}
+                    {actionBtn('Từ chối', () => void handleSpecialRefuse(r.id), 'danger')}
                   </div>
                 ),
               },
@@ -575,13 +612,14 @@ function TreasuryPageContent() {
       </div>
 
       <DetailModal
-        title="Withdrawal proposal"
+        title="Đề xuất rút tiền"
         open={withdrawDetail.open}
         onClose={() => {
           setWithdrawDetail({ open: false, id: null });
           setMainPoolBlobId('');
           setWithdrawConfirmModal({ open: false, proposalId: null });
           setWithdrawConfirmProofBlob('');
+          setManualBankInfo(null);
         }}
         loading={withdrawDetailLoading}
         error={withdrawDetailErr}
@@ -590,35 +628,34 @@ function TreasuryPageContent() {
         {wd && (
           <div className="space-y-1">
             {detailField('ID', <span className="font-mono text-xs break-all">{wd.id}</span>)}
-            {detailField('Creator', truncateAddress(wd.creator))}
-            {detailField('Pool', wd.pool_name)}
-            {detailField('Amount', formatVND(wd.withdraw_amount))}
-            {detailField('Description', wd.description || '—')}
+            {detailField('Người tạo', truncateAddress(wd.creator))}
+            {detailField('Quỹ', wd.pool_name)}
+            {detailField('Số tiền', formatVND(wd.withdraw_amount))}
+            {detailField('Mô tả', wd.description || '—')}
             {detailField(
-              'Local leader pool',
+              'Quỹ leader địa phương',
               wd.is_from_local_pool ? (
-                <span className="text-amber-700">Yes</span>
+                <span className="text-amber-700">Có</span>
               ) : (
-                <span className="text-slate-600">No</span>
+                <span className="text-slate-600">Không</span>
               ),
             )}
-            {detailField('Status', <StatusBadge status={getWithdrawProposalUiStatus(wd)} />)}
-            {detailField('Vote closes', formatDateTimeSeconds(wd.closed_at))}
-            {detailField('Created', formatDate(wd.created_at))}
+            {detailField('Trạng thái', <StatusBadge status={getWithdrawProposalUiStatus(wd)} />)}
+            {detailField('Đóng bỏ phiếu', formatDateTimeSeconds(wd.closed_at))}
+            {detailField('Ngày tạo', formatDate(wd.created_at))}
             {wd.proof_blob_id &&
               detailField(
-                'Proof',
+                'Chứng từ',
                 <div className="mt-1">
                   <BlobImage blobId={wd.proof_blob_id} className="max-h-64 rounded-lg border border-slate-200 object-contain" />
                 </div>,
               )}
             {!wd.is_executed && (
               <div className="mt-4 space-y-3 border-t border-slate-100 pt-4">
-                <p className="text-xs font-medium text-slate-600">Confirm transfer</p>
+                <p className="text-xs font-medium text-slate-600">Xác nhận chuyển tiền</p>
                 <p className="text-xs text-slate-500">
-                  PayOS / on-chain: opens payment or executes tx. Manual (non-PayOS) bank: after confirm, your proof
-                  image is sent to the server <code className="rounded bg-slate-100 px-0.5 text-[10px]">payment_callback</code>.
-                  Main pool manual path below uses a separate API.
+                  PayOS hoặc on-chain sẽ mở thanh toán hoặc ký giao dịch. Chuyển khoản thủ công: sau khi xác nhận bạn sẽ thấy
+                  tài khoản nhận và gửi ảnh chứng từ. Luồng quỹ chính (main pool) dùng mục riêng bên dưới.
                 </p>
                 <div className="flex flex-wrap gap-2">
                   <button
@@ -627,13 +664,13 @@ function TreasuryPageContent() {
                     onClick={() => wd.id && openWithdrawConfirmModal(wd.id)}
                     className="rounded-lg bg-blue-800 px-3 py-2 text-sm font-medium text-white hover:bg-blue-900 disabled:opacity-50"
                   >
-                    {busy ? 'Working…' : 'Confirm transfer…'}
+                    {busy ? 'Đang xử lý…' : 'Xác nhận chuyển tiền…'}
                   </button>
                 </div>
                 <div className="rounded-lg bg-slate-50 p-3">
-                  <p className="mb-2 text-xs font-medium text-slate-700">Manual transfer (main pool)</p>
+                  <p className="mb-2 text-xs font-medium text-slate-700">Chuyển khoản thủ công (quỹ chính)</p>
                   <FileUploadInput
-                    label="Proof image (Walrus blob)"
+                    label="Ảnh chứng từ (blob Walrus)"
                     value={mainPoolBlobId}
                     onChange={setMainPoolBlobId}
                   />
@@ -643,7 +680,7 @@ function TreasuryPageContent() {
                     onClick={() => void handleMainPoolSubmit()}
                     className="mt-2 rounded-lg border border-slate-300 px-3 py-2 text-sm font-medium text-slate-800 hover:bg-white disabled:opacity-50"
                   >
-                    Submit proof & confirm
+                    Gửi chứng từ và xác nhận
                   </button>
                 </div>
               </div>
@@ -653,7 +690,7 @@ function TreasuryPageContent() {
       </DetailModal>
 
       <DetailModal
-        title="Pending withdrawal"
+        title="Rút tiền chờ duyệt"
         open={pendingDetail.open}
         onClose={() => setPendingDetail({ open: false, id: null })}
         loading={pendingDetailLoading}
@@ -663,26 +700,26 @@ function TreasuryPageContent() {
         {pendingDetailData && (
           <div className="space-y-1">
             {detailField('ID', <span className="font-mono text-xs break-all">{pendingDetailData.id}</span>)}
-            {detailField('Pool', pendingDetailData.poolName)}
-            {detailField('Creator', truncateAddress(pendingDetailData.creator))}
-            {detailField('Description', pendingDetailData.description || '—')}
-            {detailField('Amount', formatVND(pendingDetailData.withdrawAmount))}
-            {detailField('Status', pendingDetailData.status)}
+            {detailField('Quỹ', pendingDetailData.poolName)}
+            {detailField('Người tạo', truncateAddress(pendingDetailData.creator))}
+            {detailField('Mô tả', pendingDetailData.description || '—')}
+            {detailField('Số tiền', formatVND(pendingDetailData.withdrawAmount))}
+            {detailField('Trạng thái', pendingDetailData.status)}
             {pendingDetailData.proofBlobID &&
               detailField(
-                'Proof',
+                'Chứng từ',
                 <BlobImage
                   blobId={pendingDetailData.proofBlobID}
                   className="max-h-64 rounded-lg border border-slate-200 object-contain"
                 />,
               )}
-            {detailField('Created', formatDate(pendingDetailData.createdAt))}
+            {detailField('Ngày tạo', formatDate(pendingDetailData.createdAt))}
           </div>
         )}
       </DetailModal>
 
       <DetailModal
-        title="Pending special need"
+        title="Nhu cầu đặc biệt chờ duyệt"
         open={specialDetail.open}
         onClose={() => setSpecialDetail({ open: false, id: null })}
         loading={specialDetailLoading}
@@ -692,21 +729,21 @@ function TreasuryPageContent() {
         {specialDetailData && (
           <div className="space-y-1">
             {detailField('ID', <span className="font-mono text-xs break-all">{specialDetailData.id}</span>)}
-            {detailField('Child', truncateAddress(specialDetailData.child_id))}
-            {detailField('Region', specialDetailData.region)}
-            {detailField('Description', specialDetailData.description || '—')}
-            {detailField('Target', formatVND(specialDetailData.target))}
-            {detailField('AI evaluation', specialDetailData.ai_evaluation || '—')}
-            {detailField('Review', specialDetailData.review_status)}
+            {detailField('Trẻ', truncateAddress(specialDetailData.child_id))}
+            {detailField('Vùng', specialDetailData.region)}
+            {detailField('Mô tả', specialDetailData.description || '—')}
+            {detailField('Mục tiêu', formatVND(specialDetailData.target))}
+            {detailField('Đánh giá AI', specialDetailData.ai_evaluation || '—')}
+            {detailField('Duyệt', specialDetailData.review_status)}
             {specialDetailData.proof_blob_id &&
               detailField(
-                'Proof',
+                'Chứng từ',
                 <BlobImage
                   blobId={specialDetailData.proof_blob_id}
                   className="max-h-64 rounded-lg border border-slate-200 object-contain"
                 />,
               )}
-            {detailField('Created', formatDate(specialDetailData.created_at))}
+            {detailField('Ngày tạo', formatDate(specialDetailData.created_at))}
           </div>
         )}
       </DetailModal>
@@ -714,39 +751,99 @@ function TreasuryPageContent() {
       {withdrawConfirmModal.open && (
         <div className="fixed inset-0 z-[60] flex items-center justify-center bg-slate-900/40 p-4">
           <div className="max-h-[90vh] w-full max-w-md overflow-y-auto rounded-xl border border-slate-200 bg-white p-5 shadow-xl">
-            <h3 className="text-lg font-semibold text-slate-900">Confirm withdrawal</h3>
-            <p className="mt-2 text-xs leading-relaxed text-slate-600">
-              Bước 1: <code className="rounded bg-slate-100 px-1 text-[11px]">POST /withdraw-proposals/{'{id}'}/confirm</code>.
-              Bước 2 (ngân hàng không PayOS): server trả <code className="rounded bg-slate-100 px-1 text-[11px]">payment_callback</code>{' '}
-              — ảnh chứng từ sẽ được gửi kèm <code className="rounded bg-slate-100 px-1 text-[11px]">blob_id</code> tới URL đó.
-              Luồng PayOS / on-chain không bắt buộc ảnh; có thể để trống nếu bạn chắc chắn.
-            </p>
-            <div className="mt-4">
-              <FileUploadInput
-                label="Proof image (Walrus blob)"
-                value={withdrawConfirmProofBlob}
-                onChange={setWithdrawConfirmProofBlob}
-                accept="image/*"
-              />
-            </div>
-            <div className="mt-5 flex flex-wrap justify-end gap-2">
-              <button
-                type="button"
-                disabled={busy}
-                onClick={closeWithdrawConfirmModal}
-                className="rounded-lg border border-slate-200 px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-50"
-              >
-                Cancel
-              </button>
-              <button
-                type="button"
-                disabled={busy}
-                onClick={() => void handleWithdrawConfirmModalSubmit()}
-                className="rounded-lg bg-blue-800 px-3 py-2 text-sm font-medium text-white hover:bg-blue-900 disabled:opacity-50"
-              >
-                {busy ? 'Processing…' : 'Confirm'}
-              </button>
-            </div>
+            <h3 className="text-lg font-semibold text-slate-900">Xác nhận rút tiền</h3>
+            {!manualBankInfo ? (
+              <>
+                <p className="mt-2 text-xs leading-relaxed text-slate-600">
+                  Bước 1: Lấy thông tin chuyển khoản. Với PayOS hoặc giao dịch on-chain, hệ thống sẽ mở bước tiếp theo ngay.
+                  Với chuyển khoản thủ công, sau bước này bạn sẽ thấy tài khoản nhận và tải ảnh chứng từ.
+                </p>
+                <div className="mt-5 flex flex-wrap justify-end gap-2">
+                  <button
+                    type="button"
+                    disabled={busy}
+                    onClick={closeWithdrawConfirmModal}
+                    className="rounded-lg border border-slate-200 px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-50"
+                  >
+                    Hủy
+                  </button>
+                  <button
+                    type="button"
+                    disabled={busy}
+                    onClick={() => void handleWithdrawConfirmStep1()}
+                    className="rounded-lg bg-blue-800 px-3 py-2 text-sm font-medium text-white hover:bg-blue-900 disabled:opacity-50"
+                  >
+                    {busy ? 'Đang xử lý…' : 'Lấy thông tin chuyển khoản'}
+                  </button>
+                </div>
+              </>
+            ) : (
+              <>
+                <p className="mt-2 text-xs font-medium text-slate-700">Thông tin chuyển khoản</p>
+                <div className="mt-3 space-y-2 rounded-lg border border-slate-200 bg-slate-50 p-3 text-sm">
+                  <div>
+                    <span className="text-xs text-slate-500">Tên ngân hàng</span>
+                    <p className="font-medium text-slate-900">{manualBankInfo.bank_org || '—'}</p>
+                  </div>
+                  <div>
+                    <span className="text-xs text-slate-500">Số tài khoản</span>
+                    <p className="font-mono font-medium text-slate-900">{manualBankInfo.bank_code || '—'}</p>
+                  </div>
+                  <div>
+                    <span className="text-xs text-slate-500">Chủ tài khoản</span>
+                    <p className="font-medium text-slate-900">{manualBankInfo.owner || '—'}</p>
+                  </div>
+                  <div>
+                    <span className="text-xs text-slate-500">Số tiền</span>
+                    <p className="font-medium text-slate-900">
+                      {(() => {
+                        const raw = manualBankInfo.amount?.replace(/[^\d]/g, '') ?? '';
+                        const n = raw ? Number(raw) : NaN;
+                        return Number.isFinite(n) ? formatVND(n) : manualBankInfo.amount || '—';
+                      })()}
+                    </p>
+                  </div>
+                  {manualBankInfo.description ? (
+                    <div>
+                      <span className="text-xs text-slate-500">Nội dung</span>
+                      <p className="text-slate-800">{manualBankInfo.description}</p>
+                    </div>
+                  ) : null}
+                </div>
+                <p className="mt-3 text-xs text-slate-600">
+                  Bước 2: Sau khi chuyển khoản, tải ảnh chứng từ (blob Walrus) và gửi xác nhận.
+                </p>
+                <div className="mt-4">
+                  <FileUploadInput
+                    label="Ảnh chứng từ (blob Walrus)"
+                    value={withdrawConfirmProofBlob}
+                    onChange={setWithdrawConfirmProofBlob}
+                    accept="image/*"
+                  />
+                </div>
+                <div className="mt-5 flex flex-wrap justify-end gap-2">
+                  <button
+                    type="button"
+                    disabled={busy}
+                    onClick={() => {
+                      setManualBankInfo(null);
+                      setWithdrawConfirmProofBlob('');
+                    }}
+                    className="rounded-lg border border-slate-200 px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-50"
+                  >
+                    Quay lại
+                  </button>
+                  <button
+                    type="button"
+                    disabled={busy || !withdrawConfirmProofBlob.trim()}
+                    onClick={() => void handleWithdrawConfirmStep2()}
+                    className="rounded-lg bg-blue-800 px-3 py-2 text-sm font-medium text-white hover:bg-blue-900 disabled:opacity-50"
+                  >
+                    {busy ? 'Đang gửi…' : 'Gửi bằng chứng'}
+                  </button>
+                </div>
+              </>
+            )}
           </div>
         </div>
       )}
@@ -764,7 +861,7 @@ export default function AdminTreasuryPage() {
   return (
     <Suspense
       fallback={
-        <div className="flex min-h-[40vh] items-center justify-center text-slate-500">Loading…</div>
+        <div className="flex min-h-[40vh] items-center justify-center text-slate-500">Đang tải…</div>
       }
     >
       <TreasuryPageContent />

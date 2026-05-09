@@ -9,7 +9,7 @@ type BlobSource = 'walrus' | 'api';
 
 interface BlobImageProps {
   blobId: string | undefined | null;
-  /** Walrus aggregator vs API /blobs route (child uploads often use API base). */
+  /** Walrus aggregator vs in-app blob route (e.g. child avatars on API host). */
   source?: BlobSource;
   alt?: string;
   className?: string;

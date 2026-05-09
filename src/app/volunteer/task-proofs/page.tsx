@@ -32,7 +32,7 @@ export default function VolunteerTaskProofsPage() {
       setTotalPages(Math.max(1, res.data.total_pages ?? 1));
     } catch (e) {
       console.error(e);
-      toast.error('Failed to load task proofs');
+      toast.error('Không tải được bằng chứng nhiệm vụ');
       setRows([]);
     } finally {
       setLoading(false);
@@ -52,13 +52,13 @@ export default function VolunteerTaskProofsPage() {
     setSubmitting(true);
     try {
       await taskProofService.submit(taskId.trim(), imageBlobId.trim());
-      toast.success('Proof submitted');
+      toast.success('Đã gửi bằng chứng');
       setTaskId('');
       setImageBlobId('');
       setPage(0);
       if (page === 0) void loadPage(0);
     } catch (err: any) {
-      toast.error(err?.response?.data?.message || 'Failed to submit proof');
+      toast.error(err?.response?.data?.message || 'Không gửi được bằng chứng');
     } finally {
       setSubmitting(false);
     }
@@ -129,7 +129,7 @@ export default function VolunteerTaskProofsPage() {
             },
             { key: 'status', label: 'Status', render: (r) => <StatusBadge status={r.review_status ?? r.status ?? '—'} /> },
             { key: 'reviewed_by', label: 'Reviewed by', render: (r) => (r.reviewed_by ? truncateAddress(r.reviewed_by) : '-') },
-            { key: 'created_at', label: 'Created', render: (r) => formatDate(r.created_at) },
+            { key: 'created_at', label: 'Ngày tạo', render: (r) => formatDate(r.created_at) },
           ]}
           data={rows}
           loading={loading}

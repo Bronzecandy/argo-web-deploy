@@ -12,14 +12,14 @@ import type { TransactionRecord } from '@/src/types/api.types';
 const PAGE_SIZE = 20;
 
 const ACTION_TYPE_OPTIONS = [
-  { value: '', label: 'All types' },
-  { value: 'donate', label: 'Donate' },
-  { value: 'withdraw', label: 'Withdraw' },
+  { value: '', label: 'Tất cả loại' },
+  { value: 'donate', label: 'Quyên góp' },
+  { value: 'withdraw', label: 'Rút tiền' },
   { value: 'transfer', label: 'Transfer' },
   { value: 'vote', label: 'Vote' },
   { value: 'approve', label: 'Approve' },
   { value: 'refuse', label: 'Refuse' },
-  { value: 'create', label: 'Create' },
+  { value: 'create', label: 'Tạo mới' },
   { value: 'execute', label: 'Execute' },
   { value: 'confirm', label: 'Confirm' },
 ];
@@ -58,7 +58,7 @@ export default function AdminAnalyticsPage() {
       setTotalCount(res.data.amount ?? 0);
     } catch (e) {
       console.error(e);
-      toast.error('Failed to load transactions');
+      toast.error('Không tải được giao dịch');
       setRows([]);
       setTotalCount(0);
     } finally {
@@ -150,12 +150,12 @@ export default function AdminAnalyticsPage() {
             render: (r) => (r.amount != null ? formatVND(r.amount) : '-'),
           },
           { key: 'coin_type', label: 'Coin' },
-          { key: 'pool_name', label: 'Pool', render: (r) => r.pool_name || '-' },
+          { key: 'pool_name', label: 'Quỹ', render: (r) => r.pool_name || '-' },
           { key: 'message', label: 'Message', render: (r) => <span className="max-w-xs truncate">{r.message || '-'}</span> },
-          { key: 'created_at', label: 'Created', render: (r) => formatDate(r.created_at) },
+          { key: 'created_at', label: 'Ngày tạo', render: (r) => formatDate(r.created_at) },
           {
             key: 'details',
-            label: 'Details',
+            label: 'Chi tiết',
             render: (r) => (
               <button
                 type="button"
@@ -193,7 +193,7 @@ export default function AdminAnalyticsPage() {
               {detailRow.amount != null ? formatVND(detailRow.amount) : '—'}
             </p>
             <p>
-              <span className="text-slate-500">Pool:</span> {detailRow.pool_name || '—'}
+              <span className="text-slate-500">Quỹ:</span> {detailRow.pool_name || '—'}
             </p>
             <p>
               <span className="text-slate-500">Message:</span> {detailRow.message || '—'}

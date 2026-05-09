@@ -7,6 +7,7 @@ import StatusBadge from '@/src/components/ui/StatusBadge';
 import DetailModal from '@/src/components/ui/DetailModal';
 import BlobImage from '@/src/components/ui/BlobImage';
 import FileUploadInput from '@/src/components/ui/FileUploadInput';
+import GroupedNumericInput from '@/src/components/ui/GroupedNumericInput';
 import { formatDate, formatVND, truncateAddress } from '@/src/lib/formatters';
 import { toast } from 'sonner';
 import { Plus } from 'lucide-react';
@@ -46,7 +47,7 @@ export default function LeaderCampaignsPage() {
       setTotalPages(Math.max(1, res.data.total_pages ?? 1));
     } catch (e) {
       console.error(e);
-      toast.error('Failed to load special need campaigns');
+      toast.error('Không tải được chiến dịch nhu cầu đặc biệt');
       setRows([]);
     } finally {
       setLoading(false);
@@ -86,7 +87,7 @@ export default function LeaderCampaignsPage() {
     setSubmitting(true);
     try {
       await childrenService.createSpecialNeedProposal(data);
-      toast.success('Special need proposal created');
+      toast.success('Đã tạo đề xuất nhu cầu đặc biệt');
       setChildId('');
       setDescription('');
       setTarget('');
@@ -96,7 +97,7 @@ export default function LeaderCampaignsPage() {
       if (page === 0) void loadPage(0);
     } catch (err) {
       console.error(err);
-      toast.error('Failed to create proposal');
+      toast.error('Không tạo được đề xuất');
     } finally {
       setSubmitting(false);
     }
@@ -135,17 +136,17 @@ export default function LeaderCampaignsPage() {
               render: (r) => <span className="line-clamp-2 max-w-xs">{r.description}</span>,
             },
             { key: 'target', label: 'Target', render: (r) => formatVND(r.target) },
-            { key: 'region', label: 'Region' },
+            { key: 'region', label: 'Vùng' },
             {
               key: 'ai_evaluation',
               label: 'AI evaluation',
               render: (r) => <span className="line-clamp-2 max-w-[200px] text-xs">{r.ai_evaluation || '-'}</span>,
             },
             { key: 'review_status', label: 'Review', render: (r) => <StatusBadge status={r.review_status} /> },
-            { key: 'created_at', label: 'Created', render: (r) => formatDate(r.created_at) },
+            { key: 'created_at', label: 'Ngày tạo', render: (r) => formatDate(r.created_at) },
             {
               key: 'details',
-              label: 'Details',
+              label: 'Chi tiết',
               render: (r) => (
                 <button
                   type="button"
@@ -243,13 +244,11 @@ export default function LeaderCampaignsPage() {
                 <label htmlFor="target" className="mb-1 block text-xs font-medium text-slate-500">
                   Target (VND)
                 </label>
-                <input
+                <GroupedNumericInput
                   id="target"
-                  type="number"
                   min={1}
-                  step={1}
                   value={target}
-                  onChange={(e) => setTarget(e.target.value)}
+                  onChange={setTarget}
                   className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-blue-800 focus:outline-none focus:ring-1 focus:ring-blue-800"
                 />
               </div>

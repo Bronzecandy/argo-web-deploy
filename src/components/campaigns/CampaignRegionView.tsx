@@ -56,7 +56,7 @@ export function CampaignRegionView({ backHref, backLabel, childHref }: CampaignR
           e && typeof e === 'object' && 'response' in e
             ? String((e as { response?: { data?: { message?: string } } }).response?.data?.message ?? '')
             : '';
-        toast.error(msg || 'Failed to load region');
+        toast.error(msg || 'Không tải được vùng');
         if (resetInfo) {
           setData(null);
           setChildrenList([]);
@@ -78,8 +78,8 @@ export function CampaignRegionView({ backHref, backLabel, childHref }: CampaignR
   return (
     <div>
       <PageHeader
-        title={region || 'Region'}
-        description="Established region hub — pool and children in this campaign area"
+        title={region || 'Vùng'}
+        description="Điểm vùng đã thiết lập — quỹ và trẻ em trong khu vực chiến dịch"
       />
 
       <Link href={backHref} className="mb-4 inline-block text-sm font-medium text-blue-800 hover:underline">
@@ -87,13 +87,13 @@ export function CampaignRegionView({ backHref, backLabel, childHref }: CampaignR
       </Link>
 
       {!region ? (
-        <p className="text-slate-600">Invalid region.</p>
+        <p className="text-slate-600">Vùng không hợp lệ.</p>
       ) : loading && !data ? (
         <div className="flex h-48 justify-center">
           <div className="h-8 w-8 animate-spin self-center rounded-full border-4 border-blue-800 border-t-transparent" />
         </div>
       ) : !data ? (
-        <p className="text-slate-600">No data for this region.</p>
+        <p className="text-slate-600">Không có dữ liệu cho vùng này.</p>
       ) : (
         <>
           <div className="mb-8 overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-sm">
@@ -117,19 +117,19 @@ export function CampaignRegionView({ backHref, backLabel, childHref }: CampaignR
                   <Phone className="h-4 w-4" /> {data.center_phone_number || '—'}
                 </p>
                 <p className="mt-3 text-sm">
-                  <span className="text-slate-500">Pool:</span>{' '}
+                  <span className="text-slate-500">Quỹ:</span>{' '}
                   <span className="font-mono text-xs">{data.pool_id}</span>
                 </p>
                 <p className="mt-2 text-lg font-semibold text-blue-900">
-                  Total donated: {formatVND(typeof data.total_donated === 'number' ? data.total_donated : 0)}
+                  Tổng đã quyên góp: {formatVND(typeof data.total_donated === 'number' ? data.total_donated : 0)}
                 </p>
               </div>
             </div>
           </div>
 
-          <h3 className="mb-4 text-base font-semibold text-slate-900">Children in this region</h3>
+          <h3 className="mb-4 text-base font-semibold text-slate-900">Trẻ em trong vùng này</h3>
           {childrenList.length === 0 && !loading ? (
-            <p className="text-sm text-slate-500">No children listed on this page.</p>
+            <p className="text-sm text-slate-500">Không có trẻ em trên trang này.</p>
           ) : (
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
               {childrenList.map((c) => (
@@ -160,7 +160,7 @@ export function CampaignRegionView({ backHref, backLabel, childHref }: CampaignR
                 onClick={() => void loadPage(page + 1, false)}
                 className="rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-medium shadow-sm disabled:opacity-50"
               >
-                {loading ? 'Loading…' : 'Load more'}
+                {loading ? 'Đang tải…' : 'Tải thêm'}
               </button>
             </div>
           )}

@@ -7,7 +7,7 @@ type Source = 'walrus' | 'api';
 
 /**
  * Thumbnail for Walrus-style blob ids (same pattern as leader task-proofs table).
- * Use `source="api"` when the file is served from `GET /blobs/:id` on the API host.
+ * Use `source="api"` when the image is loaded from the app API host (blob route).
  */
 export default function EntityBlobThumb({
   blobId,

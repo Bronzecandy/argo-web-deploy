@@ -4,7 +4,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { toast } from 'sonner';
 import PageHeader from '@/src/components/ui/PageHeader';
 import DataTable from '@/src/components/ui/DataTable';
-import { formatVND, truncateAddress } from '@/src/lib/formatters';
+import { formatInteger, formatVND, truncateAddress } from '@/src/lib/formatters';
 import { donorService } from '@/src/services/donor.service';
 import type { Donor } from '@/src/types/api.types';
 import { HandCoins, Search, X } from 'lucide-react';
@@ -36,7 +36,7 @@ export default function AdminDonorsPage() {
       setTotalAmount(res.data.amount ?? 0);
     } catch (e) {
       console.error(e);
-      toast.error('Failed to load donors');
+      toast.error('Không tải được danh sách nhà hảo tâm');
       setDonors([]);
     } finally {
       setLoading(false);
@@ -54,7 +54,7 @@ export default function AdminDonorsPage() {
       setSelectedDonor(res.data);
     } catch (e) {
       console.error(e);
-      toast.error('Failed to load donor detail');
+      toast.error('Không tải được chi tiết nhà hảo tâm');
     } finally {
       setDetailLoading(false);
     }
@@ -118,7 +118,7 @@ export default function AdminDonorsPage() {
         actions={
           <span className="inline-flex items-center gap-1.5 rounded-lg border border-blue-200 bg-blue-50 px-3 py-1.5 text-xs font-medium text-blue-900">
             <HandCoins className="h-3.5 w-3.5" />
-            {totalAmount.toLocaleString('vi-VN')} total
+            {formatInteger(totalAmount)} total
           </span>
         }
       />

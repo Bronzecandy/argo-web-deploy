@@ -21,7 +21,7 @@ const PAGE_SIZE = 20;
 
 /** Values aligned with backend `review_status` (e.g. "Approved"). */
 const STATUS_OPTIONS = [
-  { value: '', label: 'All statuses' },
+  { value: '', label: 'Tất cả trạng thái' },
   { value: 'Pending', label: 'Pending' },
   { value: 'PendingReview', label: 'Pending review' },
   { value: 'Approved', label: 'Approved' },
@@ -100,7 +100,7 @@ export default function LeaderTaskProofsPage() {
       setTotalPages(Math.max(1, res.data.total_pages ?? 1));
     } catch (e) {
       console.error(e);
-      toast.error('Failed to load task proofs');
+      toast.error('Không tải được bằng chứng nhiệm vụ');
       setRows([]);
     } finally {
       setLoading(false);
@@ -137,14 +137,14 @@ export default function LeaderTaskProofsPage() {
     setSubmitting(true);
     try {
       await taskProofService.submit(taskId.trim(), imageBlobId.trim());
-      toast.success('Proof submitted');
+      toast.success('Đã gửi bằng chứng');
       setTaskId('');
       setImageBlobId('');
       setPage(0);
       setListVersion((v) => v + 1);
     } catch (err) {
       console.error(err);
-      toast.error('Failed to submit proof');
+      toast.error('Không gửi được bằng chứng');
     } finally {
       setSubmitting(false);
     }
@@ -161,11 +161,11 @@ export default function LeaderTaskProofsPage() {
   const handleRefuse = async (id: string) => {
     try {
       await taskProofService.refuse(id);
-      toast.success('Proof refused');
+      toast.success('Đã từ chối bằng chứng');
       refresh();
     } catch (e) {
       console.error(e);
-      toast.error('Refuse failed');
+      toast.error('Từ chối thất bại');
     }
   };
 
@@ -262,7 +262,7 @@ export default function LeaderTaskProofsPage() {
               },
             },
             { key: 'reviewed_by', label: 'Reviewed by', render: (r) => (r.reviewed_by ? truncateAddress(r.reviewed_by) : '-') },
-            { key: 'created_at', label: 'Created', render: (r) => formatDate(r.created_at) },
+            { key: 'created_at', label: 'Ngày tạo', render: (r) => formatDate(r.created_at) },
             {
               key: 'actions',
               label: 'Actions',
@@ -350,7 +350,7 @@ export default function LeaderTaskProofsPage() {
               {detailField('AI note', p.ai_evaluation ?? '—')}
               {detailField('Raw submit date', p.raw_submit_date ? formatDate(p.raw_submit_date) : '—')}
               {detailField('Reviewed by', p.reviewed_by ? truncateAddress(p.reviewed_by) : '—')}
-              {detailField('Created', formatDate(p.created_at))}
+              {detailField('Ngày tạo', formatDate(p.created_at))}
               {detailField('Updated', formatDate(p.updated_at))}
               {blobs.length > 0 && (
                 <div className="border-t border-slate-100 pt-3">

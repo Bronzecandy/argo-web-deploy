@@ -61,11 +61,11 @@ export default function DonorProfilePage() {
     try {
       const payload = { ...form, date_of_birth: toDDMMYYYY(form.date_of_birth) };
       await profileService.upload(user.profileId, payload);
-      toast.success('Profile updated successfully');
+      toast.success('Đã cập nhật hồ sơ thành công');
       setEditing(false);
       void loadProfile();
     } catch (e: any) {
-      toast.error(e?.response?.data?.message || 'Failed to update profile');
+      toast.error(e?.response?.data?.message || 'Không cập nhật được hồ sơ');
     } finally {
       setSaving(false);
     }
@@ -115,7 +115,7 @@ export default function DonorProfilePage() {
               <p className="text-xl font-bold text-blue-900">{formatVND(profile?.total_donation || 0)}</p>
             </div>
             <div>
-              <p className="text-slate-500">Total Transactions</p>
+              <p className="text-slate-500">Tổng giao dịch</p>
               <p className="font-semibold text-slate-900">{profile?.record_amount || 0}</p>
             </div>
           </div>
@@ -215,7 +215,7 @@ export default function DonorProfilePage() {
                   className="flex items-center gap-2 rounded-lg bg-blue-800 px-4 py-2 text-sm font-medium text-white hover:bg-blue-900 disabled:opacity-50"
                 >
                   <Save className="h-4 w-4" />
-                  {saving ? 'Saving...' : 'Save Changes'}
+                  {saving ? 'Đang lưu...' : 'Save Changes'}
                 </button>
               </div>
             </div>

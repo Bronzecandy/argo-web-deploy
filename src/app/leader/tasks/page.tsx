@@ -10,11 +10,16 @@ import { collectBlobIdEntries } from '@/src/lib/blobFields';
 import { formatDate, truncateAddress } from '@/src/lib/formatters';
 import { toast } from 'sonner';
 import { useAppSelector } from '@/src/store/hooks';
+import { useLeaderCenter } from '@/src/contexts/LeaderCenterContext';
 import { taskService } from '@/src/services/task.service';
-import type { Task } from '@/src/types/api.types';
+import { childrenService } from '@/src/services/children.service';
+import type { Task, Child } from '@/src/types/api.types';
 import { Hand, ClipboardCheck, ThumbsUp, ThumbsDown, Plus } from 'lucide-react';
 
 const PAGE_SIZE = 20;
+const CHILD_LIST_PAGE_SIZE = 50;
+
+type TaskNeedKind = 'hk1' | 'hk2' | 'health' | '';
 
 function detailField(label: string, value: ReactNode) {
   return (
@@ -25,9 +30,28 @@ function detailField(label: string, value: ReactNode) {
   );
 }
 
+function childOptionLabel(c: Child) {
+  return `${c.first_name} ${c.last_name} · ${truncateAddress(c.id)}`;
+}
+
+function needIdFor(child: Child | null, kind: TaskNeedKind): string {
+  if (!child || !kind) return '';
+  if (kind === 'hk1') return child.books_needs?.[0]?.trim() || '';
+  if (kind === 'hk2') return child.books_needs?.[1]?.trim() || '';
+  return child.health_insurance_need?.trim() || '';
+}
+
 export default function LeaderTasksPage() {
   const { user } = useAppSelector((state) => state.auth);
   const { poolName, status: poolStatus, error: poolError } = useAppSelector((state) => state.leaderPool);
+  const { status: centerStatus, leaderRegion } = useLeaderCenter();
+
+  const effectiveRegion = poolName?.trim() || leaderRegion?.trim() || '';
+
+  const dataReady =
+    centerStatus !== 'loading' && poolStatus !== 'loading' && poolStatus !== 'idle';
+
+  const canUseRegion = dataReady && !!effectiveRegion;
 
   const [page, setPage] = useState(0);
   const [rows, setRows] = useState<Task[]>([]);
@@ -45,6 +69,17 @@ export default function LeaderTasksPage() {
   const [reviewReason, setReviewReason] = useState('');
 
   const [createOpen, setCreateOpen] = useState(false);
+  const [isChildTask, setIsChildTask] = useState(false);
+
+  const [childrenLoading, setChildrenLoading] = useState(false);
+  const [children, setChildren] = useState<Child[]>([]);
+  const [childrenPage, setChildrenPage] = useState(0);
+  const [childrenTotalPages, setChildrenTotalPages] = useState(1);
+
+  const [selectedChildId, setSelectedChildId] = useState('');
+  const [childDetail, setChildDetail] = useState<Child | null>(null);
+  const [detailLoading, setDetailLoading] = useState(false);
+  const [needKind, setNeedKind] = useState<TaskNeedKind>('');
 
   const [taskDetailOpen, setTaskDetailOpen] = useState(false);
   const [taskDetailId, setTaskDetailId] = useState<string | null>(null);
@@ -52,16 +87,14 @@ export default function LeaderTasksPage() {
   const [taskDetailData, setTaskDetailData] = useState<Task | null>(null);
   const [taskDetailLoading, setTaskDetailLoading] = useState(false);
 
-  const canUsePool = poolStatus === 'succeeded' && !!poolName;
-
   const loadPage = useCallback(
     async (p: number) => {
-      if (poolStatus === 'loading' || poolStatus === 'idle') {
+      if (!dataReady) {
         setLoading(true);
         setRows([]);
         return;
       }
-      if (!canUsePool) {
+      if (!canUseRegion) {
         setLoading(false);
         setRows([]);
         setTotalPages(1);
@@ -74,19 +107,19 @@ export default function LeaderTasksPage() {
           page: p,
           page_size: PAGE_SIZE,
           sort_order: 'desc',
-          region: poolName,
+          region: effectiveRegion,
         });
         setRows(res.data.data ?? []);
         setTotalPages(Math.max(1, res.data.total_pages ?? 1));
       } catch (e) {
         console.error(e);
-        toast.error('Failed to load tasks');
+        toast.error('Không tải được nhiệm vụ');
         setRows([]);
       } finally {
         setLoading(false);
       }
     },
-    [poolName, poolStatus, canUsePool],
+    [effectiveRegion, dataReady, canUseRegion],
   );
 
   useEffect(() => {
@@ -107,19 +140,93 @@ export default function LeaderTasksPage() {
       .finally(() => setTaskDetailLoading(false));
   }, [taskDetailOpen, taskDetailId]);
 
+  const loadChildrenPage = useCallback(
+    async (p: number) => {
+      if (!canUseRegion || !effectiveRegion) {
+        setChildren([]);
+        setChildrenTotalPages(1);
+        return;
+      }
+      setChildrenLoading(true);
+      try {
+        const res = await childrenService.list({
+          region: effectiveRegion,
+          page: p,
+          page_size: CHILD_LIST_PAGE_SIZE,
+          sort_order: 'desc',
+        });
+        const body = res.data;
+        setChildren(Array.isArray(body.data) ? body.data : []);
+        setChildrenTotalPages(Math.max(1, body.total_pages ?? 1));
+      } catch (e) {
+        console.error(e);
+        toast.error('Không tải được danh sách trẻ');
+        setChildren([]);
+      } finally {
+        setChildrenLoading(false);
+      }
+    },
+    [canUseRegion, effectiveRegion],
+  );
+
+  useEffect(() => {
+    setChildrenPage(0);
+  }, [effectiveRegion, createOpen]);
+
+  useEffect(() => {
+    if (!createOpen || !isChildTask) return;
+    void loadChildrenPage(childrenPage);
+  }, [createOpen, isChildTask, childrenPage, loadChildrenPage]);
+
+  useEffect(() => {
+    if (!selectedChildId) {
+      setChildDetail(null);
+      return;
+    }
+    let cancelled = false;
+    setDetailLoading(true);
+    void childrenService
+      .getById(selectedChildId)
+      .then((res) => {
+        if (!cancelled) setChildDetail(res.data ?? null);
+      })
+      .catch(() => {
+        if (!cancelled) {
+          toast.error('Không tải được thông tin trẻ');
+          setChildDetail(null);
+        }
+      })
+      .finally(() => {
+        if (!cancelled) setDetailLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [selectedChildId]);
+
+  useEffect(() => {
+    if (!createOpen) return;
+    if (!isChildTask) {
+      setSelectedChildId('');
+      setNeedKind('');
+      setChildDetail(null);
+    }
+  }, [createOpen, isChildTask]);
+
   const refresh = () => void loadPage(page);
 
   const handleClaim = async (id: string) => {
     setBusyId(id);
     try {
       await taskService.claim(id);
-      toast.success('Task claimed successfully');
+      toast.success('Đã nhận nhiệm vụ thành công');
       refresh();
     } catch (e: unknown) {
-      const msg = e && typeof e === 'object' && 'response' in e
-        ? (e as { response?: { data?: { message?: string } } }).response?.data?.message
-        : undefined;
-      toast.error(msg || 'Failed to claim task');
+      const msg =
+        e && typeof e === 'object' && 'response' in e
+          ? (e as { response?: { data?: { message?: string } } }).response?.data?.message
+          : undefined;
+      toast.error(msg || 'Không nhận được nhiệm vụ');
     } finally {
       setBusyId(null);
     }
@@ -130,58 +237,111 @@ export default function LeaderTasksPage() {
     setBusyId(reviewTask.id);
     try {
       await taskService.review(reviewTask.id, reviewVote, reviewVote ? undefined : reviewReason || undefined);
-      toast.success(reviewVote ? 'Task approved' : 'Task refused');
+      toast.success(reviewVote ? 'Đã duyệt nhiệm vụ' : 'Đã từ chối nhiệm vụ');
       setReviewTask(null);
       refresh();
     } catch (e: unknown) {
-      const msg = e && typeof e === 'object' && 'response' in e
-        ? (e as { response?: { data?: { message?: string } } }).response?.data?.message
-        : undefined;
-      toast.error(msg || 'Review failed');
+      const msg =
+        e && typeof e === 'object' && 'response' in e
+          ? (e as { response?: { data?: { message?: string } } }).response?.data?.message
+          : undefined;
+      toast.error(msg || 'Duyệt thất bại');
     } finally {
       setBusyId(null);
     }
   };
 
+  const resolvedNeedId = needIdFor(childDetail, needKind);
+
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!canUsePool || !poolName) {
-      toast.error('Your leader region is not loaded yet. Please wait or try again later.');
+    if (!canUseRegion || !effectiveRegion) {
+      toast.error('Your region is not loaded yet. Please wait or try again later.');
       return;
     }
     if (!description.trim() || !startPeriod || !endPeriod) {
       toast.error('Description and date range are required');
       return;
     }
+
+    if (isChildTask) {
+      if (!selectedChildId) {
+        toast.error('Chọn trẻ');
+        return;
+      }
+      if (!needKind) {
+        toast.error('Chọn nhu cầu');
+        return;
+      }
+      if (!resolvedNeedId) {
+        toast.error('Nhu cầu đã chọn không có mã hợp lệ trên hồ sơ trẻ');
+        return;
+      }
+    }
+
     setSubmitting(true);
     try {
-      await taskService.create({
-        description: description.trim(),
-        region: poolName,
-        start_period: startPeriod,
-        end_period: endPeriod,
-      });
-      toast.success('Task created');
+      if (isChildTask) {
+        await taskService.create({
+          description: description.trim(),
+          region: effectiveRegion,
+          start_period: startPeriod,
+          end_period: endPeriod,
+          is_child_task: true,
+          child_id: selectedChildId,
+          need_id: resolvedNeedId,
+        });
+      } else {
+        await taskService.create({
+          description: description.trim(),
+          region: effectiveRegion,
+          start_period: startPeriod,
+          end_period: endPeriod,
+          is_child_task: false,
+        });
+      }
+      toast.success('Đã tạo nhiệm vụ');
       setDescription('');
       setStartPeriod('');
       setEndPeriod('');
+      setIsChildTask(false);
+      setSelectedChildId('');
+      setNeedKind('');
+      setChildDetail(null);
       setCreateOpen(false);
       setPage(0);
       setListVersion((v) => v + 1);
     } catch (err) {
       console.error(err);
-      toast.error('Failed to create task');
+      toast.error('Không tạo được nhiệm vụ');
     } finally {
       setSubmitting(false);
     }
   };
 
-  const emptyMsg =
-    poolStatus === 'failed'
-      ? poolError || 'Could not resolve your region for task list.'
-      : canUsePool
-        ? 'No tasks in your region'
-        : 'Loading your region…';
+  const hk1Ok = !!childDetail?.books_needs?.[0]?.trim();
+  const hk2Ok = !!childDetail?.books_needs?.[1]?.trim();
+  const healthOk = !!childDetail?.health_insurance_need?.trim();
+
+  const childSelectDisabled = !canUseRegion || childrenLoading;
+  const createDisabled =
+    submitting ||
+    !canUseRegion ||
+    (isChildTask &&
+      (!selectedChildId || !needKind || !resolvedNeedId || detailLoading));
+
+  const emptyMsg = !dataReady
+    ? 'Loading your region…'
+    : !effectiveRegion
+      ? poolStatus === 'failed'
+        ? poolError || 'Could not resolve your region for tasks.'
+        : 'Could not resolve your region for tasks.'
+      : 'No tasks in your region';
+
+  const regionHint =
+    poolName?.trim() && leaderRegion?.trim() && poolName.trim() !== leaderRegion.trim()
+      ? 'Pool label and center region differ — using pool name first, then center.'
+      : null;
 
   return (
     <div className="space-y-8">
@@ -214,7 +374,7 @@ export default function LeaderTasksPage() {
               label: 'Description',
               render: (r) => <span className="line-clamp-2 max-w-xs">{r.description}</span>,
             },
-            { key: 'region', label: 'Region' },
+            { key: 'region', label: 'Vùng' },
             { key: 'start_period', label: 'Start', render: (r) => formatDate(r.start_period) },
             { key: 'end_period', label: 'End', render: (r) => formatDate(r.end_period) },
             { key: 'status', label: 'Status', render: (r) => <StatusBadge status={r.status} /> },
@@ -223,7 +383,7 @@ export default function LeaderTasksPage() {
               label: 'Assigned',
               render: (r) => (r.assigned_staff ? truncateAddress(r.assigned_staff) : '-'),
             },
-            { key: 'created_at', label: 'Created', render: (r) => formatDate(r.created_at) },
+            { key: 'created_at', label: 'Ngày tạo', render: (r) => formatDate(r.created_at) },
             {
               key: 'actions',
               label: 'Actions',
@@ -303,15 +463,134 @@ export default function LeaderTasksPage() {
               </button>
             </div>
             <p className="mb-4 rounded-lg border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700">
-              <span className="font-medium text-slate-900">Region</span> is fixed to your leader pool:{' '}
-              <span className="font-semibold text-blue-900">{canUsePool ? poolName : '…'}</span>
-              {poolStatus === 'failed' && (
+              <span className="font-medium text-slate-900">Region</span> —{' '}
+              <span className="font-semibold text-blue-900">{canUseRegion ? effectiveRegion : '…'}</span>
+              {regionHint && <span className="mt-2 block text-xs text-slate-600">{regionHint}</span>}
+              {!dataReady && (
+                <span className="mt-2 block text-amber-800">Đang tải thông tin vùng / pool…</span>
+              )}
+              {dataReady && !effectiveRegion && (
                 <span className="mt-2 block text-red-700">
-                  Pool failed to load — you cannot create tasks until this is fixed.
+                  Chưa có mã vùng — không thể tạo task cho tới khi pool hoặc trung tâm trả về vùng được gán.
                 </span>
               )}
             </p>
+
             <form onSubmit={handleCreate} className="max-w-xl space-y-4">
+              <fieldset className="space-y-2 rounded-lg border border-slate-200 p-3">
+                <legend className="px-1 text-xs font-medium text-slate-600">Loại task</legend>
+                <label className="flex cursor-pointer items-center gap-2 text-sm">
+                  <input
+                    type="radio"
+                    name="taskMode"
+                    checked={!isChildTask}
+                    onChange={() => {
+                      setIsChildTask(false);
+                      setSelectedChildId('');
+                      setNeedKind('');
+                      setChildDetail(null);
+                    }}
+                  />
+                  <span>Task tổng (vùng)</span>
+                </label>
+                <label className="flex cursor-pointer items-center gap-2 text-sm">
+                  <input
+                    type="radio"
+                    name="taskMode"
+                    checked={isChildTask}
+                    onChange={() => setIsChildTask(true)}
+                  />
+                  <span>Task theo trẻ</span>
+                </label>
+              </fieldset>
+
+              {isChildTask && (
+                <>
+                  <div>
+                    <label className="mb-1 block text-xs font-medium text-slate-500">Trẻ</label>
+                    <select
+                      className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-blue-800 focus:outline-none focus:ring-1 focus:ring-blue-800"
+                      disabled={childSelectDisabled}
+                      value={selectedChildId}
+                      onChange={(e) => {
+                        setSelectedChildId(e.target.value);
+                        setNeedKind('');
+                      }}
+                    >
+                      <option value="">{childrenLoading ? 'Đang tải…' : 'Chọn trẻ'}</option>
+                      {children.map((c) => (
+                        <option key={c.id} value={c.id}>
+                          {childOptionLabel(c)}
+                        </option>
+                      ))}
+                    </select>
+                    {canUseRegion && !childrenLoading && childrenTotalPages > 1 && (
+                      <div className="mt-2 flex items-center gap-2 text-sm text-slate-600">
+                        <button
+                          type="button"
+                          disabled={childrenPage <= 0}
+                          className="rounded border border-slate-200 px-2 py-1 disabled:opacity-50"
+                          onClick={() => setChildrenPage((p) => Math.max(0, p - 1))}
+                        >
+                          Trước
+                        </button>
+                        <span>
+                          Trang {childrenPage + 1} / {childrenTotalPages}
+                        </span>
+                        <button
+                          type="button"
+                          disabled={childrenPage >= childrenTotalPages - 1}
+                          className="rounded border border-slate-200 px-2 py-1 disabled:opacity-50"
+                          onClick={() => setChildrenPage((p) => p + 1)}
+                        >
+                          Sau
+                        </button>
+                      </div>
+                    )}
+                  </div>
+
+                  {detailLoading && selectedChildId && (
+                    <p className="text-sm text-slate-500">Đang tải nhu cầu trẻ…</p>
+                  )}
+
+                  {selectedChildId && childDetail && !detailLoading && (
+                    <fieldset className="space-y-2 rounded-lg border border-slate-200 p-3">
+                      <legend className="px-1 text-xs font-medium text-slate-600">Nhu cầu</legend>
+                      <label className="flex items-center gap-2 text-sm">
+                        <input
+                          type="radio"
+                          name="taskNeed"
+                          checked={needKind === 'hk1'}
+                          disabled={!hk1Ok}
+                          onChange={() => setNeedKind('hk1')}
+                        />
+                        <span>Sách học kỳ 1 {!hk1Ok && <span className="text-slate-400">(chưa có mã)</span>}</span>
+                      </label>
+                      <label className="flex items-center gap-2 text-sm">
+                        <input
+                          type="radio"
+                          name="taskNeed"
+                          checked={needKind === 'hk2'}
+                          disabled={!hk2Ok}
+                          onChange={() => setNeedKind('hk2')}
+                        />
+                        <span>Sách học kỳ 2 {!hk2Ok && <span className="text-slate-400">(chưa có mã)</span>}</span>
+                      </label>
+                      <label className="flex items-center gap-2 text-sm">
+                        <input
+                          type="radio"
+                          name="taskNeed"
+                          checked={needKind === 'health'}
+                          disabled={!healthOk}
+                          onChange={() => setNeedKind('health')}
+                        />
+                        <span>Bảo hiểm {!healthOk && <span className="text-slate-400">(chưa có mã)</span>}</span>
+                      </label>
+                    </fieldset>
+                  )}
+                </>
+              )}
+
               <div>
                 <label htmlFor="task-desc" className="mb-1 block text-xs font-medium text-slate-500">
                   Description
@@ -352,7 +631,7 @@ export default function LeaderTasksPage() {
               </div>
               <button
                 type="submit"
-                disabled={submitting || !canUsePool}
+                disabled={createDisabled}
                 className="rounded-lg bg-blue-800 px-4 py-2 text-sm font-medium text-white transition hover:bg-blue-900 disabled:opacity-50"
               >
                 {submitting ? 'Creating…' : 'Create task'}
@@ -451,13 +730,13 @@ export default function LeaderTasksPage() {
             <div className="space-y-1">
               {detailField('ID', <span className="font-mono text-xs break-all">{t.id}</span>)}
               {detailField('Description', t.description)}
-              {detailField('Region', t.region)}
+              {detailField('Vùng', t.region)}
               {detailField('Start', formatDate(t.start_period))}
               {detailField('End', formatDate(t.end_period))}
               {detailField('Status', <StatusBadge status={t.status} />)}
               {detailField('Assigned staff', t.assigned_staff ? truncateAddress(t.assigned_staff) : '—')}
               {detailField('Reviewed by', t.reviewed_by ? truncateAddress(t.reviewed_by) : '—')}
-              {detailField('Created', formatDate(t.created_at))}
+              {detailField('Ngày tạo', formatDate(t.created_at))}
               {detailField('Updated', formatDate(t.updated_at))}
               {blobs.length > 0 && (
                 <div className="border-t border-slate-100 pt-3">

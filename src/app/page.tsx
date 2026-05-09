@@ -60,13 +60,12 @@ export default function HomePage() {
         <div className="pointer-events-none absolute -right-20 -top-20 h-64 w-64 rounded-full bg-white/10 blur-3xl" />
         <div className="pointer-events-none absolute -bottom-16 -left-16 h-56 w-56 rounded-full bg-indigo-400/20 blur-3xl" />
         <div className="relative max-w-2xl">
-          <p className="text-sm font-medium uppercase tracking-widest text-blue-200/90">Child support, made transparent</p>
+          <p className="text-sm font-medium uppercase tracking-widest text-blue-200/90">Hỗ trợ trẻ em, minh bạch từng bước</p>
           <h1 className="mt-3 text-3xl font-bold tracking-tight sm:text-4xl lg:text-5xl">
-            See where help is needed — before you sign in.
+            Xem nơi cần giúp đỡ — trước khi bạn đăng nhập.
           </h1>
           <p className="mt-4 text-base leading-relaxed text-blue-100/90 sm:text-lg">
-            Browse regions community members suggested for support and explore verified centers and children. Sign in only when
-            you&apos;re ready to donate or use member tools.
+            Xem các vùng cộng đồng đề xuất hỗ trợ và khám phá trung tâm, trẻ em đã xác minh. Chỉ đăng nhập khi bạn sẵn sàng quyên góp hoặc dùng công cụ thành viên.
           </p>
           <div className="mt-8 flex flex-wrap gap-3">
             <Link
@@ -74,7 +73,7 @@ export default function HomePage() {
               className="inline-flex items-center gap-2 rounded-xl bg-white px-5 py-3 text-sm font-semibold text-blue-900 shadow-lg transition hover:bg-blue-50"
             >
               <Compass className="h-4 w-4" />
-              Explore network
+              Khám phá mạng lưới
               <ArrowRight className="h-4 w-4" />
             </Link>
             <Link
@@ -92,12 +91,12 @@ export default function HomePage() {
           <div>
             <h2 className="flex items-center gap-2 text-xl font-bold text-slate-900">
               <Sparkles className="h-5 w-5 text-amber-500" />
-              Regions suggested for support
+              Các vùng đề xuất hỗ trợ
             </h2>
-            <p className="mt-1 text-sm text-slate-600">Ideas from the community — explore to see children and centers.</p>
+            <p className="mt-1 text-sm text-slate-600">Ý tưởng từ cộng đồng — mở Khám phá để xem trẻ và trung tâm.</p>
           </div>
           <Link href="/explore" className="hidden shrink-0 text-sm font-semibold text-blue-800 hover:underline sm:inline">
-            View all in Explore →
+            Xem tất cả trong Khám phá →
           </Link>
         </div>
 
@@ -107,7 +106,7 @@ export default function HomePage() {
           </div>
         ) : suggestions.length === 0 ? (
           <div className="rounded-2xl border border-dashed border-slate-200 bg-slate-50/80 p-10 text-center text-sm text-slate-500">
-            No public suggestions right now. Try Explore for centers and children.
+            Chưa có đề xuất công khai. Hãy thử Khám phá trung tâm và trẻ em.
           </div>
         ) : (
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
@@ -119,11 +118,11 @@ export default function HomePage() {
               >
                 <p className="flex items-start gap-2 font-semibold text-slate-900">
                   <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-blue-800" />
-                  {s.region || 'Region'}
+                  {s.region || 'Vùng'}
                 </p>
                 {s.content && <p className="mt-2 line-clamp-3 text-xs text-slate-600">{s.content}</p>}
                 <span className="mt-3 inline-flex items-center gap-1 text-xs font-medium text-blue-800 group-hover:underline">
-                  Open Explore <ArrowRight className="h-3 w-3" />
+                  Mở Khám phá <ArrowRight className="h-3 w-3" />
                 </span>
               </Link>
             ))}
@@ -131,7 +130,7 @@ export default function HomePage() {
         )}
 
         <Link href="/explore" className="mt-6 inline-block text-sm font-semibold text-blue-800 hover:underline sm:hidden">
-          View all in Explore →
+          Xem tất cả trong Khám phá →
         </Link>
       </section>
     </GuestPublicShell>

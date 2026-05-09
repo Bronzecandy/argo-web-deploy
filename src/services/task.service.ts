@@ -5,6 +5,7 @@ import type {
   Task,
   TaskQueryParams,
   MessageResponse,
+  CreateTaskRequest,
 } from '@/src/types/api.types';
 
 class TaskService {
@@ -17,8 +18,19 @@ class TaskService {
     return { ...res, data: unwrapEntityFromGetById<Task>(res.data) };
   }
 
-  async create(data: { description: string; region: string; start_period: string; end_period: string }) {
-    return apiService.post<PaginationResponse>('/tasks', null, { params: data });
+  async create(payload: CreateTaskRequest) {
+    const body: Record<string, string | boolean> = {
+      description: payload.description,
+      start_period: payload.start_period,
+      end_period: payload.end_period,
+      region: payload.region,
+      is_child_task: payload.is_child_task,
+    };
+    if (payload.is_child_task) {
+      body.child_id = payload.child_id!;
+      body.need_id = payload.need_id!;
+    }
+    return apiService.post<MessageResponse>('/tasks', body);
   }
 
   async claim(id: string) {

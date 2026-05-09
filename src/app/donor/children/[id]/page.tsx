@@ -6,8 +6,9 @@ import { childrenService } from '@/src/services/children.service';
 import { childNeedsService, type BookNeed, type MealNeed, type HealthInsuranceNeed } from '@/src/services/child-needs.service';
 import { giftService } from '@/src/services/gift.service';
 import { BLOB_URL } from '@/src/lib/constants';
-import { formatVND, formatDate } from '@/src/lib/formatters';
+import { formatVND, formatDate, parseDigitsToNumber } from '@/src/lib/formatters';
 import PageHeader from '@/src/components/ui/PageHeader';
+import GroupedNumericInput from '@/src/components/ui/GroupedNumericInput';
 import type { Child, Gift } from '@/src/types/api.types';
 import { toast } from 'sonner';
 import Link from 'next/link';
@@ -42,8 +43,10 @@ export default function DonorChildDetailPage() {
   // Sponsor form state
   const [sponsorType, setSponsorType] = useState<'meal' | 'books' | 'health' | 'special' | null>(null);
   const [sponsorNeedId, setSponsorNeedId] = useState('');
-  const [mealMonths, setMealMonths] = useState(1);
-  const [specialAmount, setSpecialAmount] = useState(0);
+  const [mealMonthsDigits, setMealMonthsDigits] = useState('1');
+  const mealMonths = Math.max(1, Math.min(12, parseDigitsToNumber(mealMonthsDigits) ?? 1));
+  const [specialAmountDigits, setSpecialAmountDigits] = useState('');
+  const specialAmount = parseDigitsToNumber(specialAmountDigits) ?? 0;
   const [specialDescription, setSpecialDescription] = useState('');
   const [specialCampaignId, setSpecialCampaignId] = useState('');
   const [submitting, setSubmitting] = useState(false);
@@ -51,6 +54,11 @@ export default function DonorChildDetailPage() {
   useLayoutEffect(() => {
     setGiftPage(0);
   }, [id]);
+
+  useEffect(() => {
+    if (sponsorType === 'meal') setMealMonthsDigits('1');
+    if (sponsorType === 'special') setSpecialAmountDigits('');
+  }, [sponsorType]);
 
   const loadChild = useCallback(async () => {
     if (!id) return;
@@ -85,7 +93,7 @@ export default function DonorChildDetailPage() {
 
       await Promise.all(promises);
     } catch {
-      toast.error('Failed to load child details');
+      toast.error('Không tải được chi tiết trẻ');
     } finally {
       setLoading(false);
     }
@@ -126,7 +134,7 @@ export default function DonorChildDetailPage() {
       const res = await childrenService.supportMealNeed(sponsorNeedId, mealMonths);
       if (res.data.url) {
         window.open(res.data.url, '_blank');
-        toast.success('Payment page opened');
+        toast.success('Đã mở trang thanh toán');
       }
       setSponsorType(null);
     } catch {
@@ -143,7 +151,7 @@ export default function DonorChildDetailPage() {
       const res = await childrenService.supportBooksNeed(sponsorNeedId);
       if (res.data.url) {
         window.open(res.data.url, '_blank');
-        toast.success('Payment page opened');
+        toast.success('Đã mở trang thanh toán');
       }
       setSponsorType(null);
     } catch {
@@ -160,7 +168,7 @@ export default function DonorChildDetailPage() {
       const res = await childrenService.supportHealthInsuranceNeed(sponsorNeedId);
       if (res.data.url) {
         window.open(res.data.url, '_blank');
-        toast.success('Payment page opened');
+        toast.success('Đã mở trang thanh toán');
       }
       setSponsorType(null);
     } catch {
@@ -180,7 +188,7 @@ export default function DonorChildDetailPage() {
       });
       if (res.data.url) {
         window.open(res.data.url, '_blank');
-        toast.success('Payment page opened');
+        toast.success('Đã mở trang thanh toán');
       }
       setSponsorType(null);
     } catch {
@@ -271,7 +279,7 @@ export default function DonorChildDetailPage() {
                 <div><span className="text-slate-500">Monthly cost:</span> <span className="font-medium">{formatVND(mealNeed.value)}</span></div>
                 <div><span className="text-slate-500">Remaining months:</span> <span className="font-medium">{mealNeed.remaining_months}</span></div>
                 <div><span className="text-slate-500">Pool balance:</span> <span className="font-medium">{formatVND(mealNeed.balance)}</span></div>
-                <div><span className="text-slate-500">Total donated:</span> <span className="font-medium">{formatVND(mealNeed.total_donation)}</span></div>
+                <div><span className="text-slate-500">Tổng đã quyên góp:</span> <span className="font-medium">{formatVND(mealNeed.total_donation)}</span></div>
               </div>
               <button
                 onClick={() => { setSponsorType('meal'); setSponsorNeedId(mealNeed.id); }}
@@ -292,7 +300,7 @@ export default function DonorChildDetailPage() {
               <div className="grid grid-cols-2 gap-3 text-sm">
                 <div><span className="text-slate-500">Cost:</span> <span className="font-medium">{formatVND(bn.value)}</span></div>
                 <div><span className="text-slate-500">Pool balance:</span> <span className="font-medium">{formatVND(bn.balance)}</span></div>
-                <div><span className="text-slate-500">Total donated:</span> <span className="font-medium">{formatVND(bn.total_donation)}</span></div>
+                <div><span className="text-slate-500">Tổng đã quyên góp:</span> <span className="font-medium">{formatVND(bn.total_donation)}</span></div>
               </div>
               <button
                 onClick={() => { setSponsorType('books'); setSponsorNeedId(bn.id); }}
@@ -313,7 +321,7 @@ export default function DonorChildDetailPage() {
               <div className="grid grid-cols-2 gap-3 text-sm">
                 <div><span className="text-slate-500">Cost:</span> <span className="font-medium">{formatVND(healthNeed.value)}</span></div>
                 <div><span className="text-slate-500">Pool balance:</span> <span className="font-medium">{formatVND(healthNeed.balance)}</span></div>
-                <div><span className="text-slate-500">Total donated:</span> <span className="font-medium">{formatVND(healthNeed.total_donation)}</span></div>
+                <div><span className="text-slate-500">Tổng đã quyên góp:</span> <span className="font-medium">{formatVND(healthNeed.total_donation)}</span></div>
               </div>
               <button
                 onClick={() => { setSponsorType('health'); setSponsorNeedId(healthNeed.id); }}
@@ -463,12 +471,11 @@ export default function DonorChildDetailPage() {
               {sponsorType === 'meal' && (
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-1">Number of months</label>
-                  <input
-                    type="number"
+                  <GroupedNumericInput
                     min={1}
                     max={12}
-                    value={mealMonths}
-                    onChange={(e) => setMealMonths(Number(e.target.value))}
+                    value={mealMonthsDigits}
+                    onChange={setMealMonthsDigits}
                     className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-blue-700 focus:outline-none focus:ring-1 focus:ring-blue-700"
                   />
                   {mealNeed && (
@@ -483,11 +490,9 @@ export default function DonorChildDetailPage() {
                 <>
                   <div>
                     <label className="block text-sm font-medium text-slate-700 mb-1">Amount (VND)</label>
-                    <input
-                      type="number"
-                      min={1000}
-                      value={specialAmount}
-                      onChange={(e) => setSpecialAmount(Number(e.target.value))}
+                    <GroupedNumericInput
+                      value={specialAmountDigits}
+                      onChange={setSpecialAmountDigits}
                       className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-blue-700 focus:outline-none focus:ring-1 focus:ring-blue-700"
                     />
                   </div>

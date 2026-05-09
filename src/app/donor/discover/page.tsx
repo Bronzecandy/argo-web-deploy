@@ -6,7 +6,7 @@ export default function DonorDiscoverPage() {
   return (
     <ExploreContent
       title="Discover"
-      description="Browse centers and children in the AgroTrust network"
+      description="Xem trung tâm và trẻ em trong mạng AgroTrust"
       childHref={(id) => `/donor/children/${id}`}
       campaignRegionHref={(region) => `/donor/campaigns/${encodeURIComponent(region)}`}
     />

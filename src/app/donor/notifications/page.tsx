@@ -83,7 +83,7 @@ export default function DonorNotificationsPage() {
               >
                 Previous
               </button>
-              <span className="text-sm text-slate-500">Page {page + 1} of {Math.max(1, totalPages)}</span>
+              <span className="text-sm text-slate-500">Trang {page + 1} / {Math.max(1, totalPages)}</span>
               <button
                 type="button"
                 onClick={() => setPage((p) => Math.min(Math.max(1, totalPages) - 1, p + 1))}

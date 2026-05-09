@@ -65,7 +65,7 @@ export default function LeaderBankPage() {
           payos_check_sum_key: '',
         });
       } else {
-        toast.error(getErrorMessage(e, 'Failed to load bank profile'));
+        toast.error(getErrorMessage(e, 'Không tải được hồ sơ ngân hàng'));
         setBank(null);
       }
     } finally {
@@ -101,15 +101,15 @@ export default function LeaderBankPage() {
         const updatePayload: UpdateBankProfileRequest = { ...payload };
         const res = await bankService.update(bank.id, updatePayload);
         setBank(res.data);
-        toast.success('Bank profile updated');
+        toast.success('Đã cập nhật hồ sơ ngân hàng');
         setEditing(false);
       } else {
         const res = await bankService.create(payload);
         setBank(res.data);
-        toast.success('Bank profile created');
+        toast.success('Đã tạo hồ sơ ngân hàng');
       }
     } catch (err: unknown) {
-      toast.error(getErrorMessage(err, bank ? 'Update failed' : 'Create failed'));
+      toast.error(getErrorMessage(err, bank ? 'Cập nhật thất bại' : 'Tạo mới thất bại'));
     } finally {
       setSaving(false);
     }
@@ -267,7 +267,7 @@ export default function LeaderBankPage() {
             disabled={saving}
             className="rounded-lg bg-blue-800 px-5 py-2.5 text-sm font-medium text-white shadow-sm transition hover:bg-blue-900 disabled:opacity-60"
           >
-            {saving ? 'Saving…' : bank ? 'Save changes' : 'Create profile'}
+            {saving ? 'Đang lưu…' : bank ? 'Save changes' : 'Create profile'}
           </button>
         </form>
       )}

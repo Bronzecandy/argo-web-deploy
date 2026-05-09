@@ -36,7 +36,7 @@ export default function DonorChildUploadPage() {
     regionService
       .listRegions()
       .then((res) => setRegions(res.data.regions || []))
-      .catch(() => toast.error('Failed to load regions'));
+      .catch(() => toast.error('Không tải được danh sách vùng'));
   }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -106,7 +106,7 @@ export default function DonorChildUploadPage() {
             }
           : {}),
       });
-      toast.success('Child upload request submitted');
+      toast.success('Đã gửi yêu cầu tải hồ sơ trẻ');
       setFirstName('');
       setLastName('');
       setDateOfBirth('');
@@ -122,7 +122,7 @@ export default function DonorChildUploadPage() {
         err && typeof err === 'object' && 'response' in err
           ? String((err as { response?: { data?: { message?: string } } }).response?.data?.message ?? '')
           : '';
-      toast.error(msg || 'Submit failed');
+      toast.error(msg || 'Gửi thất bại');
     } finally {
       setSubmitting(false);
     }

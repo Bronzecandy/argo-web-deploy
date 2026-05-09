@@ -88,7 +88,7 @@ export default function DonorDashboardPage() {
     },
     {
       key: 'pool_name',
-      label: 'Pool',
+      label: 'Quỹ',
       render: (item: TransactionRecord) => item.pool_name || '-',
     },
     {
@@ -108,7 +108,7 @@ export default function DonorDashboardPage() {
   const proposalColumns = [
     {
       key: 'pool_name',
-      label: 'Pool',
+      label: 'Quỹ',
       render: (item: WithdrawProposal) => <span className="font-medium">{item.pool_name}</span>,
     },
     {
@@ -204,10 +204,10 @@ export default function DonorDashboardPage() {
         />
       </div>
 
-      {/* Active Withdrawal Proposals */}
+      {/* Active Đề xuất rút tiền */}
       <div className="mt-6">
         <div className="mb-3 flex items-center justify-between">
-          <h2 className="text-lg font-semibold text-slate-900">Active Withdrawal Proposals</h2>
+          <h2 className="text-lg font-semibold text-slate-900">Active Đề xuất rút tiền</h2>
           <Link
             href="/donor/withdrawals"
             className="flex items-center gap-1 text-sm font-medium text-blue-800 hover:text-blue-900"

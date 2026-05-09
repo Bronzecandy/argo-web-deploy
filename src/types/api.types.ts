@@ -544,6 +544,17 @@ export interface Task {
   updated_at: string;
 }
 
+/** Leader-led task creation request payload. */
+export interface CreateTaskRequest {
+  description: string;
+  end_period: string;
+  is_child_task: boolean;
+  region: string;
+  start_period: string;
+  child_id?: string;
+  need_id?: string;
+}
+
 export interface TaskProof {
   id: string;
   task_id?: string;

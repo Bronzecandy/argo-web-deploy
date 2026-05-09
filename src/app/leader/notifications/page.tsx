@@ -45,7 +45,7 @@ export default function LeaderNotificationsPage() {
       setTotalPages(Math.max(1, res.data.total_pages ?? 1));
     } catch (e) {
       console.error(e);
-      toast.error('Failed to load notifications');
+      toast.error('Không tải được thông báo');
       setItems([]);
     } finally {
       setLoading(false);
@@ -109,7 +109,7 @@ export default function LeaderNotificationsPage() {
         {user?.address && !loading && items.length > 0 && (
           <div className="mt-6 flex items-center justify-between border-t border-slate-100 pt-4">
             <span className="text-xs text-slate-500">
-              Page {page + 1} of {Math.max(1, totalPages)}
+              Trang {page + 1} / {Math.max(1, totalPages)}
             </span>
             <div className="flex gap-1">
               <button
@@ -146,8 +146,8 @@ export default function LeaderNotificationsPage() {
           <div className="space-y-1">
             {detailField('ID', <span className="font-mono text-xs break-all">{detailItem.id}</span>)}
             {detailField('Content', detailItem.content)}
-            {detailField('Region', detailItem.region || '—')}
-            {detailField('Created', formatDate(detailItem.created_at))}
+            {detailField('Vùng', detailItem.region || '—')}
+            {detailField('Ngày tạo', formatDate(detailItem.created_at))}
             {detailField('Updated', formatDate(detailItem.updated_at))}
           </div>
         )}

@@ -10,7 +10,7 @@ import { regionService } from '@/src/services/region.service';
 import { ROLES } from '@/src/lib/constants';
 
 const ROLE_OPTIONS = [
-  { value: ROLES.VOLUNTEER, label: 'Volunteer' },
+  { value: ROLES.VOLUNTEER, label: 'Tình nguyện viên' },
   { value: ROLES.LOCAL_LEADER, label: 'Local leader' },
   { value: ROLES.DONOR, label: 'Donor' },
 ] as const;
@@ -27,7 +27,7 @@ export default function DonorRegisterPage() {
     regionService
       .listRegions()
       .then((res) => setRegions(res.data.regions || []))
-      .catch(() => toast.error('Failed to load regions'));
+      .catch(() => toast.error('Không tải được danh sách vùng'));
   }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -48,7 +48,7 @@ export default function DonorRegisterPage() {
         region: region.trim(),
         register_role: registerRole,
       });
-      toast.success('Registration submitted');
+      toast.success('Đã gửi đăng ký');
       setAvatarBlobId('');
       setIdentityBlobId('');
     } catch (err: unknown) {
@@ -56,7 +56,7 @@ export default function DonorRegisterPage() {
         err && typeof err === 'object' && 'response' in err
           ? String((err as { response?: { data?: { message?: string } } }).response?.data?.message ?? '')
           : '';
-      toast.error(msg || 'Registration failed');
+      toast.error(msg || 'Gửi đăng ký thất bại');
     } finally {
       setSubmitting(false);
     }

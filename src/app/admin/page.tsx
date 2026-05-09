@@ -44,7 +44,7 @@ function groupByDate(records: TransactionRecord[]) {
 function groupByField<T>(items: T[], field: keyof T): { name: string; value: number }[] {
   const map: Record<string, number> = {};
   for (const item of items) {
-    const key = String((item as any)[field] || 'Unknown');
+    const key = String((item as any)[field] || 'Không rõ');
     map[key] = (map[key] || 0) + 1;
   }
   return Object.entries(map).map(([name, value]) => ({ name, value }));
@@ -131,8 +131,8 @@ export default function AdminDashboard() {
     const exec = withdrawals.filter((w) => w.is_executed).length;
     const pending = withdrawals.filter((w) => !w.is_executed).length;
     return [
-      { name: 'Executed', value: exec },
-      { name: 'Pending', value: pending },
+      { name: 'Đã thực thi', value: exec },
+      { name: 'Đang chờ', value: pending },
     ].filter((d) => d.value > 0);
   }, [withdrawals]);
   const regByStatus = useMemo(() => statusSummary(registrations), [registrations]);
@@ -155,33 +155,33 @@ export default function AdminDashboard() {
   return (
     <div className="space-y-6">
       <PageHeader
-        title="Admin Dashboard"
-        description="Comprehensive overview of AgroTrust platform activity"
+        title="Bảng điều khiển quản trị"
+        description="Tổng quan hoạt động nền tảng AgroTrust"
       />
 
       {/* Stats Row 1 */}
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
-        <StatsCard label="Total Transactions" value={stats.transactions} icon={HandCoins} />
-        <StatsCard label="Transaction Volume" value={formatVND(totalTxAmount)} icon={TrendingUp} />
-        <StatsCard label="Withdrawal Volume" value={formatVND(totalWithdrawAmount)} icon={TrendingDown} />
-        <StatsCard label="Children" value={stats.children} icon={Baby} />
+        <StatsCard label="Tổng giao dịch" value={stats.transactions} icon={HandCoins} />
+        <StatsCard label="Khối lượng giao dịch" value={formatVND(totalTxAmount)} icon={TrendingUp} />
+        <StatsCard label="Khối lượng rút" value={formatVND(totalWithdrawAmount)} icon={TrendingDown} />
+        <StatsCard label="Trẻ em" value={stats.children} icon={Baby} />
       </div>
 
       {/* Stats Row 2 */}
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-5">
-        <StatsCard label="Registrations" value={stats.registrations} icon={Users} />
-        <StatsCard label="Centers" value={stats.centers} icon={Building2} />
-        <StatsCard label="Withdrawals" value={stats.withdrawals} icon={Wallet} />
-        <StatsCard label="Staff" value={stats.staff} icon={UserCheck} />
-        <StatsCard label="Donors" value={stats.donors} icon={Users} />
+        <StatsCard label="Đăng ký" value={stats.registrations} icon={Users} />
+        <StatsCard label="Trung tâm" value={stats.centers} icon={Building2} />
+        <StatsCard label="Rút tiền" value={stats.withdrawals} icon={Wallet} />
+        <StatsCard label="Nhân sự" value={stats.staff} icon={UserCheck} />
+        <StatsCard label="Nhà hảo tâm" value={stats.donors} icon={Users} />
       </div>
 
       {/* Transaction Volume Over Time */}
       <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
-        <h2 className="mb-1 text-base font-semibold text-slate-900">Transaction Volume Over Time</h2>
-        <p className="mb-4 text-xs text-slate-500">Daily total transaction amounts</p>
+        <h2 className="mb-1 text-base font-semibold text-slate-900">Khối lượng giao dịch theo thời gian</h2>
+        <p className="mb-4 text-xs text-slate-500">Tổng số tiền giao dịch theo ngày</p>
         {txByDate.length === 0 ? (
-          <p className="py-8 text-center text-sm text-slate-400">No transaction data</p>
+          <p className="py-8 text-center text-sm text-slate-400">Chưa có dữ liệu giao dịch</p>
         ) : (
           <ResponsiveContainer width="100%" height={300}>
             <AreaChart data={txByDate}>
@@ -203,10 +203,10 @@ export default function AdminDashboard() {
 
       {/* Transaction Count Over Time */}
       <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
-        <h2 className="mb-1 text-base font-semibold text-slate-900">Daily Transaction Count</h2>
-        <p className="mb-4 text-xs text-slate-500">Number of transactions per day</p>
+        <h2 className="mb-1 text-base font-semibold text-slate-900">Số lượng giao dịch theo ngày</h2>
+        <p className="mb-4 text-xs text-slate-500">Số giao dịch mỗi ngày</p>
         {txByDate.length === 0 ? (
-          <p className="py-8 text-center text-sm text-slate-400">No transaction data</p>
+          <p className="py-8 text-center text-sm text-slate-400">Chưa có dữ liệu giao dịch</p>
         ) : (
           <ResponsiveContainer width="100%" height={260}>
             <BarChart data={txByDate}>
@@ -223,9 +223,9 @@ export default function AdminDashboard() {
       {/* Row: Tx By Type + Withdrawal Status */}
       <div className="grid gap-6 lg:grid-cols-2">
         <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
-          <h2 className="mb-4 text-base font-semibold text-slate-900">Transactions by Type</h2>
+          <h2 className="mb-4 text-base font-semibold text-slate-900">Giao dịch theo loại</h2>
           {txByType.length === 0 ? (
-            <p className="py-8 text-center text-sm text-slate-400">No data</p>
+            <p className="py-8 text-center text-sm text-slate-400">Chưa có dữ liệu</p>
           ) : (
             <ResponsiveContainer width="100%" height={300}>
               <PieChart>
@@ -240,9 +240,9 @@ export default function AdminDashboard() {
         </div>
 
         <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
-          <h2 className="mb-4 text-base font-semibold text-slate-900">Withdrawal Proposals</h2>
+          <h2 className="mb-4 text-base font-semibold text-slate-900">Đề xuất rút tiền</h2>
           {withdrawByStatus.length === 0 ? (
-            <p className="py-8 text-center text-sm text-slate-400">No data</p>
+            <p className="py-8 text-center text-sm text-slate-400">Chưa có dữ liệu</p>
           ) : (
             <ResponsiveContainer width="100%" height={300}>
               <PieChart>
@@ -255,7 +255,7 @@ export default function AdminDashboard() {
             </ResponsiveContainer>
           )}
           <p className="mt-2 text-center text-xs text-slate-500">
-            Total withdraw amount: <span className="font-semibold text-slate-700">{formatVND(totalWithdrawAmount)}</span>
+            Tổng số tiền rút: <span className="font-semibold text-slate-700">{formatVND(totalWithdrawAmount)}</span>
           </p>
         </div>
       </div>
@@ -263,9 +263,9 @@ export default function AdminDashboard() {
       {/* Row: Registration Status + Center Status */}
       <div className="grid gap-6 lg:grid-cols-2">
         <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
-          <h2 className="mb-4 text-base font-semibold text-slate-900">Registration Requests by Status</h2>
+          <h2 className="mb-4 text-base font-semibold text-slate-900">Yêu cầu đăng ký theo trạng thái</h2>
           {regByStatus.length === 0 ? (
-            <p className="py-8 text-center text-sm text-slate-400">No data</p>
+            <p className="py-8 text-center text-sm text-slate-400">Chưa có dữ liệu</p>
           ) : (
             <ResponsiveContainer width="100%" height={260}>
               <BarChart data={regByStatus} layout="vertical">
@@ -280,9 +280,9 @@ export default function AdminDashboard() {
         </div>
 
         <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
-          <h2 className="mb-4 text-base font-semibold text-slate-900">Support Centers by Region</h2>
+          <h2 className="mb-4 text-base font-semibold text-slate-900">Trung tâm hỗ trợ theo vùng</h2>
           {centersByRegion.length === 0 ? (
-            <p className="py-8 text-center text-sm text-slate-400">No data</p>
+            <p className="py-8 text-center text-sm text-slate-400">Chưa có dữ liệu</p>
           ) : (
             <ResponsiveContainer width="100%" height={260}>
               <BarChart data={centersByRegion} layout="vertical">
@@ -300,9 +300,9 @@ export default function AdminDashboard() {
       {/* Row: Children by Region + Child Upload Status */}
       <div className="grid gap-6 lg:grid-cols-2">
         <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
-          <h2 className="mb-4 text-base font-semibold text-slate-900">Children by Region</h2>
+          <h2 className="mb-4 text-base font-semibold text-slate-900">Trẻ em theo vùng</h2>
           {childrenByRegion.length === 0 ? (
-            <p className="py-8 text-center text-sm text-slate-400">No data</p>
+            <p className="py-8 text-center text-sm text-slate-400">Chưa có dữ liệu</p>
           ) : (
             <ResponsiveContainer width="100%" height={280}>
               <BarChart data={childrenByRegion}>
@@ -317,9 +317,9 @@ export default function AdminDashboard() {
         </div>
 
         <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
-          <h2 className="mb-4 text-base font-semibold text-slate-900">Child Upload Requests by Status</h2>
+          <h2 className="mb-4 text-base font-semibold text-slate-900">Yêu cầu tải hồ sơ trẻ theo trạng thái</h2>
           {uploadsByStatus.length === 0 ? (
-            <p className="py-8 text-center text-sm text-slate-400">No data</p>
+            <p className="py-8 text-center text-sm text-slate-400">Chưa có dữ liệu</p>
           ) : (
             <ResponsiveContainer width="100%" height={280}>
               <PieChart>
@@ -336,9 +336,9 @@ export default function AdminDashboard() {
 
       {/* Tasks by Status */}
       <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
-        <h2 className="mb-4 text-base font-semibold text-slate-900">Tasks by Status</h2>
+        <h2 className="mb-4 text-base font-semibold text-slate-900">Nhiệm vụ theo trạng thái</h2>
         {tasksByStatus.length === 0 ? (
-          <p className="py-8 text-center text-sm text-slate-400">No task data</p>
+          <p className="py-8 text-center text-sm text-slate-400">Chưa có dữ liệu nhiệm vụ</p>
         ) : (
           <ResponsiveContainer width="100%" height={250}>
             <BarChart data={tasksByStatus}>
@@ -356,21 +356,21 @@ export default function AdminDashboard() {
       <div className="rounded-xl border border-slate-200 bg-white shadow-sm">
         <div className="flex items-center justify-between border-b border-slate-200 px-5 py-4">
           <div>
-            <h2 className="font-semibold text-slate-900">Recent Transactions</h2>
-            <p className="text-xs text-slate-500">Latest platform activity</p>
+            <h2 className="font-semibold text-slate-900">Giao dịch gần đây</h2>
+            <p className="text-xs text-slate-500">Hoạt động mới nhất trên nền tảng</p>
           </div>
           <a href="/admin/analytics" className="flex items-center gap-1 text-sm text-blue-800 hover:underline">
-            View all <ArrowUpRight className="h-3.5 w-3.5" />
+            Xem tất cả <ArrowUpRight className="h-3.5 w-3.5" />
           </a>
         </div>
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-slate-100 bg-slate-50/60">
-                <th className="px-5 py-2.5 text-left font-medium text-slate-500">Type</th>
-                <th className="px-5 py-2.5 text-left font-medium text-slate-500">Pool</th>
-                <th className="px-5 py-2.5 text-right font-medium text-slate-500">Amount</th>
-                <th className="px-5 py-2.5 text-right font-medium text-slate-500">Date</th>
+                <th className="px-5 py-2.5 text-left font-medium text-slate-500">Loại</th>
+                <th className="px-5 py-2.5 text-left font-medium text-slate-500">Quỹ</th>
+                <th className="px-5 py-2.5 text-right font-medium text-slate-500">Số tiền</th>
+                <th className="px-5 py-2.5 text-right font-medium text-slate-500">Ngày</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
@@ -390,7 +390,7 @@ export default function AdminDashboard() {
               ))}
               {allTx.length === 0 && (
                 <tr>
-                  <td colSpan={4} className="px-5 py-8 text-center text-slate-400">No recent transactions</td>
+                  <td colSpan={4} className="px-5 py-8 text-center text-slate-400">Chưa có giao dịch gần đây</td>
                 </tr>
               )}
             </tbody>
@@ -402,23 +402,23 @@ export default function AdminDashboard() {
       <div className="rounded-xl border border-slate-200 bg-white shadow-sm">
         <div className="flex items-center justify-between border-b border-slate-200 px-5 py-4">
           <div>
-            <h2 className="font-semibold text-slate-900">Recent Withdrawal Proposals</h2>
-            <p className="text-xs text-slate-500">Latest proposals across all pools</p>
+            <h2 className="font-semibold text-slate-900">Đề xuất rút tiền gần đây</h2>
+            <p className="text-xs text-slate-500">Đề xuất mới nhất trên các quỹ</p>
           </div>
           <a href="/admin/treasury" className="flex items-center gap-1 text-sm text-blue-800 hover:underline">
-            View all <ArrowUpRight className="h-3.5 w-3.5" />
+            Xem tất cả <ArrowUpRight className="h-3.5 w-3.5" />
           </a>
         </div>
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-slate-100 bg-slate-50/60">
-                <th className="px-5 py-2.5 text-left font-medium text-slate-500">Pool</th>
-                <th className="px-5 py-2.5 text-left font-medium text-slate-500">Description</th>
-                <th className="px-5 py-2.5 text-right font-medium text-slate-500">Amount</th>
-                <th className="px-5 py-2.5 text-center font-medium text-slate-500">Approve / Refuse</th>
-                <th className="px-5 py-2.5 text-center font-medium text-slate-500">Status</th>
-                <th className="px-5 py-2.5 text-right font-medium text-slate-500">Created</th>
+                <th className="px-5 py-2.5 text-left font-medium text-slate-500">Quỹ</th>
+                <th className="px-5 py-2.5 text-left font-medium text-slate-500">Mô tả</th>
+                <th className="px-5 py-2.5 text-right font-medium text-slate-500">Số tiền</th>
+                <th className="px-5 py-2.5 text-center font-medium text-slate-500">Duyệt / Từ chối</th>
+                <th className="px-5 py-2.5 text-center font-medium text-slate-500">Trạng thái</th>
+                <th className="px-5 py-2.5 text-right font-medium text-slate-500">Ngày tạo</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
@@ -436,7 +436,7 @@ export default function AdminDashboard() {
                     <span className={`inline-block rounded-full px-2.5 py-0.5 text-xs font-medium ${
                       w.is_executed ? 'bg-blue-50 text-blue-900' : 'bg-amber-50 text-amber-700'
                     }`}>
-                      {w.is_executed ? 'Executed' : 'Pending'}
+                      {w.is_executed ? 'Đã thực thi' : 'Đang chờ'}
                     </span>
                   </td>
                   <td className="px-5 py-3 text-right text-slate-400">{formatDate(w.created_at)}</td>
@@ -444,7 +444,7 @@ export default function AdminDashboard() {
               ))}
               {withdrawals.length === 0 && (
                 <tr>
-                  <td colSpan={6} className="px-5 py-8 text-center text-slate-400">No withdrawal proposals</td>
+                  <td colSpan={6} className="px-5 py-8 text-center text-slate-400">Chưa có đề xuất rút tiền</td>
                 </tr>
               )}
             </tbody>

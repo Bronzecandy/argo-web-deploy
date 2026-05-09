@@ -6,7 +6,9 @@ import { giftService } from '@/src/services/gift.service';
 import { blobService } from '@/src/services/blob.service';
 import { useExecuteTransaction } from '@/src/hooks/useExecuteTransaction';
 import PageHeader from '@/src/components/ui/PageHeader';
+import GroupedNumericInput from '@/src/components/ui/GroupedNumericInput';
 import { toast } from 'sonner';
+import { parseDigitsToNumber } from '@/src/lib/formatters';
 import { Gift, Send, Upload, Package } from 'lucide-react';
 
 export default function DonorGiftsPage() {
@@ -24,7 +26,8 @@ export default function DonorGiftsPage() {
   const [category, setCategory] = useState('');
   const [description, setDescription] = useState('');
   const [message, setMessage] = useState('');
-  const [giftValue, setGiftValue] = useState(0);
+  const [giftValueDigits, setGiftValueDigits] = useState('');
+  const giftValue = parseDigitsToNumber(giftValueDigits) ?? 0;
   const [carrier, setCarrier] = useState('');
   const [trackingCode, setTrackingCode] = useState('');
   const [imageFile, setImageFile] = useState<File | null>(null);
@@ -72,12 +75,12 @@ export default function DonorGiftsPage() {
       setCategory('');
       setDescription('');
       setMessage('');
-      setGiftValue(0);
+      setGiftValueDigits('');
       setCarrier('');
       setTrackingCode('');
       setImageFile(null);
     } catch (e: any) {
-      toast.error(e?.response?.data?.message || 'Failed to send gift');
+      toast.error(e?.response?.data?.message || 'Không gửi được quà');
     } finally {
       setSending(false);
     }
@@ -104,7 +107,7 @@ export default function DonorGiftsPage() {
         toast.info('No gifts found for this child');
       }
     } catch {
-      toast.error('Failed to load gifts');
+      toast.error('Không tải được danh sách quà');
     } finally {
       setTracking(false);
     }
@@ -203,11 +206,10 @@ export default function DonorGiftsPage() {
 
               <div>
                 <label className="mb-1 block text-sm font-medium text-slate-700">Gift value (VND)</label>
-                <input
-                  type="number"
+                <GroupedNumericInput
                   min={0}
-                  value={giftValue || ''}
-                  onChange={(e) => setGiftValue(Number(e.target.value))}
+                  value={giftValueDigits}
+                  onChange={setGiftValueDigits}
                   className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-blue-700 focus:outline-none focus:ring-1 focus:ring-blue-700"
                 />
               </div>
@@ -277,7 +279,7 @@ export default function DonorGiftsPage() {
               disabled={tracking}
               className="rounded-lg bg-blue-800 px-4 py-2 text-sm font-medium text-white hover:bg-blue-900 disabled:opacity-50"
             >
-              {tracking ? 'Loading...' : 'Search'}
+              {tracking ? 'Đang tải...' : 'Search'}
             </button>
           </div>
 

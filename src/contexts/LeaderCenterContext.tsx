@@ -18,7 +18,7 @@ export type LeaderCenterLoadStatus = 'loading' | 'has_center' | 'no_center' | 'e
 type LeaderCenterContextValue = {
   status: LeaderCenterLoadStatus;
   center: SupportCenter | null;
-  /** `region` from GET /centers/leader (200) — use for API filters even before address/phone are set. */
+  /** Region label from leader center response. */
   leaderRegion: string | null;
   errorMessage: string | null;
   refetch: () => Promise<void>;
@@ -26,7 +26,7 @@ type LeaderCenterContextValue = {
 
 const LeaderCenterContext = createContext<LeaderCenterContextValue | null>(null);
 
-/** GET /centers/leader may return 200 with a stub row before address/phone are set — treat as no center yet. */
+/** Incomplete center row may omit address/phone until finalized. */
 function isCompleteLeaderCenter(data: unknown): data is SupportCenter {
   if (data == null || typeof data !== 'object') return false;
   const o = data as Record<string, unknown>;

@@ -8,7 +8,7 @@ import DataTable from '@/src/components/ui/DataTable';
 import StatusBadge from '@/src/components/ui/StatusBadge';
 import DetailModal from '@/src/components/ui/DetailModal';
 import BlobImage from '@/src/components/ui/BlobImage';
-import { formatDate, formatVND, truncateAddress } from '@/src/lib/formatters';
+import { formatDate, formatInteger, formatVND, truncateAddress } from '@/src/lib/formatters';
 import { centerService } from '@/src/services/center.service';
 import { useExecuteTransaction } from '@/src/hooks/useExecuteTransaction';
 import type { CenterRequest, SupportCenter } from '@/src/types/api.types';
@@ -16,23 +16,23 @@ import type { CenterRequest, SupportCenter } from '@/src/types/api.types';
 const PAGE_SIZE = 20;
 
 const STATUS_OPTIONS = [
-  { value: '', label: 'All statuses' },
+  { value: '', label: 'Tất cả trạng thái' },
   { value: 'pending', label: 'Pending' },
-  { value: 'pending_review', label: 'Pending review' },
+  { value: 'pending_review', label: 'Chờ duyệt' },
   { value: 'approved', label: 'Approved' },
   { value: 'refused', label: 'Refused' },
 ];
 
 type CentersTab = 'centers' | 'requests';
 
-/** GET /centers — on-chain support centers */
+/** On-chain registered support centers */
 const SUPPORT_CENTER_COLUMNS = [
   {
     key: 'id',
     label: 'ID',
     render: (c: SupportCenter) => <span className="font-mono text-xs">{truncateAddress(c.id, 8)}</span>,
   },
-  { key: 'region', label: 'Region' },
+  { key: 'region', label: 'Vùng' },
   {
     key: 'center_address',
     label: 'Address',
@@ -55,14 +55,14 @@ const SUPPORT_CENTER_COLUMNS = [
   },
 ];
 
-/** GET /center-reqs — registration / review pipeline */
+/** Center registration requests from leaders */
 const CENTER_REQUEST_COLUMNS = [
   {
     key: 'id',
     label: 'ID',
     render: (c: CenterRequest) => <span className="font-mono text-xs">{truncateAddress(c.id, 8)}</span>,
   },
-  { key: 'region', label: 'Region' },
+  { key: 'region', label: 'Vùng' },
   {
     key: 'address',
     label: 'Address',
@@ -75,11 +75,11 @@ const CENTER_REQUEST_COLUMNS = [
   { key: 'phone_number', label: 'Phone' },
   {
     key: 'created_by',
-    label: 'Created by',
+    label: 'Người tạo',
     render: (c: CenterRequest) => <span className="font-mono text-xs">{truncateAddress(c.created_by, 8)}</span>,
   },
   { key: 'status', label: 'Status', render: (c: CenterRequest) => <StatusBadge status={c.status} /> },
-  { key: 'created_at', label: 'Created', render: (c: CenterRequest) => formatDate(c.created_at) },
+  { key: 'created_at', label: 'Ngày tạo', render: (c: CenterRequest) => formatDate(c.created_at) },
 ];
 
 function isSupportCenter(row: SupportCenter | CenterRequest): row is SupportCenter {
@@ -133,7 +133,7 @@ export default function AdminCentersPage() {
         e && typeof e === 'object' && 'response' in e
           ? String((e as { response?: { data?: { message?: string } } }).response?.data?.message ?? '')
           : '';
-      toast.error(msg || 'Failed to load centers');
+      toast.error(msg || 'Không tải được danh sách trung tâm');
       setCenters([]);
     } finally {
       setLoading(false);
@@ -159,7 +159,7 @@ export default function AdminCentersPage() {
         e && typeof e === 'object' && 'response' in e
           ? String((e as { response?: { data?: { message?: string } } }).response?.data?.message ?? '')
           : '';
-      toast.error(msg || 'Failed to load center requests');
+      toast.error(msg || 'Không tải được yêu cầu trung tâm');
       setReqs([]);
     } finally {
       setReqLoading(false);
@@ -207,14 +207,14 @@ export default function AdminCentersPage() {
     setVoteBusyId(id);
     try {
       await centerService.voteCenterRequest(id, { is_vote_yes: true });
-      toast.success('Vote recorded');
+      toast.success('Đã ghi nhận phiếu');
       await loadCenterRequests();
     } catch (e: unknown) {
       const msg =
         e && typeof e === 'object' && 'response' in e
           ? String((e as { response?: { data?: { message?: string } } }).response?.data?.message ?? '')
           : '';
-      toast.error(msg || 'Vote failed');
+      toast.error(msg || 'Bỏ phiếu thất bại');
     } finally {
       setVoteBusyId(null);
     }
@@ -229,7 +229,7 @@ export default function AdminCentersPage() {
         is_vote_yes: false,
         refuse_reason: refuseReason || undefined,
       });
-      toast.success('Refusal recorded');
+      toast.success('Đã ghi nhận từ chối');
       setRefuseModal(null);
       await loadCenterRequests();
     } catch (e: unknown) {
@@ -237,7 +237,7 @@ export default function AdminCentersPage() {
         e && typeof e === 'object' && 'response' in e
           ? String((e as { response?: { data?: { message?: string } } }).response?.data?.message ?? '')
           : '';
-      toast.error(msg || 'Vote failed');
+      toast.error(msg || 'Bỏ phiếu thất bại');
     } finally {
       setVoteBusyId(null);
     }
@@ -247,7 +247,7 @@ export default function AdminCentersPage() {
     setConfirmBusyId(id);
     const ok = await execute(
       () => centerService.confirmCenterRequest(id),
-      { successMessage: 'Center confirmed & executed on-chain' },
+      { successMessage: 'Đã xác nhận trung tâm và thực thi on-chain' },
     );
     if (ok) await loadCenterRequests();
     setConfirmBusyId(null);
@@ -255,7 +255,7 @@ export default function AdminCentersPage() {
 
   const centerDetailsCol = {
     key: 'details' as const,
-    label: 'Details',
+    label: 'Chi tiết',
     className: 'whitespace-nowrap',
     render: (c: SupportCenter) => (
       <button
@@ -273,7 +273,7 @@ export default function AdminCentersPage() {
 
   const requestDetailsCol = {
     key: 'details' as const,
-    label: 'Details',
+    label: 'Chi tiết',
     className: 'whitespace-nowrap',
     render: (c: CenterRequest) => (
       <button
@@ -337,16 +337,16 @@ export default function AdminCentersPage() {
   return (
     <div className="p-6">
       <PageHeader
-        title="Support centers"
+        title="Trung tâm hỗ trợ"
         description={
           tab === 'centers'
-            ? 'On-chain support centers (GET /centers)'
-            : 'New center submissions from Local Leaders (GET /center-reqs)'
+            ? 'Trung tâm hỗ trợ đã đăng ký trên chuỗi'
+            : 'Đăng ký trung tâm mới từ trưởng vùng'
         }
         actions={
           <span className="inline-flex items-center gap-1.5 rounded-lg border border-blue-200 bg-blue-50 px-3 py-1.5 text-xs font-medium text-blue-900">
             <Building2 className="h-3.5 w-3.5" />
-            {headerTotal.toLocaleString('vi-VN')} total
+            {formatInteger(headerTotal)} total
           </span>
         }
       />
@@ -374,7 +374,7 @@ export default function AdminCentersPage() {
           }`}
         >
           <ClipboardList className="h-4 w-4 shrink-0" />
-          Center requests
+          Yêu cầu trung tâm
         </button>
       </div>
 
@@ -453,7 +453,7 @@ export default function AdminCentersPage() {
       )}
 
       <DetailModal
-        title={detail?.type === 'request' ? 'Center request' : 'Support center'}
+        title={detail?.type === 'request' ? 'Yêu cầu trung tâm' : 'Trung tâm hỗ trợ'}
         open={!!detail}
         onClose={() => setDetail(null)}
         loading={detailLoading}

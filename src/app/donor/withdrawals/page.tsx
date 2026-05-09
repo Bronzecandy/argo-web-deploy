@@ -62,7 +62,7 @@ export default function DonorWithdrawalsPage() {
         voteType,
         voteType ? undefined : refuseReason || undefined,
       ),
-      { successMessage: voteType ? 'Vote approved & executed on-chain' : 'Vote refused & executed on-chain' },
+      { successMessage: voteType ? 'Đã ghi nhận phiếu duyệt và thực thi on-chain' : 'Đã ghi nhận từ chối và thực thi on-chain' },
     );
     if (ok) {
       setSelectedProposal(null);
@@ -79,31 +79,31 @@ export default function DonorWithdrawalsPage() {
   const columns = [
     {
       key: 'pool_name',
-      label: 'Pool',
+      label: 'Quỹ',
       render: (item: WithdrawProposal) => <span className="font-medium">{item.pool_name}</span>,
     },
     {
       key: 'description',
-      label: 'Description',
+      label: 'Mô tả',
       render: (item: WithdrawProposal) => (
         <span className="max-w-[200px] truncate block text-slate-600">{item.description || '-'}</span>
       ),
     },
     {
       key: 'withdraw_amount',
-      label: 'Amount',
+      label: 'Số tiền',
       render: (item: WithdrawProposal) => (
         <span className="font-semibold text-slate-900">{formatVND(item.withdraw_amount)}</span>
       ),
     },
     {
       key: 'creator',
-      label: 'Creator',
+      label: 'Người tạo',
       render: (item: WithdrawProposal) => truncateAddress(item.creator),
     },
     {
       key: 'votes',
-      label: 'Votes',
+      label: 'Phiếu',
       render: (item: WithdrawProposal) => (
         <div className="flex items-center gap-3 text-xs">
           <span className="flex items-center gap-1 text-blue-800">
@@ -117,23 +117,23 @@ export default function DonorWithdrawalsPage() {
     },
     {
       key: 'status',
-      label: 'Status',
+      label: 'Trạng thái',
       render: (item: WithdrawProposal) => (
         <StatusBadge status={item.is_executed ? 'executed' : 'pending'} />
       ),
     },
     {
       key: 'actions',
-      label: 'Action',
+      label: 'Thao tác',
       render: (item: WithdrawProposal) => {
-        if (item.is_executed) return <span className="text-xs text-slate-400">Closed</span>;
-        if (hasVoted(item)) return <span className="text-xs text-blue-800 font-medium">Voted</span>;
+        if (item.is_executed) return <span className="text-xs text-slate-400">Đã đóng</span>;
+        if (hasVoted(item)) return <span className="text-xs text-blue-800 font-medium">Đã bỏ phiếu</span>;
         return (
           <button
             onClick={(e) => { e.stopPropagation(); setSelectedProposal(item); setVoteType(true); setRefuseReason(''); }}
             className="rounded-lg bg-blue-800 px-3 py-1.5 text-xs font-medium text-white hover:bg-blue-900"
           >
-            <Vote className="inline h-3 w-3 mr-1" /> Vote
+            <Vote className="inline h-3 w-3 mr-1" /> Bỏ phiếu
           </button>
         );
       },
@@ -143,8 +143,8 @@ export default function DonorWithdrawalsPage() {
   return (
     <div>
       <PageHeader
-        title="Withdrawal Proposals"
-        description="Review and vote on withdrawal proposals (DAO governance)"
+        title="Đề xuất rút tiền"
+        description="Xem và bỏ phiếu đề xuất rút tiền (quản trị DAO)"
       />
 
       {/* Filters */}
@@ -157,7 +157,7 @@ export default function DonorWithdrawalsPage() {
               filter === f ? 'bg-white text-blue-900 shadow-sm' : 'text-slate-600 hover:text-slate-900'
             }`}
           >
-            {f}
+            {f === 'open' ? 'Đang mở' : f === 'executed' ? 'Đã thực thi' : 'Tất cả'}
           </button>
         ))}
       </div>
@@ -169,7 +169,7 @@ export default function DonorWithdrawalsPage() {
         page={page}
         totalPages={totalPages}
         onPageChange={setPage}
-        emptyMessage="No withdrawal proposals found"
+        emptyMessage="Không tìm thấy đề xuất rút tiền"
       />
 
       {/* Vote Modal */}
@@ -177,17 +177,17 @@ export default function DonorWithdrawalsPage() {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
           <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-xl">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-bold text-slate-900">Vote on Proposal</h3>
+              <h3 className="text-lg font-bold text-slate-900">Bỏ phiếu đề xuất</h3>
               <button onClick={() => setSelectedProposal(null)}>
                 <X className="h-5 w-5 text-slate-400" />
               </button>
             </div>
 
             <div className="rounded-lg bg-slate-50 p-4 mb-4 text-sm">
-              <p><span className="font-medium text-slate-700">Pool:</span> {selectedProposal.pool_name}</p>
-              <p className="mt-1"><span className="font-medium text-slate-700">Amount:</span> {formatVND(selectedProposal.withdraw_amount)}</p>
-              <p className="mt-1"><span className="font-medium text-slate-700">Description:</span> {selectedProposal.description || '-'}</p>
-              <p className="mt-1"><span className="font-medium text-slate-700">Created:</span> {formatDateTime(selectedProposal.created_at)}</p>
+              <p><span className="font-medium text-slate-700">Quỹ:</span> {selectedProposal.pool_name}</p>
+              <p className="mt-1"><span className="font-medium text-slate-700">Số tiền:</span> {formatVND(selectedProposal.withdraw_amount)}</p>
+              <p className="mt-1"><span className="font-medium text-slate-700">Mô tả:</span> {selectedProposal.description || '-'}</p>
+              <p className="mt-1"><span className="font-medium text-slate-700">Ngày tạo:</span> {formatDateTime(selectedProposal.created_at)}</p>
             </div>
 
             <div className="flex gap-3 mb-4">
@@ -197,7 +197,7 @@ export default function DonorWithdrawalsPage() {
                   voteType ? 'border-blue-600 bg-blue-50 text-blue-900' : 'border-slate-200 text-slate-500 hover:border-slate-300'
                 }`}
               >
-                <ThumbsUp className="h-4 w-4" /> Approve
+                <ThumbsUp className="h-4 w-4" /> Duyệt
               </button>
               <button
                 onClick={() => setVoteType(false)}
@@ -205,19 +205,19 @@ export default function DonorWithdrawalsPage() {
                   !voteType ? 'border-red-500 bg-red-50 text-red-700' : 'border-slate-200 text-slate-500 hover:border-slate-300'
                 }`}
               >
-                <ThumbsDown className="h-4 w-4" /> Refuse
+                <ThumbsDown className="h-4 w-4" /> Từ chối
               </button>
             </div>
 
             {!voteType && (
               <div className="mb-4">
-                <label className="block text-sm font-medium text-slate-700 mb-1">Reason for refusal</label>
+                <label className="block text-sm font-medium text-slate-700 mb-1">Lý do từ chối</label>
                 <textarea
                   value={refuseReason}
                   onChange={(e) => setRefuseReason(e.target.value)}
                   className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-blue-700 focus:outline-none focus:ring-1 focus:ring-blue-700"
                   rows={2}
-                  placeholder="Explain why you're refusing..."
+                  placeholder="Giải thích lý do từ chối..."
                 />
               </div>
             )}
@@ -227,7 +227,7 @@ export default function DonorWithdrawalsPage() {
                 onClick={() => setSelectedProposal(null)}
                 className="rounded-lg border border-slate-200 px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-50"
               >
-                Cancel
+                Hủy
               </button>
               <button
                 onClick={() => void handleVote()}
@@ -236,7 +236,7 @@ export default function DonorWithdrawalsPage() {
                   voteType ? 'bg-blue-800 hover:bg-blue-900' : 'bg-red-600 hover:bg-red-700'
                 }`}
               >
-                {voting ? 'Submitting...' : voteType ? 'Confirm Approve' : 'Confirm Refuse'}
+                {voting ? 'Đang gửi...' : voteType ? 'Xác nhận duyệt' : 'Xác nhận từ chối'}
               </button>
             </div>
           </div>

@@ -57,7 +57,7 @@ export default function PublicChildDetailPage() {
 
       await Promise.all(promises);
     } catch {
-      toast.error('Failed to load child details');
+      toast.error('Không tải được chi tiết trẻ');
     } finally {
       setLoading(false);
     }

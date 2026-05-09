@@ -23,18 +23,18 @@ import {
   Compass,
 } from 'lucide-react';
 
-/** Browse & follow — same flow as mobile: home → explore → regions → track */
+/** Duyệt & theo dõi — cùng luồng mobile: trang chủ → khám phá → vùng → theo dõi */
 const NAV_BROWSE: { label: string; href: string; icon: typeof LayoutDashboard }[] = [
-  { label: 'Home', href: '/donor', icon: LayoutDashboard },
-  { label: 'Discover', href: '/donor/discover', icon: Search },
-  { label: 'Regions', href: '/donor/regions', icon: MapPin },
-  { label: 'My track', href: '/donor/track', icon: HeartHandshake },
+  { label: 'Trang chủ', href: '/donor', icon: LayoutDashboard },
+  { label: 'Khám phá', href: '/donor/discover', icon: Search },
+  { label: 'Vùng', href: '/donor/regions', icon: MapPin },
+  { label: 'Theo dõi', href: '/donor/track', icon: HeartHandshake },
 ];
 
-/** Giving & treasury */
+/** Quyên góp & kho tiền */
 const NAV_GIVING: { label: string; href: string; icon: typeof HandCoins }[] = [
-  { label: 'Donate', href: '/donor/donate', icon: HandCoins },
-  { label: 'Withdrawals', href: '/donor/withdrawals', icon: Vote },
+  { label: 'Quyên góp', href: '/donor/donate', icon: HandCoins },
+  { label: 'Rút tiền', href: '/donor/withdrawals', icon: Vote },
 ];
 
 const SETTINGS_HREF = '/donor/settings';
@@ -93,7 +93,7 @@ export default function DonorLayout({ children }: { children: React.ReactNode })
   const settingsActive = SETTINGS_SUBPATHS.some((p) => pathname === p || pathname.startsWith(`${p}/`));
 
   const hasDonorRole = user?.roles?.includes(ROLES.DONOR);
-  const areaBadge = hasDonorRole ? 'DONOR' : 'MEMBER';
+  const areaBadge = hasDonorRole ? 'Nhà hảo tâm' : 'Thành viên';
   const showVolunteerLink = user ? userHasAnyRole(user, [ROLES.VOLUNTEER]) : false;
 
   useEffect(() => {
@@ -114,7 +114,7 @@ export default function DonorLayout({ children }: { children: React.ReactNode })
   const renderNavGroups = (onNavigate?: () => void) => (
     <>
       <div className="flex flex-col gap-0.5 sm:flex-row sm:items-center sm:gap-1">
-        <span className="mb-1 px-1 text-[10px] font-semibold uppercase tracking-wide text-slate-400 sm:sr-only">Browse</span>
+        <span className="mb-1 px-1 text-[10px] font-semibold uppercase tracking-wide text-slate-400 sm:sr-only">Duyệt</span>
         <div className="flex flex-wrap gap-1">
           {NAV_BROWSE.map((item) => (
             <NavLink
@@ -130,7 +130,7 @@ export default function DonorLayout({ children }: { children: React.ReactNode })
       </div>
       <span className="hidden h-5 w-px shrink-0 bg-slate-200 sm:block" aria-hidden />
       <div className="flex flex-col gap-0.5 sm:flex-row sm:items-center sm:gap-1">
-        <span className="mb-1 px-1 text-[10px] font-semibold uppercase tracking-wide text-slate-400 sm:sr-only">Giving</span>
+        <span className="mb-1 px-1 text-[10px] font-semibold uppercase tracking-wide text-slate-400 sm:sr-only">Góp & rút</span>
         <div className="flex flex-wrap gap-1">
           {NAV_GIVING.map((item) => (
             <NavLink
@@ -146,10 +146,10 @@ export default function DonorLayout({ children }: { children: React.ReactNode })
       </div>
       <span className="hidden h-5 w-px shrink-0 bg-slate-200 sm:block" aria-hidden />
       <div className="flex flex-col gap-0.5 sm:flex-row sm:items-center">
-        <span className="mb-1 px-1 text-[10px] font-semibold uppercase tracking-wide text-slate-400 sm:sr-only">Account</span>
+        <span className="mb-1 px-1 text-[10px] font-semibold uppercase tracking-wide text-slate-400 sm:sr-only">Tài khoản</span>
         <NavLink
           href={SETTINGS_HREF}
-          label="Settings"
+          label="Cài đặt"
           icon={Settings}
           active={settingsActive}
           onClick={onNavigate}
@@ -183,14 +183,14 @@ export default function DonorLayout({ children }: { children: React.ReactNode })
               className="hidden items-center gap-1 rounded-lg px-2.5 py-1.5 text-xs font-medium text-slate-600 hover:bg-slate-100 sm:inline-flex"
             >
               <Compass className="h-3.5 w-3.5" />
-              Explore
+              Khám phá
             </Link>
             {showVolunteerLink && (
               <Link
                 href="/volunteer"
                 className="hidden rounded-lg border border-orange-200 bg-orange-50 px-2.5 py-1.5 text-xs font-semibold text-orange-900 sm:inline-block"
               >
-                Volunteer
+                Tình nguyện viên
               </Link>
             )}
             <span className="hidden max-w-[100px] truncate font-mono text-[11px] text-slate-500 md:inline" title={user?.address}>
@@ -202,7 +202,7 @@ export default function DonorLayout({ children }: { children: React.ReactNode })
               className="hidden items-center gap-1 rounded-lg border border-slate-200 px-2.5 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50 sm:inline-flex"
             >
               <LogOut className="h-3.5 w-3.5" />
-              <span className="hidden lg:inline">Logout</span>
+              <span className="hidden lg:inline">Đăng xuất</span>
             </button>
 
             <div className="relative sm:hidden" ref={menuRef}>
@@ -211,7 +211,7 @@ export default function DonorLayout({ children }: { children: React.ReactNode })
                 onClick={() => setMobileMenuOpen((v) => !v)}
                 className="flex h-10 w-10 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-700"
                 aria-expanded={mobileMenuOpen}
-                aria-label="Menu"
+                aria-label="Mở menu"
               >
                 {mobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
               </button>
@@ -223,11 +223,11 @@ export default function DonorLayout({ children }: { children: React.ReactNode })
                       onClick={closeMobile}
                       className="mb-2 block rounded-lg bg-orange-50 px-3 py-2 text-center text-xs font-semibold text-orange-900"
                     >
-                      Volunteer area
+                      Khu vực tình nguyện viên
                     </Link>
                   )}
                   <Link href="/explore" onClick={closeMobile} className="mb-2 flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-slate-700 hover:bg-slate-50">
-                    <Compass className="h-4 w-4" /> Public Explore
+                    <Compass className="h-4 w-4" /> Khám phá công khai
                   </Link>
                   <div className="space-y-3 border-t border-slate-100 pt-3">{renderNavGroups(closeMobile)}</div>
                   <p className="mt-3 truncate border-t border-slate-100 pt-3 font-mono text-[10px] text-slate-500">{user?.address}</p>
@@ -236,7 +236,7 @@ export default function DonorLayout({ children }: { children: React.ReactNode })
                     onClick={() => dispatch(logoutUser())}
                     className="mt-2 flex w-full items-center justify-center gap-2 rounded-lg py-2 text-sm font-medium text-red-600 hover:bg-red-50"
                   >
-                    <LogOut className="h-4 w-4" /> Logout
+                    <LogOut className="h-4 w-4" /> Đăng xuất
                   </button>
                 </div>
               )}
@@ -247,7 +247,7 @@ export default function DonorLayout({ children }: { children: React.ReactNode })
         {/* Row 2: primary navigation (desktop / tablet) */}
         <nav
           className="mx-auto hidden max-w-6xl items-center gap-3 border-t border-slate-100/90 px-4 py-2 sm:flex lg:px-6"
-          aria-label="Main"
+          aria-label="Điều hướng chính"
         >
           {renderNavGroups()}
         </nav>

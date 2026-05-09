@@ -4,7 +4,8 @@ import { useState, useEffect } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { paymentService } from '@/src/services/payment.service';
 import PageHeader from '@/src/components/ui/PageHeader';
-import { formatVND } from '@/src/lib/formatters';
+import GroupedNumericInput from '@/src/components/ui/GroupedNumericInput';
+import { formatVND, parseDigitsToNumber } from '@/src/lib/formatters';
 import { toast } from 'sonner';
 import { HandCoins, ExternalLink } from 'lucide-react';
 
@@ -18,7 +19,8 @@ export default function DonorDonatePage() {
     const qPoolId = searchParams.get('poolId');
     if (qPoolId) setPoolId(qPoolId);
   }, [searchParams]);
-  const [amount, setAmount] = useState(0);
+  const [amountDigits, setAmountDigits] = useState('');
+  const amount = parseDigitsToNumber(amountDigits) ?? 0;
   const [message, setMessage] = useState('');
   const [submitting, setSubmitting] = useState(false);
 
@@ -41,13 +43,13 @@ export default function DonorDonatePage() {
       });
       if (res.data.url) {
         window.open(res.data.url, '_blank');
-        toast.success('Payment page opened in a new tab');
+        toast.success('Đã mở trang thanh toán trong tab mới');
       } else {
-        toast.success('Donation submitted successfully');
+        toast.success('Quyên góp thành công');
       }
     } catch (e: any) {
       console.error(e);
-      toast.error(e?.response?.data?.message || 'Failed to process donation');
+      toast.error(e?.response?.data?.message || 'Không xử lý được quyên góp');
     } finally {
       setSubmitting(false);
     }
@@ -89,21 +91,19 @@ export default function DonorDonatePage() {
 
             <div>
               <label className="mb-1 block text-sm font-medium text-slate-700">Amount (VND)</label>
-              <input
-                type="number"
-                placeholder="Enter amount"
-                min={1000}
-                value={amount || ''}
-                onChange={(e) => setAmount(Number(e.target.value))}
-                className="w-full rounded-lg border border-slate-200 px-3 py-2.5 text-sm focus:border-blue-700 focus:outline-none focus:ring-1 focus:ring-blue-700"
-              />
+                <GroupedNumericInput
+                  placeholder="Enter amount"
+                  value={amountDigits}
+                  onChange={setAmountDigits}
+                  className="w-full rounded-lg border border-slate-200 px-3 py-2.5 text-sm focus:border-blue-700 focus:outline-none focus:ring-1 focus:ring-blue-700"
+                />
 
               <div className="mt-2 flex flex-wrap gap-2">
                 {PRESET_AMOUNTS.map((preset) => (
                   <button
                     key={preset}
                     type="button"
-                    onClick={() => setAmount(preset)}
+                    onClick={() => setAmountDigits(String(preset))}
                     className={`rounded-lg border px-3 py-1.5 text-xs font-medium transition ${
                       amount === preset
                         ? 'border-blue-600 bg-blue-50 text-blue-900'
@@ -140,7 +140,7 @@ export default function DonorDonatePage() {
 
             <button
               onClick={() => void handleDonate()}
-              disabled={submitting || !poolId || !amount}
+              disabled={submitting || !poolId || amount < 1000}
               className="flex w-full items-center justify-center gap-2 rounded-lg bg-blue-800 px-4 py-3 text-sm font-semibold text-white hover:bg-blue-900 disabled:opacity-50 transition"
             >
               {submitting ? (

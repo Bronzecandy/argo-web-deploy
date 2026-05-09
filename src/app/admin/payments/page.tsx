@@ -62,7 +62,7 @@ export default function AdminPaymentsPage() {
       setTotalPages(Math.max(1, res.data.total_pages ?? 1));
     } catch (e) {
       console.error(e);
-      toast.error(getErrorMessage(e, 'Failed to load payments'));
+      toast.error(getErrorMessage(e, 'Không tải được danh sách thanh toán'));
       setRows([]);
     } finally {
       setLoading(false);
@@ -90,14 +90,14 @@ export default function AdminPaymentsPage() {
 
   const handleApprove = async (id: string) => {
     setBusyId(id);
-    const ok = await execute(() => paymentService.approve(id), { successMessage: 'Payment approved & executed on-chain' });
+    const ok = await execute(() => paymentService.approve(id), { successMessage: 'Đã duyệt thanh toán và thực thi on-chain' });
     if (ok) refresh();
     setBusyId(null);
   };
 
   const handleRefuse = async (id: string) => {
     setBusyId(id);
-    const ok = await execute(() => paymentService.refuse(id), { successMessage: 'Payment refused' });
+    const ok = await execute(() => paymentService.refuse(id), { successMessage: 'Đã từ chối thanh toán' });
     if (ok) {
       setRefuseConfirm(null);
       refresh();
@@ -109,7 +109,7 @@ export default function AdminPaymentsPage() {
     <div className="space-y-6">
       <PageHeader
         title="Payments"
-        description="Review payment records; approve builds an on-chain transaction (POST /payments/{id}/approve), refuse completes without tx (POST /payments/{id}/refuse)."
+        description="Review payment records. Approving may execute an on-chain transaction; refusing closes the payment without one."
         actions={
           <span className="inline-flex items-center gap-1.5 rounded-lg border border-blue-200 bg-blue-50 px-3 py-1.5 text-xs font-medium text-blue-900">
             <CreditCard className="h-3.5 w-3.5" />
@@ -180,10 +180,10 @@ export default function AdminPaymentsPage() {
             render: (p) =>
               p.review_status ? <StatusBadge status={p.review_status} /> : <span className="text-slate-400">—</span>,
           },
-          { key: 'created_at', label: 'Created', render: (p) => formatDateTime(p.created_at || '') },
+          { key: 'created_at', label: 'Ngày tạo', render: (p) => formatDateTime(p.created_at || '') },
           {
             key: 'detail_btn',
-            label: 'Details',
+            label: 'Chi tiết',
             className: 'whitespace-nowrap',
             render: (p) => (
               <button
@@ -275,7 +275,7 @@ export default function AdminPaymentsPage() {
           <div className="w-full max-w-md rounded-xl border border-slate-200 bg-white p-5 shadow-xl">
             <h3 className="mb-2 text-lg font-semibold text-slate-900">Refuse payment?</h3>
             <p className="mb-4 text-sm text-slate-600">
-              Calls <code className="rounded bg-slate-100 px-1 text-xs">POST /payments/{'{id}'}/refuse</code>. Amount:{' '}
+              This will refuse the payment record. Amount:{' '}
               {typeof refuseConfirm.amount === 'number' ? formatVND(refuseConfirm.amount) : '—'}.
             </p>
             <div className="flex justify-end gap-2">

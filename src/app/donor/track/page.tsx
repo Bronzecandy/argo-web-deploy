@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { useAppSelector } from '@/src/store/hooks';
 import { childrenService } from '@/src/services/children.service';
 import { BLOB_URL } from '@/src/lib/constants';
-import { formatDate } from '@/src/lib/formatters';
+import { formatDate, formatInteger } from '@/src/lib/formatters';
 import PageHeader from '@/src/components/ui/PageHeader';
 import type { Child } from '@/src/types/api.types';
 import { Baby, MapPin } from 'lucide-react';
@@ -42,7 +42,7 @@ export default function DonorTrackPage() {
         e && typeof e === 'object' && 'response' in e
           ? String((e as { response?: { data?: { message?: string } } }).response?.data?.message ?? '')
           : '';
-      toast.error(msg || 'Failed to load supported children');
+      toast.error(msg || 'Không tải được trẻ đã hỗ trợ');
       setChildren([]);
     } finally {
       setLoading(false);
@@ -59,7 +59,7 @@ export default function DonorTrackPage() {
         title="My track"
         description={
           user?.address
-            ? `Children you support — ${totalAmount.toLocaleString('vi-VN')} total (API count)`
+            ? `Children you support — ${formatInteger(totalAmount)} total (API count)`
             : 'Sign in to see children you have supported'
         }
       />

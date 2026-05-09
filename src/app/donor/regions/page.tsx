@@ -62,7 +62,7 @@ export default function DonorRegionsPage() {
       setSuggestions(normalizeList<SupportedRegionSuggestion>(res.data));
       setSTotalPages(Math.max(1, res.data.total_pages ?? 1));
     } catch {
-      toast.error('Failed to load region suggestions');
+      toast.error('Không tải được đề xuất vùng');
       setSuggestions([]);
     } finally {
       setSLoading(false);
@@ -81,7 +81,7 @@ export default function DonorRegionsPage() {
       const res = await registrationService.getByWallet(addr);
       setRegs(normalizeList<RegistrationRequest>(res.data));
     } catch {
-      toast.error('Failed to load your registrations');
+      toast.error('Không tải được đăng ký của bạn');
       setRegs([]);
     } finally {
       setRLoading(false);
@@ -101,7 +101,7 @@ export default function DonorRegionsPage() {
       setMine(normalizeList<SupportedRegionSuggestion>(res.data));
       setMTotalPages(Math.max(1, res.data.total_pages ?? 1));
     } catch {
-      toast.error('Failed to load your suggestions');
+      toast.error('Không tải được đề xuất của bạn');
       setMine([]);
     } finally {
       setMLoading(false);
@@ -123,13 +123,13 @@ export default function DonorRegionsPage() {
   const handleCreateSuggestion = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!region.trim() || !content.trim()) {
-      toast.error('Region and description are required');
+      toast.error('Cần nhập vùng và mô tả');
       return;
     }
     setSubmitting(true);
     try {
       await regionService.createSuggestion({ region: region.trim(), content: content.trim() });
-      toast.success('Suggestion submitted');
+      toast.success('Đã gửi đề xuất');
       setModalOpen(false);
       setRegion('');
       setContent('');
@@ -141,7 +141,7 @@ export default function DonorRegionsPage() {
         err && typeof err === 'object' && 'response' in err
           ? String((err as { response?: { data?: { message?: string } } }).response?.data?.message ?? '')
           : '';
-      toast.error(msg || 'Failed to submit');
+      toast.error(msg || 'Gửi thất bại');
     } finally {
       setSubmitting(false);
     }
@@ -149,7 +149,7 @@ export default function DonorRegionsPage() {
 
   const handleConfirmRegistration = async (id: string) => {
     const ok = await execute(() => registrationService.confirm(id), {
-      successMessage: 'Registration confirmed on-chain',
+      successMessage: 'Đã xác nhận đăng ký on-chain',
     });
     if (ok) void loadRegistrations();
   };
@@ -170,8 +170,8 @@ export default function DonorRegionsPage() {
   return (
     <div className="space-y-6">
       <PageHeader
-        title="Regions & registrations"
-        description="Regions that need support, your role registrations, and your region suggestions"
+        title="Vùng & đăng ký"
+        description="Các vùng cần hỗ trợ, đăng ký vai trò của bạn và đề xuất vùng"
         actions={
           <button
             type="button"
@@ -179,15 +179,15 @@ export default function DonorRegionsPage() {
             className="inline-flex items-center gap-2 rounded-lg bg-blue-800 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-blue-900"
           >
             <Plus className="h-4 w-4" />
-            Propose region
+            Đề xuất vùng
           </button>
         }
       />
 
       <div className="flex flex-wrap gap-2">
-        {tabBtn('suggestions', 'Needing support')}
-        {tabBtn('registrations', 'My registrations')}
-        {tabBtn('mine', 'My suggestions')}
+        {tabBtn('suggestions', 'Cần hỗ trợ')}
+        {tabBtn('registrations', 'Đăng ký của tôi')}
+        {tabBtn('mine', 'Đề xuất của tôi')}
       </div>
 
       {tab === 'suggestions' && (
@@ -197,21 +197,21 @@ export default function DonorRegionsPage() {
           page={sPage}
           totalPages={sTotalPages}
           onPageChange={setSPage}
-          emptyMessage="No open region suggestions."
+          emptyMessage="Chưa có đề xuất vùng mở."
           columns={[
-            { key: 'region', label: 'Region' },
+            { key: 'region', label: 'Vùng' },
             {
               key: 'content',
-              label: 'Content',
+              label: 'Nội dung',
               render: (r) => <span className="line-clamp-2 max-w-md text-sm">{r.content}</span>,
             },
-            { key: 'status', label: 'Status', render: (r) => <StatusBadge status={r.status || 'pending'} /> },
+            { key: 'status', label: 'Trạng thái', render: (r) => <StatusBadge status={r.status || 'pending'} /> },
             {
               key: 'created_by',
-              label: 'Created by',
+              label: 'Người tạo',
               render: (r) => truncateAddress(r.created_by),
             },
-            { key: 'created_at', label: 'Created', render: (r) => formatDate(r.created_at) },
+            { key: 'created_at', label: 'Ngày tạo', render: (r) => formatDate(r.created_at) },
           ]}
         />
       )}
@@ -219,7 +219,7 @@ export default function DonorRegionsPage() {
       {tab === 'registrations' && (
         <>
           {!user?.address && (
-            <p className="text-sm text-amber-800">Sign in to see your registration requests.</p>
+            <p className="text-sm text-amber-800">Đăng nhập để xem yêu cầu đăng ký của bạn.</p>
           )}
           <DataTable<RegistrationRequest>
             loading={rLoading}
@@ -227,20 +227,20 @@ export default function DonorRegionsPage() {
             page={0}
             totalPages={1}
             onPageChange={() => {}}
-            emptyMessage="No registrations for this wallet."
+            emptyMessage="Chưa có đăng ký cho ví này."
             columns={[
               {
                 key: 'id',
                 label: 'ID',
                 render: (r) => <span className="font-mono text-xs">{truncateAddress(r.id, 6)}</span>,
               },
-              { key: 'region', label: 'Region' },
-              { key: 'register_role', label: 'Role', render: (r) => <span className="capitalize">{r.register_role}</span> },
-              { key: 'status', label: 'Status', render: (r) => <StatusBadge status={r.status} /> },
-              { key: 'created_at', label: 'Created', render: (r) => formatDate(r.created_at) },
+              { key: 'region', label: 'Vùng' },
+              { key: 'register_role', label: 'Vai trò', render: (r) => <span className="capitalize">{r.register_role}</span> },
+              { key: 'status', label: 'Trạng thái', render: (r) => <StatusBadge status={r.status} /> },
+              { key: 'created_at', label: 'Ngày tạo', render: (r) => formatDate(r.created_at) },
               {
                 key: 'actions',
-                label: 'Actions',
+                label: 'Thao tác',
                 className: 'whitespace-nowrap',
                 render: (r) =>
                   r.isAvailableToConfirm ? (
@@ -250,7 +250,7 @@ export default function DonorRegionsPage() {
                       onClick={() => void handleConfirmRegistration(r.id)}
                       className="rounded-lg border border-blue-200 bg-blue-50 px-2 py-1 text-xs font-medium text-blue-900 disabled:opacity-50"
                     >
-                      Confirm on-chain
+                      Xác nhận on-chain
                     </button>
                   ) : (
                     <span className="text-xs text-slate-400">—</span>
@@ -264,7 +264,7 @@ export default function DonorRegionsPage() {
       {tab === 'mine' && (
         <>
           {!user?.address && (
-            <p className="text-sm text-amber-800">Sign in to see suggestions you created.</p>
+            <p className="text-sm text-amber-800">Đăng nhập để xem đề xuất bạn đã tạo.</p>
           )}
           <DataTable<SupportedRegionSuggestion>
             loading={mLoading}
@@ -272,25 +272,25 @@ export default function DonorRegionsPage() {
             page={mPage}
             totalPages={mTotalPages}
             onPageChange={setMPage}
-            emptyMessage="You have not submitted any region suggestions yet."
+            emptyMessage="Bạn chưa gửi đề xuất vùng nào."
             columns={[
-              { key: 'region', label: 'Region' },
+              { key: 'region', label: 'Vùng' },
               {
                 key: 'content',
-                label: 'Content',
+                label: 'Nội dung',
                 render: (r) => <span className="line-clamp-2 max-w-md text-sm">{r.content}</span>,
               },
-              { key: 'status', label: 'Status', render: (r) => <StatusBadge status={r.status || 'pending'} /> },
-              { key: 'created_at', label: 'Created', render: (r) => formatDate(r.created_at) },
+              { key: 'status', label: 'Trạng thái', render: (r) => <StatusBadge status={r.status || 'pending'} /> },
+              { key: 'created_at', label: 'Ngày tạo', render: (r) => formatDate(r.created_at) },
             ]}
           />
         </>
       )}
 
       <p className="text-xs text-slate-500">
-        To register as Volunteer or Local Leader with documents, use{' '}
+        Để đăng ký Tình nguyện viên hoặc Trưởng vùng kèm giấy tờ, dùng{' '}
         <Link href="/donor/register" className="text-blue-800 hover:underline">
-          Role registration
+          Đăng ký vai trò
         </Link>
         .
       </p>
@@ -299,24 +299,24 @@ export default function DonorRegionsPage() {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 p-4">
           <div className="max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-xl border border-slate-200 bg-white p-6 shadow-xl">
             <div className="mb-4 flex items-center justify-between">
-              <h2 className="text-lg font-semibold text-slate-900">Propose a supported region</h2>
+              <h2 className="text-lg font-semibold text-slate-900">Đề xuất vùng được hỗ trợ</h2>
               <button
                 type="button"
                 onClick={() => setModalOpen(false)}
                 className="rounded-lg px-3 py-1 text-sm text-slate-600 hover:bg-slate-100"
               >
-                Close
+                Đóng
               </button>
             </div>
             <form onSubmit={handleCreateSuggestion} className="space-y-4">
               <div>
-                <label className="mb-1 block text-xs font-medium text-slate-500">Region</label>
+                <label className="mb-1 block text-xs font-medium text-slate-500">Vùng</label>
                 <input
                   list="donor-region-options"
                   className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm"
                   value={region}
                   onChange={(e) => setRegion(e.target.value)}
-                  placeholder="Choose or type a region"
+                  placeholder="Chọn hoặc nhập tên vùng"
                   required
                 />
                 <datalist id="donor-region-options">
@@ -326,7 +326,7 @@ export default function DonorRegionsPage() {
                 </datalist>
               </div>
               <div>
-                <label className="mb-1 block text-xs font-medium text-slate-500">Why this region needs support</label>
+                <label className="mb-1 block text-xs font-medium text-slate-500">Vì sao vùng này cần hỗ trợ</label>
                 <textarea
                   className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm"
                   rows={5}
@@ -340,7 +340,7 @@ export default function DonorRegionsPage() {
                 disabled={submitting}
                 className="rounded-lg bg-blue-800 px-4 py-2 text-sm font-medium text-white disabled:opacity-50"
               >
-                {submitting ? 'Submitting…' : 'Submit'}
+                {submitting ? 'Đang gửi…' : 'Gửi'}
               </button>
             </form>
           </div>

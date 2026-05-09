@@ -59,7 +59,7 @@ export default function VolunteerProfilePage() {
         identity_code: identityCode || '',
       };
       await profileService.upload(user.profileId, data);
-      toast.success('Profile updated');
+      toast.success('Đã cập nhật hồ sơ');
       void loadProfile();
     } catch (e: any) {
       toast.error(e?.response?.data?.message || 'Update failed');
@@ -173,7 +173,7 @@ export default function VolunteerProfilePage() {
           className="mt-6 inline-flex items-center gap-2 rounded-lg bg-blue-800 px-5 py-2.5 text-sm font-medium text-white hover:bg-blue-900 disabled:opacity-50"
         >
           <Save className="h-4 w-4" />
-          {saving ? 'Saving...' : 'Save changes'}
+          {saving ? 'Đang lưu...' : 'Save changes'}
         </button>
       </div>
     </div>

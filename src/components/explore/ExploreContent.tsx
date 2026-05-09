@@ -20,8 +20,8 @@ export interface ExploreContentProps {
 }
 
 function ExploreInner({
-  title = 'Discover',
-  description = 'Browse centers and children in the AgroTrust network',
+  title = 'Khám phá',
+  description = 'Xem trung tâm và trẻ em trong mạng AgroTrust',
   childHref,
   campaignRegionHref,
 }: ExploreContentProps) {
@@ -127,7 +127,7 @@ function ExploreInner({
             tab === 'centers' ? 'bg-white text-blue-900 shadow-sm' : 'text-slate-600 hover:text-slate-900'
           }`}
         >
-          <Building2 className="h-4 w-4" /> Centers
+          <Building2 className="h-4 w-4" /> Trung tâm
         </button>
         <button
           type="button"
@@ -136,7 +136,7 @@ function ExploreInner({
             tab === 'children' ? 'bg-white text-blue-900 shadow-sm' : 'text-slate-600 hover:text-slate-900'
           }`}
         >
-          <Baby className="h-4 w-4" /> Children
+          <Baby className="h-4 w-4" /> Trẻ em
         </button>
         <button
           type="button"
@@ -145,7 +145,7 @@ function ExploreInner({
             tab === 'campaigns' ? 'bg-white text-blue-900 shadow-sm' : 'text-slate-600 hover:text-slate-900'
           }`}
         >
-          <Megaphone className="h-4 w-4" /> Regional hubs
+          <Megaphone className="h-4 w-4" /> Điểm vùng
         </button>
       </div>
 
@@ -154,7 +154,7 @@ function ExploreInner({
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
           <input
             type="text"
-            placeholder="Search..."
+            placeholder="Tìm kiếm…"
             value={keyword}
             onChange={(e) => setKeyword(e.target.value)}
             className="rounded-xl border border-slate-200 py-2 pl-9 pr-3 text-sm shadow-sm focus:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-600/20"
@@ -165,7 +165,7 @@ function ExploreInner({
           onChange={(e) => setSelectedRegion(e.target.value)}
           className="rounded-xl border border-slate-200 px-3 py-2 text-sm shadow-sm focus:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-600/20"
         >
-          <option value="">All regions</option>
+          <option value="">Tất cả vùng</option>
           {regions.map((r) => (
             <option key={r} value={r}>
               {r}
@@ -182,7 +182,7 @@ function ExploreInner({
         <>
           {centers.length === 0 ? (
             <div className="rounded-2xl border border-slate-200 bg-white p-12 text-center text-sm text-slate-400 shadow-sm">
-              No centers found
+              Không tìm thấy trung tâm
             </div>
           ) : (
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -210,7 +210,7 @@ function ExploreInner({
         <>
           {children.length === 0 ? (
             <div className="rounded-2xl border border-slate-200 bg-white p-12 text-center text-sm text-slate-400 shadow-sm">
-              No children found
+              Không tìm thấy trẻ em
             </div>
           ) : (
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
@@ -251,7 +251,7 @@ function ExploreInner({
         <>
           {campaignCenters.length === 0 ? (
             <div className="rounded-2xl border border-slate-200 bg-white p-12 text-center text-sm text-slate-400 shadow-sm">
-              No regional hubs found
+              Không tìm thấy điểm vùng
             </div>
           ) : (
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -269,7 +269,7 @@ function ExploreInner({
                         <p className="mt-0.5 text-sm text-slate-600">{center.center_address}</p>
                       </div>
                     </div>
-                    <p className="mt-3 text-xs font-medium text-blue-800">View pool and children →</p>
+                    <p className="mt-3 text-xs font-medium text-blue-800">Xem quỹ và trẻ em →</p>
                   </div>
                 </Link>
               ))}
@@ -292,7 +292,7 @@ function ExploreInner({
               Previous
             </button>
             <span className="text-sm text-slate-500">
-              Page {page + 1} of {Math.max(1, totalPages)}
+              Trang {page + 1} / {Math.max(1, totalPages)}
             </span>
             <button
               type="button"
@@ -310,7 +310,7 @@ function ExploreInner({
 
 export function ExploreContent(props: ExploreContentProps) {
   return (
-    <Suspense fallback={<div className="flex h-48 items-center justify-center text-slate-500">Loading…</div>}>
+    <Suspense fallback={<div className="flex h-48 items-center justify-center text-slate-500">Đang tải…</div>}>
       <ExploreInner {...props} />
     </Suspense>
   );

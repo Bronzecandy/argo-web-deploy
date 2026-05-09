@@ -24,16 +24,16 @@ import {
 } from 'lucide-react';
 
 const NAV_ITEMS = [
-  { label: 'Dashboard', href: '/admin', icon: LayoutDashboard },
-  { label: 'Account Management', href: '/admin/accounts', icon: Users },
-  { label: 'Child Profiles', href: '/admin/children', icon: Baby },
-  { label: 'Support Centers', href: '/admin/centers', icon: Building2 },
-  { label: 'Donors', href: '/admin/donors', icon: HandCoins },
-  { label: 'Payments', href: '/admin/payments', icon: CreditCard },
-  { label: 'Treasury & Proposals', href: '/admin/treasury', icon: Wallet },
-  { label: 'Transaction Records', href: '/admin/analytics', icon: BarChart3 },
-  { label: 'Region suggestions (admin)', href: '/admin/regions', icon: MapPin },
-  { label: 'Config', href: '/admin/config', icon: Settings },
+  { label: 'Bảng điều khiển', href: '/admin', icon: LayoutDashboard },
+  { label: 'Quản lý tài khoản', href: '/admin/accounts', icon: Users },
+  { label: 'Hồ sơ trẻ', href: '/admin/children', icon: Baby },
+  { label: 'Trung tâm hỗ trợ', href: '/admin/centers', icon: Building2 },
+  { label: 'Nhà hảo tâm', href: '/admin/donors', icon: HandCoins },
+  { label: 'Thanh toán', href: '/admin/payments', icon: CreditCard },
+  { label: 'Kho bạc & đề xuất', href: '/admin/treasury', icon: Wallet },
+  { label: 'Giao dịch', href: '/admin/analytics', icon: BarChart3 },
+  { label: 'Đề xuất vùng (admin)', href: '/admin/regions', icon: MapPin },
+  { label: 'Cấu hình', href: '/admin/config', icon: Settings },
 ];
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
@@ -105,7 +105,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
         <div className="border-t border-slate-200 p-3">
           <div className="mb-2 rounded-lg bg-slate-50 px-3 py-2">
-            <p className="text-xs font-medium text-slate-700">{user?.role || 'Admin'}</p>
+            <p className="text-xs font-medium text-slate-700">{user?.role || 'Quản trị'}</p>
             <p className="text-xs text-slate-400">{truncateAddress(user?.address || '')}</p>
           </div>
           <button
@@ -113,7 +113,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm text-red-600 transition hover:bg-red-50"
           >
             <LogOut className="h-4 w-4" />
-            Logout
+            Đăng xuất
           </button>
         </div>
       </aside>
@@ -127,7 +127,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           <div className="flex-1" />
           <div className="flex items-center gap-2 text-sm text-slate-500">
             <div className="h-2 w-2 rounded-full bg-blue-600" />
-            Connected
+            Đã kết nối
           </div>
         </header>
         <main className="flex-1 overflow-y-auto p-4 lg:p-6">{children}</main>

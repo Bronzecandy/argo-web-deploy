@@ -17,7 +17,7 @@ import type { Child } from '@/src/types/api.types';
 const PAGE_SIZE = 20;
 
 const GENDER_OPTIONS = [
-  { value: '', label: 'All genders' },
+  { value: '', label: 'Tất cả giới tính' },
   { value: 'male', label: 'Male' },
   { value: 'female', label: 'Female' },
   { value: 'other', label: 'Other' },
@@ -54,7 +54,7 @@ export default function AdminChildrenPage() {
         e && typeof e === 'object' && 'response' in e
           ? String((e as { response?: { data?: { message?: string } } }).response?.data?.message ?? '')
           : '';
-      toast.error(msg || 'Failed to load children');
+      toast.error(msg || 'Không tải được danh sách trẻ');
       setChildren([]);
     } finally {
       setChildLoading(false);
@@ -80,7 +80,7 @@ export default function AdminChildrenPage() {
         const msg =
           e && typeof e === 'object' && 'response' in e
             ? String((e as { response?: { data?: { message?: string } } }).response?.data?.message ?? '')
-            : 'Failed to load';
+            : 'Không tải được';
         setDetailErr(msg);
       })
       .finally(() => setDetailLoading(false));
@@ -149,8 +149,8 @@ export default function AdminChildrenPage() {
               ),
             },
             { key: 'gender', label: 'Gender', render: (c) => <span className="capitalize">{c.gender}</span> },
-            { key: 'region', label: 'Region' },
-            { key: 'date_of_birth', label: 'Date of birth', render: (c) => formatDate(c.date_of_birth) },
+            { key: 'region', label: 'Vùng' },
+            { key: 'date_of_birth', label: 'Ngày sinh', render: (c) => formatDate(c.date_of_birth) },
             {
               key: 'identity_code',
               label: 'Identity',
@@ -179,7 +179,7 @@ export default function AdminChildrenPage() {
           page={childPage}
           totalPages={childTotalPages}
           onPageChange={(p) => setChildPage(p)}
-          emptyMessage="No children found for the selected filters."
+          emptyMessage="Không tìm thấy trẻ em for the selected filters."
         />
       </div>
 

@@ -68,7 +68,7 @@ export default function VolunteerDashboardPage() {
   return (
     <div className="space-y-6">
       <PageHeader
-        title={profileName ? `Welcome, ${profileName}` : 'Volunteer Dashboard'}
+        title={profileName ? `Chào ${profileName}` : 'Bảng điều khiển tình nguyện viên'}
         description={user?.address ? `Wallet: ${truncateAddress(user.address)}` : ''}
       />
 

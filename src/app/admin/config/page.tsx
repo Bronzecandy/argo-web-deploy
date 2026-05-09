@@ -19,7 +19,7 @@ export default function AdminConfigPage() {
     setSavingMeal(true);
     await execute(
       () => configService.updateMealNeedEditDates({ start_date: startDate || undefined, end_date: endDate || undefined }),
-      { successMessage: 'Meal need edit dates updated' },
+      { successMessage: 'Đã cập nhật ngày chỉnh sửa nhu cầu ăn' },
     );
     setSavingMeal(false);
   };
@@ -28,7 +28,7 @@ export default function AdminConfigPage() {
     setSavingBooks(true);
     await execute(
       () => configService.updateBooksNeedEditDates({ start_date: startDate || undefined, end_date: endDate || undefined }),
-      { successMessage: 'Books need edit dates updated' },
+      { successMessage: 'Đã cập nhật ngày chỉnh sửa nhu cầu sách' },
     );
     setSavingBooks(false);
   };
@@ -37,7 +37,7 @@ export default function AdminConfigPage() {
     setSavingHealth(true);
     await execute(
       () => configService.updateHealthInsuranceNeedEditDates({ start_date: startDate || undefined, end_date: endDate || undefined }),
-      { successMessage: 'Health insurance need edit dates updated' },
+      { successMessage: 'Đã cập nhật ngày chỉnh sửa nhu cầu bảo hiểm y tế' },
     );
     setSavingHealth(false);
   };
@@ -89,7 +89,7 @@ export default function AdminConfigPage() {
               disabled={savingMeal}
               className="rounded-lg bg-blue-800 px-5 py-2.5 text-sm font-medium text-white hover:bg-blue-900 disabled:opacity-50"
             >
-              {savingMeal ? 'Saving...' : 'Update meal need dates'}
+              {savingMeal ? 'Đang lưu...' : 'Cập nhật ngày nhu cầu ăn'}
             </button>
             <button
               type="button"
@@ -97,7 +97,7 @@ export default function AdminConfigPage() {
               disabled={savingBooks}
               className="rounded-lg bg-blue-600 px-5 py-2.5 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50"
             >
-              {savingBooks ? 'Saving...' : 'Update books need dates'}
+              {savingBooks ? 'Đang lưu...' : 'Cập nhật ngày nhu cầu sách'}
             </button>
             <button
               type="button"
@@ -105,7 +105,7 @@ export default function AdminConfigPage() {
               disabled={savingHealth}
               className="rounded-lg bg-purple-600 px-5 py-2.5 text-sm font-medium text-white hover:bg-purple-700 disabled:opacity-50"
             >
-              {savingHealth ? 'Saving...' : 'Update health insurance dates'}
+              {savingHealth ? 'Đang lưu...' : 'Cập nhật ngày bảo hiểm y tế'}
             </button>
           </div>
         </div>

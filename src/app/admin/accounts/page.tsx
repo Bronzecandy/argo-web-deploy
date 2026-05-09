@@ -35,12 +35,12 @@ function isRegistrationApproved(status?: string) {
 }
 
 const REG_STATUS_OPTIONS = [
-  { value: '', label: 'All statuses' },
-  { value: 'pending', label: 'Pending' },
-  { value: 'pending_review', label: 'Pending review' },
-  { value: 'approved', label: 'Approved' },
-  { value: 'refused', label: 'Refused' },
-  { value: 'rejected', label: 'Rejected' },
+  { value: '', label: 'Tất cả trạng thái' },
+  { value: 'pending', label: 'Đang chờ' },
+  { value: 'pending_review', label: 'Chờ duyệt' },
+  { value: 'approved', label: 'Đã duyệt' },
+  { value: 'refused', label: 'Từ chối' },
+  { value: 'rejected', label: 'Bị từ chối' },
 ];
 
 type AdminRow = {
@@ -123,7 +123,7 @@ export default function AdminAccountsPage() {
         e && typeof e === 'object' && 'response' in e
           ? String((e as { response?: { data?: { message?: string } } }).response?.data?.message ?? '')
           : '';
-      toast.error(msg || 'Failed to load registration requests');
+      toast.error(msg || 'Không tải được yêu cầu đăng ký');
       setRegistrations([]);
     } finally {
       setRegLoading(false);
@@ -146,7 +146,7 @@ export default function AdminAccountsPage() {
         e && typeof e === 'object' && 'response' in e
           ? String((e as { response?: { data?: { message?: string } } }).response?.data?.message ?? '')
           : '';
-      toast.error(msg || 'Failed to load staff');
+      toast.error(msg || 'Không tải được nhân sự');
       setStaff([]);
     } finally {
       setStaffLoading(false);
@@ -170,7 +170,7 @@ export default function AdminAccountsPage() {
         e && typeof e === 'object' && 'response' in e
           ? String((e as { response?: { data?: { message?: string } } }).response?.data?.message ?? '')
           : '';
-      toast.error(msg || 'Failed to load admins');
+      toast.error(msg || 'Không tải được quản trị viên');
       setAdmins([]);
     } finally {
       setAdminLoading(false);
@@ -224,14 +224,14 @@ export default function AdminAccountsPage() {
     setVoteBusyId(id);
     try {
       await registrationService.vote(id, { is_vote_yes: true });
-      toast.success('Vote recorded');
+      toast.success('Đã ghi nhận phiếu');
       await loadRegistrations();
     } catch (e: unknown) {
       const msg =
         e && typeof e === 'object' && 'response' in e
           ? String((e as { response?: { data?: { message?: string } } }).response?.data?.message ?? '')
           : '';
-      toast.error(msg || 'Vote failed');
+      toast.error(msg || 'Bỏ phiếu thất bại');
     } finally {
       setVoteBusyId(null);
     }
@@ -243,7 +243,7 @@ export default function AdminAccountsPage() {
     setVoteBusyId(id);
     try {
       await registrationService.vote(id, { is_vote_yes: false, refuse_reason: refuseReason || undefined });
-      toast.success('Refusal recorded');
+      toast.success('Đã ghi nhận từ chối');
       setRefuseModal(null);
       await loadRegistrations();
     } catch (e: unknown) {
@@ -251,7 +251,7 @@ export default function AdminAccountsPage() {
         e && typeof e === 'object' && 'response' in e
           ? String((e as { response?: { data?: { message?: string } } }).response?.data?.message ?? '')
           : '';
-      toast.error(msg || 'Vote failed');
+      toast.error(msg || 'Bỏ phiếu thất bại');
     } finally {
       setVoteBusyId(null);
     }
@@ -261,7 +261,7 @@ export default function AdminAccountsPage() {
     setConfirmBusyId(id);
     const ok = await execute(
       () => registrationService.confirm(id),
-      { successMessage: 'Registration confirmed & executed on-chain' },
+      { successMessage: 'Đã xác nhận đăng ký và thực thi on-chain' },
     );
     if (ok) await loadRegistrations();
     setConfirmBusyId(null);
@@ -281,8 +281,8 @@ export default function AdminAccountsPage() {
   return (
     <div className="p-6">
       <PageHeader
-        title="Accounts"
-        description="Review registration requests and manage staff directory"
+        title="Tài khoản"
+        description="Duyệt yêu cầu đăng ký và quản lý danh bạ nhân sự"
       />
 
       <div className="mb-6 flex gap-1 rounded-lg border border-slate-200 bg-slate-50 p-1">
@@ -296,7 +296,7 @@ export default function AdminAccountsPage() {
           }`}
         >
           <UserPlus className="h-4 w-4" />
-          Registration requests
+          Yêu cầu đăng ký
         </button>
         <button
           type="button"
@@ -308,7 +308,7 @@ export default function AdminAccountsPage() {
           }`}
         >
           <Users className="h-4 w-4" />
-          Staff list
+          Danh sách nhân sự
         </button>
       </div>
 
@@ -320,7 +320,7 @@ export default function AdminAccountsPage() {
                 <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
                 <input
                   type="search"
-                  placeholder="Search by keyword…"
+                  placeholder="Tìm theo từ khóa…"
                   value={regSearchDraft}
                   onChange={(e) => setRegSearchDraft(e.target.value)}
                   onKeyDown={(e) => e.key === 'Enter' && applyRegSearch()}
@@ -346,11 +346,11 @@ export default function AdminAccountsPage() {
                 onClick={applyRegSearch}
                 className="rounded-lg bg-blue-800 px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-blue-900"
               >
-                Search
+                Tìm
               </button>
             </div>
             <p className="text-xs text-slate-500">
-              Total matching records: {regTotalAmount.toLocaleString('vi-VN')}
+              Tổng bản ghi khớp: {regTotalAmount.toLocaleString('vi-VN')}
             </p>
           </div>
 
@@ -359,20 +359,20 @@ export default function AdminAccountsPage() {
               { key: 'id', label: 'ID', render: (r) => <span className="font-mono text-xs">{truncateAddress(r.id, 8)}</span> },
               {
                 key: 'name',
-                label: 'Name',
+                label: 'Tên',
                 render: (r) => (
                   <span>
                     {r.first_name} {r.last_name}
                   </span>
                 ),
               },
-              { key: 'register_role', label: 'Role', render: (r) => <span className="capitalize">{r.register_role}</span> },
+              { key: 'register_role', label: 'Vai trò', render: (r) => <span className="capitalize">{r.register_role}</span> },
               { key: 'region', label: 'Region' },
-              { key: 'status', label: 'Status', render: (r) => <StatusBadge status={r.status} /> },
-              { key: 'created_at', label: 'Created', render: (r) => formatDate(r.created_at) },
+              { key: 'status', label: 'Trạng thái', render: (r) => <StatusBadge status={r.status} /> },
+              { key: 'created_at', label: 'Ngày tạo', render: (r) => formatDate(r.created_at) },
               {
                 key: 'actions',
-                label: 'Actions',
+                label: 'Thao tác',
                 className: 'whitespace-nowrap',
                 render: (r) => {
                   const approved = isRegistrationApproved(r.status);
@@ -390,14 +390,14 @@ export default function AdminAccountsPage() {
                         }}
                         className="inline-flex items-center gap-1 rounded-md border border-slate-200 bg-white px-2 py-1 text-xs font-medium text-slate-800 hover:bg-slate-50"
                       >
-                        Details
+                        Chi tiết
                       </button>
                       <button
                         type="button"
                         disabled={approved || voteBusyId === r.id}
                         onClick={() => handleVote(r.id, true)}
                         className="inline-flex items-center gap-1 rounded-md border border-blue-200 bg-blue-50 px-2 py-1 text-xs font-medium text-blue-900 hover:bg-blue-100 disabled:cursor-not-allowed disabled:opacity-50"
-                        title="Approve vote"
+                        title="Phiếu duyệt"
                       >
                         <ThumbsUp className="h-3.5 w-3.5" />
                       </button>
@@ -406,7 +406,7 @@ export default function AdminAccountsPage() {
                         disabled={approved || voteBusyId === r.id}
                         onClick={() => handleVote(r.id, false)}
                         className="inline-flex items-center gap-1 rounded-md border border-red-200 bg-red-50 px-2 py-1 text-xs font-medium text-red-800 hover:bg-red-100 disabled:cursor-not-allowed disabled:opacity-50"
-                        title="Refuse vote"
+                        title="Phiếu từ chối"
                       >
                         <ThumbsDown className="h-3.5 w-3.5" />
                       </button>
@@ -416,10 +416,10 @@ export default function AdminAccountsPage() {
                           disabled={approved || confirmBusyId === r.id}
                           onClick={() => handleConfirm(r.id)}
                           className="inline-flex items-center gap-1 rounded-md border border-slate-200 bg-white px-2 py-1 text-xs font-medium text-slate-800 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
-                          title="Confirm on-chain"
+                          title="Xác nhận on-chain"
                         >
                           <ShieldCheck className="h-3.5 w-3.5" />
-                          Confirm
+                          Xác nhận
                         </button>
                       )}
                     </div>
@@ -432,7 +432,7 @@ export default function AdminAccountsPage() {
             page={regPage}
             totalPages={regTotalPages}
             onPageChange={(p) => setRegPage(p)}
-            emptyMessage="No registration requests match your filters."
+            emptyMessage="Không có yêu cầu đăng ký phù hợp bộ lọc."
           />
         </div>
       )}
@@ -444,7 +444,7 @@ export default function AdminAccountsPage() {
               <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
               <input
                 type="search"
-                placeholder="Search staff & admins…"
+                placeholder="Tìm nhân sự & quản trị…"
                 value={staffSearchDraft}
                 onChange={(e) => setStaffSearchDraft(e.target.value)}
                 onKeyDown={(e) => e.key === 'Enter' && applyStaffSearch()}
@@ -456,18 +456,18 @@ export default function AdminAccountsPage() {
               onClick={applyStaffSearch}
               className="rounded-lg bg-blue-800 px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-blue-900"
             >
-              Search
+              Tìm
             </button>
           </div>
 
           <section>
-            <h2 className="mb-3 text-sm font-semibold text-slate-800">Staff</h2>
+            <h2 className="mb-3 text-sm font-semibold text-slate-800">Nhân sự</h2>
             <DataTable<Staff>
               columns={[
                 { key: 'id', label: 'ID', render: (s) => <span className="font-mono text-xs">{truncateAddress(s.id, 8)}</span> },
                 {
                   key: 'details',
-                  label: 'Details',
+                  label: 'Chi tiết',
                   className: 'whitespace-nowrap',
                   render: (s) => (
                     <button
@@ -479,69 +479,69 @@ export default function AdminAccountsPage() {
                       }}
                       className="rounded-md border border-blue-200 px-2 py-1 text-xs font-medium text-blue-900 hover:bg-blue-50"
                     >
-                      Details
+                      Chi tiết
                     </button>
                   ),
                 },
                 {
                   key: 'name',
-                  label: 'Name',
+                  label: 'Tên',
                   render: (s) => (
                     <span>
                       {s.first_name} {s.last_name}
                     </span>
                   ),
                 },
-                { key: 'region', label: 'Region' },
+                { key: 'region', label: 'Vùng' },
                 { key: 'email', label: 'Email' },
-                { key: 'phone_number', label: 'Phone' },
+                { key: 'phone_number', label: 'Điện thoại' },
               ]}
               data={staff}
               loading={staffLoading}
               page={staffPage}
               totalPages={staffTotalPages}
               onPageChange={(p) => setStaffPage(p)}
-              emptyMessage="No staff found."
+              emptyMessage="Không tìm thấy nhân sự."
             />
           </section>
 
           <section>
-            <h2 className="mb-3 text-sm font-semibold text-slate-800">Administrators</h2>
+            <h2 className="mb-3 text-sm font-semibold text-slate-800">Quản trị viên</h2>
             <DataTable<AdminRow>
               columns={[
                 { key: 'id', label: 'ID', render: (a) => <span className="font-mono text-xs">{truncateAddress(a.id, 8)}</span> },
                 {
                   key: 'details',
-                  label: 'Details',
+                  label: 'Chi tiết',
                   render: (a) => (
                     <button
                       type="button"
                       onClick={() => setAdminDetailRow(a)}
                       className="rounded-md border border-blue-200 px-2 py-1 text-xs font-medium text-blue-900 hover:bg-blue-50"
                     >
-                      Details
+                      Chi tiết
                     </button>
                   ),
                 },
                 {
                   key: 'name',
-                  label: 'Name',
+                  label: 'Tên',
                   render: (a) => (
                     <span>
                       {a.first_name ?? '-'} {a.last_name ?? ''}
                     </span>
                   ),
                 },
-                { key: 'region', label: 'Region', render: (a) => a.region ?? '-' },
+                { key: 'region', label: 'Vùng', render: (a) => a.region ?? '-' },
                 { key: 'email', label: 'Email', render: (a) => a.email ?? '-' },
-                { key: 'phone_number', label: 'Phone', render: (a) => a.phone_number ?? '-' },
+                { key: 'phone_number', label: 'Điện thoại', render: (a) => a.phone_number ?? '-' },
               ]}
               data={admins}
               loading={adminLoading}
               page={adminPage}
               totalPages={adminTotalPages}
               onPageChange={(p) => setAdminPage(p)}
-              emptyMessage="No administrators found."
+              emptyMessage="Không tìm thấy quản trị viên."
             />
           </section>
         </div>
@@ -551,23 +551,23 @@ export default function AdminAccountsPage() {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 p-4">
           <div className="w-full max-w-md rounded-xl border border-slate-200 bg-white p-5 shadow-xl">
             <div className="mb-3 flex items-center justify-between">
-              <h3 className="text-lg font-semibold text-slate-900">Refuse registration</h3>
+              <h3 className="text-lg font-semibold text-slate-900">Từ chối đăng ký</h3>
               <button
                 type="button"
                 onClick={() => setRefuseModal(null)}
                 className="rounded-lg p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-700"
-                aria-label="Close"
+                aria-label="Đóng"
               >
                 <X className="h-5 w-5" />
               </button>
             </div>
-            <p className="mb-2 text-sm text-slate-600">Optional reason (shown to reviewers).</p>
+            <p className="mb-2 text-sm text-slate-600">Lý do (tùy chọn, hiển thị cho người duyệt).</p>
             <textarea
               value={refuseReason}
               onChange={(e) => setRefuseReason(e.target.value)}
               rows={3}
               className="mb-4 w-full rounded-lg border border-slate-200 p-2 text-sm outline-none ring-blue-800/20 focus:ring-2"
-              placeholder="Reason for refusal…"
+              placeholder="Lý do từ chối…"
             />
             <div className="flex justify-end gap-2">
               <button
@@ -575,7 +575,7 @@ export default function AdminAccountsPage() {
                 onClick={() => setRefuseModal(null)}
                 className="rounded-lg border border-slate-200 px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
               >
-                Cancel
+                Hủy
               </button>
               <button
                 type="button"
@@ -584,7 +584,7 @@ export default function AdminAccountsPage() {
                 className="inline-flex items-center gap-1 rounded-lg bg-red-600 px-3 py-2 text-sm font-medium text-white hover:bg-red-700 disabled:opacity-50"
               >
                 <Check className="h-4 w-4" />
-                Submit refusal
+                Gửi từ chối
               </button>
             </div>
           </div>
@@ -592,7 +592,7 @@ export default function AdminAccountsPage() {
       )}
 
       <DetailModal
-        title="Registration request"
+        title="Yêu cầu đăng ký"
         open={regDetailOpen}
         onClose={() => {
           setRegDetailOpen(false);
@@ -609,18 +609,18 @@ export default function AdminAccountsPage() {
           return (
             <div className="space-y-1">
               {detailField('ID', <span className="font-mono text-xs break-all">{r.id}</span>)}
-              {detailField('Name', `${r.first_name} ${r.last_name}`)}
-              {detailField('Role', <span className="capitalize">{r.register_role}</span>)}
-              {detailField('Region', r.region)}
-              {detailField('Status', <StatusBadge status={r.status} />)}
-              {detailField('Identity code', r.identity_code)}
+              {detailField('Tên', `${r.first_name} ${r.last_name}`)}
+              {detailField('Vai trò', <span className="capitalize">{r.register_role}</span>)}
+              {detailField('Vùng', r.region)}
+              {detailField('Trạng thái', <StatusBadge status={r.status} />)}
+              {detailField('Mã định danh', r.identity_code)}
               {detailField('Email', r.email)}
-              {detailField('Phone', r.phone_number)}
-              {detailField('Gender', r.gender)}
-              {detailField('Date of birth', formatDate(r.date_of_birth))}
-              {detailField('Created by', truncateAddress(r.created_by))}
-              {detailField('Created', formatDate(r.created_at))}
-              {detailField('Updated', formatDate(r.updated_at))}
+              {detailField('Điện thoại', r.phone_number)}
+              {detailField('Giới tính', r.gender)}
+              {detailField('Ngày sinh', formatDate(r.date_of_birth))}
+              {detailField('Người tạo', truncateAddress(r.created_by))}
+              {detailField('Ngày tạo', formatDate(r.created_at))}
+              {detailField('Cập nhật', formatDate(r.updated_at))}
               {blobs.length > 0 && (
                 <div className="border-t border-slate-100 pt-3">
                   <div className="mb-2 text-xs font-medium text-slate-600">Images (Walrus)</div>
@@ -640,7 +640,7 @@ export default function AdminAccountsPage() {
       </DetailModal>
 
       <DetailModal
-        title="Staff"
+        title="Nhân sự"
         open={staffDetailOpen}
         onClose={() => {
           setStaffDetailOpen(false);
@@ -657,15 +657,15 @@ export default function AdminAccountsPage() {
           return (
             <div className="space-y-1">
               {detailField('ID', <span className="font-mono text-xs break-all">{s.id}</span>)}
-              {detailField('User', truncateAddress(s.user))}
-              {detailField('Name', `${s.first_name} ${s.last_name}`)}
-              {detailField('Region', s.region)}
+              {detailField('Người dùng', truncateAddress(s.user))}
+              {detailField('Tên', `${s.first_name} ${s.last_name}`)}
+              {detailField('Vùng', s.region)}
               {detailField('Email', s.email)}
-              {detailField('Phone', s.phone_number)}
-              {detailField('Gender', s.gender)}
-              {detailField('Identity code', s.identity_code)}
-              {s.date_of_birth && detailField('Date of birth', formatDate(s.date_of_birth))}
-              {detailField('Uploaded', formatDate(s.uploaded_at))}
+              {detailField('Điện thoại', s.phone_number)}
+              {detailField('Giới tính', s.gender)}
+              {detailField('Mã định danh', s.identity_code)}
+              {s.date_of_birth && detailField('Ngày sinh', formatDate(s.date_of_birth))}
+              {detailField('Tải lên', formatDate(s.uploaded_at))}
               {staffBlobs.length > 0 && (
                 <div className="border-t border-slate-100 pt-3">
                   <div className="mb-2 text-xs font-medium text-slate-600">Images (Walrus)</div>
@@ -705,7 +705,7 @@ export default function AdminAccountsPage() {
       </DetailModal>
 
       <DetailModal
-        title="Administrator"
+        title="Quản trị viên"
         open={adminDetailRow != null}
         onClose={() => setAdminDetailRow(null)}
         loading={false}
@@ -718,9 +718,9 @@ export default function AdminAccountsPage() {
               'Name',
               `${adminDetailRow.first_name ?? '—'} ${adminDetailRow.last_name ?? ''}`,
             )}
-            {detailField('Region', adminDetailRow.region ?? '—')}
+            {detailField('Vùng', adminDetailRow.region ?? '—')}
             {detailField('Email', adminDetailRow.email ?? '—')}
-            {detailField('Phone', adminDetailRow.phone_number ?? '—')}
+            {detailField('Điện thoại', adminDetailRow.phone_number ?? '—')}
             <p className="pt-2 text-xs text-slate-500">
               No GET-by-id in API — details are from the list response only.
             </p>

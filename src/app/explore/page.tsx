@@ -15,8 +15,8 @@ export default function PublicExplorePage() {
     <GuestPublicShell>
       <div className="mb-8 flex flex-col gap-4 rounded-2xl border border-blue-100 bg-gradient-to-r from-blue-50/90 to-indigo-50/50 p-5 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h2 className="text-lg font-semibold text-slate-900">Ready to give?</h2>
-          <p className="mt-1 text-sm text-slate-600">Sign in to donate to pools and sponsor verified needs.</p>
+          <h2 className="text-lg font-semibold text-slate-900">Sẵn sàng đồng hành?</h2>
+          <p className="mt-1 text-sm text-slate-600">Đăng nhập để quyên góp vào quỹ và tài trợ nhu cầu đã xác minh.</p>
         </div>
         <button
           type="button"
@@ -33,14 +33,14 @@ export default function PublicExplorePage() {
       </div>
 
       <ExploreContent
-        title="Explore"
-        description="Browse centers, children, and regional hubs — no account required to look around"
+        title="Khám phá"
+        description="Xem trung tâm, trẻ em và điểm vùng — không cần tài khoản để xem"
         childHref={(id) => `/children/${id}`}
         campaignRegionHref={(region) => `/campaigns/${encodeURIComponent(region)}`}
       />
 
       <p className="mt-8 text-center text-sm text-slate-500">
-        Already have an account?{' '}
+        Đã có tài khoản?{' '}
         <Link href="/login" className="font-medium text-blue-800 hover:underline">
           Sign in
         </Link>

@@ -30,21 +30,21 @@ import type { LucideIcon } from 'lucide-react';
 type NavItem = { label: string; href: string; icon: LucideIcon };
 
 const FULL_NAV_ITEMS: NavItem[] = [
-  { label: 'Dashboard', href: '/leader', icon: LayoutDashboard },
-  { label: 'Bank Account', href: '/leader/bank', icon: Landmark },
-  { label: 'Volunteer registrations', href: '/leader/volunteers', icon: UserPlus },
-  { label: 'Children', href: '/leader/children', icon: Baby },
-  { label: 'Withdrawals', href: '/leader/withdrawals', icon: Wallet },
-  { label: 'Supported region suggestions', href: '/leader/regions', icon: MapPin },
-  { label: 'Tasks', href: '/leader/tasks', icon: ListChecks },
-  { label: 'Task Proofs', href: '/leader/task-proofs', icon: ClipboardCheck },
-  { label: 'Notifications', href: '/leader/notifications', icon: Bell },
-  { label: 'Profile', href: '/leader/profile', icon: User },
+  { label: 'Trang chủ', href: '/leader', icon: LayoutDashboard },
+  { label: 'Tài khoản ngân hàng', href: '/leader/bank', icon: Landmark },
+  { label: 'Đăng ký tình nguyện viên', href: '/leader/volunteers', icon: UserPlus },
+  { label: 'Trẻ em', href: '/leader/children', icon: Baby },
+  { label: 'Rút tiền', href: '/leader/withdrawals', icon: Wallet },
+  { label: 'Đề xuất vùng', href: '/leader/regions', icon: MapPin },
+  { label: 'Nhiệm vụ', href: '/leader/tasks', icon: ListChecks },
+  { label: 'Chứng từ nhiệm vụ', href: '/leader/task-proofs', icon: ClipboardCheck },
+  { label: 'Thông báo', href: '/leader/notifications', icon: Bell },
+  { label: 'Hồ sơ', href: '/leader/profile', icon: User },
 ];
 
 const NO_CENTER_NAV_ITEMS: NavItem[] = [
-  { label: 'Volunteer registrations', href: '/leader/volunteers', icon: UserPlus },
-  { label: 'Register center', href: '/leader/register-center', icon: Building2 },
+  { label: 'Đăng ký tình nguyện viên', href: '/leader/volunteers', icon: UserPlus },
+  { label: 'Đăng ký trung tâm', href: '/leader/register-center', icon: Building2 },
 ];
 
 function pathAllowedWithoutCenter(pathname: string) {
@@ -118,7 +118,7 @@ export default function LeaderLayout({ children }: { children: React.ReactNode }
         <nav className="flex-1 overflow-y-auto p-3">
           {restrictedNav && (
             <p className="mb-2 rounded-lg bg-amber-50 px-2 py-2 text-[11px] leading-snug text-amber-900">
-              No center assigned yet — use Volunteer review and Register center until your center is active.
+              Chưa có trung tâm — dùng duyệt tình nguyện viên và Đăng ký trung tâm cho tới khi được kích hoạt.
             </p>
           )}
           <ul className="space-y-0.5">
@@ -147,7 +147,7 @@ export default function LeaderLayout({ children }: { children: React.ReactNode }
 
         <div className="border-t border-slate-200 p-3">
           <div className="mb-2 rounded-lg bg-slate-50 px-3 py-2">
-            <p className="text-xs font-medium text-slate-700">Local Leader</p>
+            <p className="text-xs font-medium text-slate-700">Leader địa phương</p>
             <p className="text-xs text-slate-400">{truncateAddress(user?.address || '')}</p>
           </div>
           <button
@@ -159,7 +159,7 @@ export default function LeaderLayout({ children }: { children: React.ReactNode }
             className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm text-red-600 transition hover:bg-red-50"
           >
             <LogOut className="h-4 w-4" />
-            Logout
+            Đăng xuất
           </button>
         </div>
       </aside>
@@ -172,14 +172,13 @@ export default function LeaderLayout({ children }: { children: React.ReactNode }
           <div className="flex-1" />
           <div className="flex items-center gap-2 text-sm text-slate-500">
             <div className="h-2 w-2 rounded-full bg-blue-600" />
-            Connected
+            Đã kết nối
           </div>
         </header>
         <main className="flex-1 overflow-y-auto p-4 lg:p-6">
           {centerStatus === 'error' && errorMessage && (
             <div className="mb-4 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
-              Could not verify center status ({errorMessage}). Full navigation is shown; try refreshing if something
-              looks wrong.
+              Không kiểm tra được trạng thái trung tâm ({errorMessage}). Đang hiện đầy đủ menu — thử tải lại nếu có lỗi.
             </div>
           )}
           {showCenterLoading ? (

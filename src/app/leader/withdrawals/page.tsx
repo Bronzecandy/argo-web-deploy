@@ -104,7 +104,7 @@ export default function LeaderWithdrawalsPage() {
       setRows(Array.isArray(body.data) ? body.data : []);
       setTotalPages(Math.max(1, body.total_pages ?? 1));
     } catch (e: unknown) {
-      toast.error(getErrorMessage(e, 'Failed to load proposals'));
+      toast.error(getErrorMessage(e, 'Không tải được đề xuất'));
       setRows([]);
     } finally {
       setListLoading(false);
@@ -147,7 +147,7 @@ export default function LeaderWithdrawalsPage() {
         setChildren(Array.isArray(body.data) ? body.data : []);
         setChildrenTotalPages(Math.max(1, body.total_pages ?? 1));
       } catch (e: unknown) {
-        toast.error(getErrorMessage(e, 'Failed to load children'));
+        toast.error(getErrorMessage(e, 'Không tải được danh sách trẻ'));
         setChildren([]);
       } finally {
         setChildrenLoading(false);
@@ -179,7 +179,7 @@ export default function LeaderWithdrawalsPage() {
       })
       .catch((e: unknown) => {
         if (!cancelled) {
-          toast.error(getErrorMessage(e, 'Failed to load child'));
+          toast.error(getErrorMessage(e, 'Không tải được thông tin trẻ'));
           setChildDetail(null);
         }
       })
@@ -308,30 +308,30 @@ export default function LeaderWithdrawalsPage() {
 
   const columns = [
     { key: 'id', label: 'ID' },
-    { key: 'description', label: 'Description' },
-    { key: 'pool_name', label: 'Pool' },
+    { key: 'description', label: 'Mô tả' },
+    { key: 'pool_name', label: 'Quỹ' },
     {
       key: 'withdraw_amount',
-      label: 'Amount',
+      label: 'Số tiền',
       render: (row: WithdrawProposal) => formatVND(row.withdraw_amount),
     },
-    { key: 'approve_weight', label: 'Approve weight' },
-    { key: 'refuse_weight', label: 'Refuse weight' },
+    { key: 'approve_weight', label: 'Trọng số duyệt' },
+    { key: 'refuse_weight', label: 'Trọng số từ chối' },
     {
       key: 'is_executed',
-      label: 'Executed',
+      label: 'Thực thi',
       render: (row: WithdrawProposal) => (
         <StatusBadge status={row.is_executed ? 'executed' : 'pending'} />
       ),
     },
     {
       key: 'created_at',
-      label: 'Created',
+      label: 'Ngày tạo',
       render: (row: WithdrawProposal) => formatDate(row.created_at),
     },
     {
       key: 'details',
-      label: 'Details',
+      label: 'Chi tiết',
       render: (row: WithdrawProposal) => (
         <button
           type="button"
@@ -342,7 +342,7 @@ export default function LeaderWithdrawalsPage() {
           }}
           className="rounded-lg border border-slate-200 px-2 py-1 text-xs font-medium text-slate-700 hover:bg-slate-50"
         >
-          Details
+          Chi tiết
         </button>
       ),
     },
@@ -362,8 +362,8 @@ export default function LeaderWithdrawalsPage() {
   return (
     <div>
       <PageHeader
-        title="Withdrawals"
-        description="Review proposals, withdraw for a child need, or request a regional pool withdrawal for other tasks"
+        title="Rút tiền"
+        description="Xem đề xuất, rút cho nhu cầu trẻ, hoặc đề xuất rút quỹ vùng cho nhiệm vụ khác"
         actions={
           <button
             type="button"
@@ -371,14 +371,14 @@ export default function LeaderWithdrawalsPage() {
             className="inline-flex items-center gap-2 rounded-lg bg-blue-800 px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-blue-900"
           >
             <Plus className="h-4 w-4" />
-            Create
+            Tạo
           </button>
         }
       />
 
       {!user?.address ? (
         <div className="rounded-xl border border-slate-200 bg-white p-8 text-center text-sm text-slate-500">
-          Connect your wallet to see your withdrawal proposals.
+          Kết nối ví để xem đề xuất rút tiền của bạn.
         </div>
       ) : (
         <DataTable<WithdrawProposal>
@@ -388,7 +388,7 @@ export default function LeaderWithdrawalsPage() {
           page={page}
           totalPages={totalPages}
           onPageChange={setPage}
-          emptyMessage="No proposals yet"
+          emptyMessage="Chưa có đề xuất"
         />
       )}
       {createOpen && (
@@ -402,13 +402,13 @@ export default function LeaderWithdrawalsPage() {
             onClick={(e) => e.stopPropagation()}
           >
             <div className="mb-4 flex items-center justify-between gap-2">
-              <h2 className="text-lg font-semibold text-slate-900">Create withdrawal</h2>
+              <h2 className="text-lg font-semibold text-slate-900">Tạo đề xuất rút</h2>
               <button
                 type="button"
                 onClick={() => setCreateOpen(false)}
                 className="rounded-lg px-3 py-1.5 text-sm text-slate-600 hover:bg-slate-100"
               >
-                Close
+                Đóng
               </button>
             </div>
         <form
@@ -514,7 +514,7 @@ export default function LeaderWithdrawalsPage() {
                 setNeedKind('');
               }}
             >
-              <option value="">{childrenLoading ? 'Loading…' : 'Select a child'}</option>
+              <option value="">{childrenLoading ? 'Đang tải…' : 'Chọn trẻ'}</option>
               {children.map((c) => (
                 <option key={c.id} value={c.id}>
                   {childOptionLabel(c)}

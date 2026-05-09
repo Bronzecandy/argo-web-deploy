@@ -38,7 +38,7 @@ export default function VolunteerCenterRequestsPage() {
       setRows((res.data.data ?? []) as CenterRequest[]);
       setTotalPages(Math.max(1, res.data.total_pages ?? 1));
     } catch {
-      toast.error('Failed to load center requests');
+      toast.error('Không tải được yêu cầu trung tâm');
       setRows([]);
     } finally {
       setLoading(false);
@@ -53,14 +53,14 @@ export default function VolunteerCenterRequestsPage() {
     setVoteBusy(id);
     try {
       await centerService.voteCenterRequest(id, { is_vote_yes: true });
-      toast.success('Vote recorded');
+      toast.success('Đã ghi nhận phiếu');
       void load();
     } catch (e: unknown) {
       const msg =
         e && typeof e === 'object' && 'response' in e
           ? String((e as { response?: { data?: { message?: string } } }).response?.data?.message ?? '')
           : '';
-      toast.error(msg || 'Vote failed');
+      toast.error(msg || 'Bỏ phiếu thất bại');
     } finally {
       setVoteBusy(null);
     }
@@ -78,7 +78,7 @@ export default function VolunteerCenterRequestsPage() {
         is_vote_yes: false,
         refuse_reason: refuseReason.trim(),
       });
-      toast.success('Refusal recorded');
+      toast.success('Đã ghi nhận từ chối');
       setRefuseModal(null);
       setRefuseReason('');
       void load();
@@ -87,7 +87,7 @@ export default function VolunteerCenterRequestsPage() {
         e && typeof e === 'object' && 'response' in e
           ? String((e as { response?: { data?: { message?: string } } }).response?.data?.message ?? '')
           : '';
-      toast.error(msg || 'Vote failed');
+      toast.error(msg || 'Bỏ phiếu thất bại');
     } finally {
       setVoteBusy(null);
     }
@@ -111,8 +111,8 @@ export default function VolunteerCenterRequestsPage() {
   return (
     <div>
       <PageHeader
-        title="Center requests"
-        description="Vote on proposed support centers (GET /center-reqs)"
+        title="Yêu cầu trung tâm"
+        description="Review and vote on proposed support centers from local leaders."
       />
 
       <DataTable<CenterRequest>
@@ -128,7 +128,7 @@ export default function VolunteerCenterRequestsPage() {
             label: 'ID',
             render: (r) => <span className="font-mono text-xs">{truncateAddress(r.id, 6)}</span>,
           },
-          { key: 'region', label: 'Region' },
+          { key: 'region', label: 'Vùng' },
           {
             key: 'address',
             label: 'Address',
@@ -136,7 +136,7 @@ export default function VolunteerCenterRequestsPage() {
           },
           { key: 'phone_number', label: 'Phone' },
           { key: 'status', label: 'Status', render: (r) => <StatusBadge status={r.status} /> },
-          { key: 'created_at', label: 'Created', render: (r) => formatDate(r.created_at) },
+          { key: 'created_at', label: 'Ngày tạo', render: (r) => formatDate(r.created_at) },
           {
             key: 'actions',
             label: 'Actions',

@@ -60,7 +60,7 @@ export default function DonorTransactionsPage() {
     },
     {
       key: 'pool_name',
-      label: 'Pool',
+      label: 'Quỹ',
       render: (item: TransactionRecord) => <span className="font-medium">{item.pool_name || '-'}</span>,
     },
     {

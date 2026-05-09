@@ -7,6 +7,7 @@ import PageHeader from '@/src/components/ui/PageHeader';
 import DataTable from '@/src/components/ui/DataTable';
 import DetailModal from '@/src/components/ui/DetailModal';
 import EntityBlobThumb from '@/src/components/ui/EntityBlobThumb';
+import GroupedNumericInput from '@/src/components/ui/GroupedNumericInput';
 import StatusBadge from '@/src/components/ui/StatusBadge';
 import { collectBlobIdEntries } from '@/src/lib/blobFields';
 import { formatDate, truncateAddress } from '@/src/lib/formatters';
@@ -30,7 +31,7 @@ function normalizeChildUploadListStatus(status?: string) {
 const PAGE_SIZE = 20;
 
 const GENDER_OPTIONS = [
-  { value: '', label: 'All genders' },
+  { value: '', label: 'Tất cả giới tính' },
   { value: 'male', label: 'Male' },
   { value: 'female', label: 'Female' },
   { value: 'other', label: 'Other' },
@@ -62,7 +63,7 @@ function detailField(label: string, value: ReactNode) {
   );
 }
 
-/** Child avatars are typically served via GET /blobs/:id; other proof-style ids use Walrus URLs. */
+/** Use API-served image for avatar field; other blob fields use Walrus URLs. */
 function childBlobThumbSource(key: string): 'api' | 'walrus' {
   if (key === 'avatar_blob_id') return 'api';
   return 'walrus';
@@ -117,7 +118,7 @@ export default function LeaderChildrenPage() {
   const [uploadDetailOpen, setUploadDetailOpen] = useState(false);
   const [uploadDetailRow, setUploadDetailRow] = useState<UploadChildRequestEntity | null>(null);
 
-  /** Approve (review OK) — configure needs before review + PUT needs (no child-upload confirm) */
+  /** Approve path: optional review, then update child needs on-chain. */
   const [approveModal, setApproveModal] = useState<UploadChildRequestEntity | null>(null);
   const [needMeal, setNeedMeal] = useState(false);
   const [needBooks, setNeedBooks] = useState(false);
@@ -135,7 +136,7 @@ export default function LeaderChildrenPage() {
       setChildren(Array.isArray(body.data) ? body.data : []);
       setTotalPages(Math.max(1, body.total_pages ?? 1));
     } catch (e: unknown) {
-      toast.error(getErrorMessage(e, 'Failed to load children'));
+      toast.error(getErrorMessage(e, 'Không tải được danh sách trẻ'));
       setChildren([]);
     } finally {
       setListLoading(false);
@@ -162,7 +163,7 @@ export default function LeaderChildrenPage() {
       setUploads(raw.filter((u) => normalizeChildUploadListStatus(u.status) === 'pending'));
       setUploadTotalPages(Math.max(1, body.total_pages ?? 1));
     } catch (e: unknown) {
-      toast.error(getErrorMessage(e, 'Failed to load upload requests'));
+      toast.error(getErrorMessage(e, 'Không tải được yêu cầu tải lên'));
       setUploads([]);
     } finally {
       setUploadLoading(false);
@@ -188,7 +189,7 @@ export default function LeaderChildrenPage() {
       setProfileReqs(raw.filter((u) => isChildUploadReviewApproved(u.review_status)));
       setProfileTotalPages(Math.max(1, body.total_pages ?? 1));
     } catch (e: unknown) {
-      toast.error(getErrorMessage(e, 'Failed to load child upload requests'));
+      toast.error(getErrorMessage(e, 'Không tải được yêu cầu tải lên hồ sơ trẻ'));
       setProfileReqs([]);
     } finally {
       setProfilesLoading(false);
@@ -262,7 +263,7 @@ export default function LeaderChildrenPage() {
         region: approveModal.region,
       });
       if (!child) {
-        toast.error('Không tìm thấy child với identity_code này trong danh sách /children');
+        toast.error('Không tìm thấy child với mã định danh này trong danh sách trẻ');
         return;
       }
       const childId = child.id.trim();
@@ -314,11 +315,11 @@ export default function LeaderChildrenPage() {
         if (!ok) return;
       }
 
-      toast.success('Review saved and child needs updated');
+      toast.success('Đã lưu duyệt và cập nhật nhu cầu trẻ');
       setApproveModal(null);
       await loadUploads();
     } catch (e: unknown) {
-      toast.error(getErrorMessage(e, 'Operation failed'));
+      toast.error(getErrorMessage(e, 'Thao tác thất bại'));
     } finally {
       setApproveSubmitting(false);
       setBusyId(null);
@@ -331,11 +332,11 @@ export default function LeaderChildrenPage() {
     setBusyId(id);
     try {
       await childUploadService.review(id, { is_vote_yes: false, refuse_reason: refuseReason || undefined });
-      toast.success('Review refusal recorded');
+      toast.success('Đã ghi nhận từ chối duyệt');
       setRefuseModal(null);
       await loadUploads();
     } catch (e: unknown) {
-      toast.error(getErrorMessage(e, 'Review failed'));
+      toast.error(getErrorMessage(e, 'Duyệt thất bại'));
     } finally {
       setBusyId(null);
     }
@@ -345,10 +346,10 @@ export default function LeaderChildrenPage() {
     setVoteBusyId(id);
     try {
       await childUploadService.vote(id, { is_vote_yes: true });
-      toast.success('Vote recorded');
+      toast.success('Đã ghi nhận phiếu');
       await loadProfiles();
     } catch (e: unknown) {
-      toast.error(getErrorMessage(e, 'Vote failed'));
+      toast.error(getErrorMessage(e, 'Bỏ phiếu thất bại'));
     } finally {
       setVoteBusyId(null);
     }
@@ -368,11 +369,11 @@ export default function LeaderChildrenPage() {
         is_vote_yes: false,
         refuse_reason: refuseReason.trim() || undefined,
       });
-      toast.success('Vote recorded');
+      toast.success('Đã ghi nhận phiếu');
       setRefuseModal(null);
       await loadProfiles();
     } catch (e: unknown) {
-      toast.error(getErrorMessage(e, 'Vote failed'));
+      toast.error(getErrorMessage(e, 'Bỏ phiếu thất bại'));
     } finally {
       setVoteBusyId(null);
     }
@@ -383,10 +384,10 @@ export default function LeaderChildrenPage() {
     { key: 'first_name', label: 'First name' },
     { key: 'last_name', label: 'Last name' },
     { key: 'gender', label: 'Gender' },
-    { key: 'region', label: 'Region' },
+    { key: 'region', label: 'Vùng' },
     {
       key: 'date_of_birth',
-      label: 'Date of birth',
+      label: 'Ngày sinh',
       render: (row: Child) => formatDate(row.date_of_birth),
     },
     { key: 'identity_code', label: 'Identity code' },
@@ -509,7 +510,7 @@ export default function LeaderChildrenPage() {
                 ),
               },
               { key: 'gender', label: 'Gender', render: (u) => <span className="capitalize">{u.gender}</span> },
-              { key: 'region', label: 'Region' },
+              { key: 'region', label: 'Vùng' },
               { key: 'status', label: 'Status', render: (u) => <StatusBadge status={u.status} /> },
               {
                 key: 'review_status',
@@ -525,7 +526,7 @@ export default function LeaderChildrenPage() {
                   </span>
                 ),
               },
-              { key: 'created_at', label: 'Created', render: (u) => formatDate(u.created_at) },
+              { key: 'created_at', label: 'Ngày tạo', render: (u) => formatDate(u.created_at) },
               {
                 key: 'actions',
                 label: 'Review',
@@ -576,8 +577,8 @@ export default function LeaderChildrenPage() {
       {tab === 'profiles' && (
         <div className="space-y-4">
           <p className="rounded-lg border border-slate-200 bg-slate-50 px-4 py-3 text-xs text-slate-600">
-            Requests with <code className="rounded bg-white px-1">review_status</code> approved by local leaders appear here
-            for on-chain voting: <code className="rounded bg-white px-1">POST /child-upload-reqs/{'{id}'}/vote</code>.
+            Upload requests that leaders have already approved for <code className="rounded bg-white px-1">review_status</code> appear
+            here for your on-chain vote.
           </p>
           <DataTable<UploadChildRequestEntity>
             columns={[
@@ -592,14 +593,14 @@ export default function LeaderChildrenPage() {
                 ),
               },
               { key: 'gender', label: 'Gender', render: (u) => <span className="capitalize">{u.gender}</span> },
-              { key: 'region', label: 'Region' },
+              { key: 'region', label: 'Vùng' },
               {
                 key: 'review_status',
                 label: 'Review',
                 render: (u) => (u.review_status ? <StatusBadge status={u.review_status} /> : <span className="text-slate-400">—</span>),
               },
               { key: 'status', label: 'Status', render: (u) => <StatusBadge status={u.status} /> },
-              { key: 'created_at', label: 'Created', render: (u) => formatDate(u.created_at) },
+              { key: 'created_at', label: 'Ngày tạo', render: (u) => formatDate(u.created_at) },
               {
                 key: 'actions',
                 label: 'Vote',
@@ -656,7 +657,7 @@ export default function LeaderChildrenPage() {
           page={page}
           totalPages={totalPages}
           onPageChange={setPage}
-          emptyMessage="No children found"
+          emptyMessage="Không tìm thấy trẻ em"
         />
       )}
 
@@ -684,14 +685,10 @@ export default function LeaderChildrenPage() {
             </div>
 
             <p className="mb-4 rounded-lg border border-blue-100 bg-blue-50/80 px-3 py-2 text-xs text-slate-700">
-              Chọn nhu cầu và nhập <strong>số tiền (VND)</strong>. Khi <strong>Confirm</strong>:{' '}
-              <code className="rounded bg-white px-1">POST …/child-upload-reqs/{'{id}'}/review</code> (nếu cần), rồi các{' '}
-              <code className="rounded bg-white px-1">PUT</code> need; <strong>Books</strong> dùng một ô tiền nhưng gọi{' '}
-              <code className="rounded bg-white px-1">PUT /children/books-need</code> <strong>hai lần</strong> (cùng số tiền) với{' '}
-              <code className="rounded bg-white px-1">books_needs[0]</code> và{' '}
-              <code className="rounded bg-white px-1">books_needs[1]</code> sau khi duyệt —{' '}
-              <code className="rounded bg-white px-1">child_id</code> lấy qua <code className="rounded bg-white px-1">identity_code</code> +{' '}
-              <code className="rounded bg-white px-1">GET /children</code>.
+              Chọn nhu cầu và nhập <strong>số tiền (VND)</strong>. Khi xác nhận: hệ thống có thể ghi nhận review (nếu cần), rồi cập nhật
+              nhu cầu trẻ. <strong>Sách:</strong> một ô tiền áp dụng cho <strong>cả hai</strong> học kỳ (
+              <code className="rounded bg-white px-1">books_needs[0]</code> và <code className="rounded bg-white px-1">books_needs[1]</code>)
+              sau khi duyệt. <code className="rounded bg-white px-1">child_id</code> được tra theo <code className="rounded bg-white px-1">identity_code</code> trên hồ sơ trẻ.
             </p>
 
             <div className="space-y-4 text-sm">
@@ -707,14 +704,12 @@ export default function LeaderChildrenPage() {
                   <span className="font-medium text-slate-900">Meal need</span>
                   <span className="mt-0.5 block text-xs text-slate-500">Amount basis: per month (VND/month)</span>
                   {needMeal && (
-                    <input
-                      type="number"
+                    <GroupedNumericInput
                       min={1}
-                      step={1}
                       className={`${approveInputClass} mt-2`}
                       placeholder="e.g. 500000"
                       value={mealValue}
-                      onChange={(e) => setMealValue(e.target.value)}
+                      onChange={setMealValue}
                       disabled={approveSubmitting || executing}
                     />
                   )}
@@ -732,20 +727,17 @@ export default function LeaderChildrenPage() {
                 <span className="flex-1">
                   <span className="font-medium text-slate-900">Books need</span>
                   <span className="mt-0.5 block text-xs text-slate-500">
-                    Một mức tiền (VND/kì). Sau khi review, hệ thống gửi hai lần{' '}
-                    <code className="rounded bg-slate-100 px-0.5">PUT …/books-need</code> với{' '}
-                    <code className="rounded bg-slate-100 px-0.5">books_needs[0]</code> và{' '}
-                    <code className="rounded bg-slate-100 px-0.5">books_needs[1]</code>.
+                    Một mức tiền (VND/kì). Sau khi review, hệ thống áp dụng cùng mức cho cả hai mã need sách (
+                    <code className="rounded bg-slate-100 px-0.5">books_needs[0]</code>,{' '}
+                    <code className="rounded bg-slate-100 px-0.5">books_needs[1]</code>).
                   </span>
                   {needBooks && (
-                    <input
-                      type="number"
+                    <GroupedNumericInput
                       min={1}
-                      step={1}
                       className={`${approveInputClass} mt-2`}
                       placeholder="e.g. 800000"
                       value={booksValue}
-                      onChange={(e) => setBooksValue(e.target.value)}
+                      onChange={setBooksValue}
                       disabled={approveSubmitting || executing}
                     />
                   )}
@@ -764,14 +756,12 @@ export default function LeaderChildrenPage() {
                   <span className="font-medium text-slate-900">Health insurance need</span>
                   <span className="mt-0.5 block text-xs text-slate-500">Amount basis: per year (VND/year)</span>
                   {needHealth && (
-                    <input
-                      type="number"
+                    <GroupedNumericInput
                       min={1}
-                      step={1}
                       className={`${approveInputClass} mt-2`}
                       placeholder="e.g. 1200000"
                       value={healthValue}
-                      onChange={(e) => setHealthValue(e.target.value)}
+                      onChange={setHealthValue}
                       disabled={approveSubmitting || executing}
                     />
                   )}
@@ -780,10 +770,7 @@ export default function LeaderChildrenPage() {
             </div>
 
             <p className="mt-3 text-[11px] text-slate-400">
-              Request body uses <code className="rounded bg-slate-100 px-1">child_id</code> (child profile id) and{' '}
-              <code className="rounded bg-slate-100 px-1">value</code>. On-chain steps use{' '}
-              <code className="rounded bg-slate-100 px-1">POST /tx/execute</code> when the API returns{' '}
-              <code className="rounded bg-slate-100 px-1">tx_bytes</code>.
+              Cập nhật nhu cầu dùng mã trẻ và số tiền. Bước on-chain (nếu có) sẽ được xử lý khi bạn xác nhận giao dịch trong ví.
             </p>
 
             <div className="mt-5 flex flex-wrap justify-end gap-2">
@@ -875,10 +862,10 @@ export default function LeaderChildrenPage() {
               {detailField('ID', <span className="font-mono text-xs break-all">{c.id}</span>)}
               {detailField('Name', `${c.first_name} ${c.last_name}`)}
               {detailField('Gender', <span className="capitalize">{c.gender}</span>)}
-              {detailField('Region', c.region)}
-              {detailField('Date of birth', formatDate(c.date_of_birth))}
-              {detailField('Identity code', c.identity_code)}
-              {detailField('Home address', c.home_address || '—')}
+              {detailField('Vùng', c.region)}
+              {detailField('Ngày sinh', formatDate(c.date_of_birth))}
+              {detailField('Mã định danh', c.identity_code)}
+              {detailField('Địa chỉ nhà', c.home_address || '—')}
               {detailField('Meal need', c.meal_need ? truncateAddress(c.meal_need) : '—')}
               {detailField('Health insurance need', c.health_insurance_need ? truncateAddress(c.health_insurance_need) : '—')}
               {detailField('Books needs', (c.books_needs?.length ? c.books_needs : []).map((id) => truncateAddress(id)).join(', ') || '—')}
@@ -932,16 +919,16 @@ export default function LeaderChildrenPage() {
                 {detailField('Profile ID', <span className="font-mono text-xs break-all">{u.profile_id}</span>)}
                 {detailField('Name', `${u.first_name} ${u.last_name}`)}
                 {detailField('Gender', <span className="capitalize">{u.gender}</span>)}
-                {detailField('Region', u.region)}
-                {detailField('Identity code', u.identity_code)}
-                {detailField('Date of birth', formatDate(u.date_of_birth))}
-                {detailField('Home address', u.home_address ?? '—')}
+                {detailField('Vùng', u.region)}
+                {detailField('Mã định danh', u.identity_code)}
+                {detailField('Ngày sinh', formatDate(u.date_of_birth))}
+                {detailField('Địa chỉ nhà', u.home_address ?? '—')}
                 {detailField('Status', <StatusBadge status={u.status} />)}
                 {detailField('Review status', u.review_status ? <StatusBadge status={u.review_status} /> : <span className="text-slate-400">—</span>)}
                 {detailField('Reviewed by', u.reviewed_by ? truncateAddress(u.reviewed_by) : '—')}
                 {detailField('AI note', u.ai_evaluation ?? '—')}
-                {detailField('Created by', truncateAddress(u.created_by))}
-                {detailField('Created', formatDate(u.created_at))}
+                {detailField('Người tạo', truncateAddress(u.created_by))}
+                {detailField('Ngày tạo', formatDate(u.created_at))}
                 {detailField('Updated', formatDate(u.updated_at))}
                 {detailField('Closed', formatDate(u.closed_at))}
                 {detailField('Confirm upload', u.is_confirm_upload ? 'Yes' : 'No')}

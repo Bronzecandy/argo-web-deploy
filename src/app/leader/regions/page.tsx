@@ -69,7 +69,7 @@ export default function LeaderRegionsPage() {
         setTotalPages(Math.max(1, res.data.total_pages ?? 1));
       } catch (e) {
         console.error(e);
-        toast.error('Failed to load your supported region suggestions');
+        toast.error('Không tải được đề xuất vùng được hỗ trợ của bạn');
         setRows([]);
       } finally {
         setLoading(false);
@@ -99,7 +99,7 @@ export default function LeaderRegionsPage() {
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!region.trim() || !content.trim()) {
-      toast.error('Enter both `region` and `content` (POST /regions/supported-suggestions)');
+      toast.error('Please enter both region and content');
       return;
     }
     const payload: CreateSupportedRegionSuggestionRequest = {
@@ -109,7 +109,7 @@ export default function LeaderRegionsPage() {
     setSubmitting(true);
     try {
       await regionService.createSuggestion(payload);
-      toast.success('Supported region suggestion created');
+      toast.success('Đã tạo đề xuất vùng được hỗ trợ');
       setRegion('');
       setContent('');
       setProposeOpen(false);
@@ -121,7 +121,7 @@ export default function LeaderRegionsPage() {
         err && typeof err === 'object' && 'response' in err
           ? (err as { response?: { data?: { message?: string } } }).response?.data?.message
           : null;
-      toast.error(msg || 'Failed to submit suggestion');
+      toast.error(msg || 'Gửi đề xuất thất bại');
     } finally {
       setSubmitting(false);
     }
@@ -133,8 +133,8 @@ export default function LeaderRegionsPage() {
         title="Supported region suggestions"
         description={
           user?.address
-            ? `POST /regions/supported-suggestions · ${truncateAddress(user.address)}`
-            : 'Sign in to submit and list your suggestions (GET with created_by filter)'
+            ? `Submit and track suggestions · ${truncateAddress(user.address)}`
+            : 'Sign in to submit and list your suggestions'
         }
         actions={
           <button
@@ -170,7 +170,7 @@ export default function LeaderRegionsPage() {
             { key: 'created_at', label: 'created_at', render: (r) => formatDate(r.created_at) },
             {
               key: 'detail',
-              label: 'Details',
+              label: 'Chi tiết',
               className: 'whitespace-nowrap',
               render: (r) => (
                 <button
@@ -211,8 +211,7 @@ export default function LeaderRegionsPage() {
               </button>
             </div>
             <p className="mb-4 text-sm text-slate-500">
-              Body: <code className="rounded bg-slate-100 px-1">region</code>,{' '}
-              <code className="rounded bg-slate-100 px-1">content</code> — POST /regions/supported-suggestions
+              Provide a <strong>region</strong> and <strong>content</strong> explaining why this area should be supported.
             </p>
             <form onSubmit={handleCreate} className="space-y-4">
               <div>
@@ -278,12 +277,12 @@ export default function LeaderRegionsPage() {
             <div className="space-y-1">
               {detailField('ID', <span className="font-mono text-xs break-all">{r.id}</span>)}
               {detailField('Profile ID', <span className="font-mono text-xs break-all">{r.profile_id}</span>)}
-              {detailField('Region', r.region)}
+              {detailField('Vùng', r.region)}
               {detailField('Content', r.content)}
               {detailField('Status', <StatusBadge status={r.status || 'pending'} />)}
-              {detailField('Created by', truncateAddress(r.created_by))}
+              {detailField('Người tạo', truncateAddress(r.created_by))}
               {detailField('Reviewed by', r.reviewed_by ? truncateAddress(r.reviewed_by) : '—')}
-              {detailField('Created', formatDate(r.created_at))}
+              {detailField('Ngày tạo', formatDate(r.created_at))}
               {detailField('Updated', formatDate(r.updated_at))}
               {blobs.length > 0 && (
                 <div className="border-t border-slate-100 pt-3">

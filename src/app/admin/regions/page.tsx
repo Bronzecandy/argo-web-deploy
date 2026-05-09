@@ -60,7 +60,7 @@ export default function AdminRegionsPage() {
       setTotalPages(Math.max(1, res.data.total_pages ?? 1));
     } catch (e) {
       console.error(e);
-      toast.error(getErrorMessage(e, 'Failed to load supported region suggestions'));
+      toast.error(getErrorMessage(e, 'Không tải được đề xuất vùng được hỗ trợ'));
       setRows([]);
     } finally {
       setLoading(false);
@@ -89,11 +89,11 @@ export default function AdminRegionsPage() {
   const handleApprove = async (id: string) => {
     try {
       await regionService.reviewSuggestion(id, { is_vote_yes: true });
-      toast.success('Suggestion approved (POST /regions/supported-suggestions/{id}/review)');
+      toast.success('Đã phê duyệt đề xuất');
       refresh();
     } catch (e) {
       console.error(e);
-      toast.error(getErrorMessage(e, 'Approve failed'));
+      toast.error(getErrorMessage(e, 'Phê duyệt thất bại'));
     }
   };
 
@@ -105,7 +105,7 @@ export default function AdminRegionsPage() {
   const submitRefuse = async () => {
     if (!refuseModal) return;
     if (!refuseReason.trim()) {
-      toast.error('Enter refuse_reason (VoteRequest)');
+      toast.error('Please enter a refuse reason');
       return;
     }
     try {
@@ -113,12 +113,12 @@ export default function AdminRegionsPage() {
         is_vote_yes: false,
         refuse_reason: refuseReason.trim(),
       });
-      toast.success('Suggestion refused');
+      toast.success('Đã từ chối đề xuất');
       setRefuseModal(null);
       refresh();
     } catch (e) {
       console.error(e);
-      toast.error(getErrorMessage(e, 'Refuse failed'));
+      toast.error(getErrorMessage(e, 'Từ chối thất bại'));
     }
   };
 
@@ -126,17 +126,8 @@ export default function AdminRegionsPage() {
     <div className="space-y-6">
       <PageHeader
         title="Supported region suggestions (admin)"
-        description="GET /regions/admin/supported-suggestions — review via POST /regions/supported-suggestions/{id}/review (VoteRequest)"
+        description="Review suggestions from local leaders — approve or refuse with an optional reason."
       />
-
-      <p className="rounded-lg border border-slate-200 bg-slate-50 px-4 py-3 text-xs text-slate-600">
-        List: <code className="rounded bg-white px-1">GET /regions/admin/supported-suggestions</code> — paginated response fields{' '}
-        <code className="rounded bg-white px-1">data</code>, <code className="rounded bg-white px-1">amount</code>,{' '}
-        <code className="rounded bg-white px-1">page</code>, <code className="rounded bg-white px-1">total_pages</code>. Review:{' '}
-        <code className="rounded bg-white px-1">POST /regions/supported-suggestions/{'{id}'}/review</code> with body{' '}
-        <code className="rounded bg-white px-1">VoteRequest</code> (<code className="rounded bg-white px-1">is_vote_yes</code>,{' '}
-        <code className="rounded bg-white px-1">refuse_reason</code>).
-      </p>
 
       <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -208,7 +199,7 @@ export default function AdminRegionsPage() {
           { key: 'created_at', label: 'created_at', render: (r) => formatDate(r.created_at) },
           {
             key: 'detail_btn',
-            label: 'Details',
+            label: 'Chi tiết',
             render: (r) => (
               <button
                 type="button"
@@ -299,9 +290,7 @@ export default function AdminRegionsPage() {
                 <X className="h-5 w-5" />
               </button>
             </div>
-            <p className="mb-2 text-sm text-slate-600">
-              <code className="rounded bg-slate-100 px-1">refuse_reason</code> on <code className="rounded bg-slate-100 px-1">VoteRequest</code> (required).
-            </p>
+            <p className="mb-2 text-sm text-slate-600">A reason is required when refusing a suggestion.</p>
             <textarea
               value={refuseReason}
               onChange={(e) => setRefuseReason(e.target.value)}

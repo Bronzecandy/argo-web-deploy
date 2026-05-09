@@ -58,7 +58,7 @@ export default function LeaderGiftsPage() {
       setTotalPages(Math.max(1, res.data.total_pages ?? 1));
     } catch (e) {
       console.error(e);
-      toast.error('Failed to load gifts');
+      toast.error('Không tải được danh sách quà');
       setRows([]);
     } finally {
       setLoading(false);
@@ -178,7 +178,7 @@ export default function LeaderGiftsPage() {
               },
               { key: 'status', label: 'Status', render: (r) => <StatusBadge status={r.status} /> },
               { key: 'carrier', label: 'Carrier', render: (r) => r.carrier || '-' },
-              { key: 'tracking_code', label: 'Tracking', render: (r) => r.tracking_code || '-' },
+              { key: 'tracking_code', label: 'Mã vận đơn', render: (r) => r.tracking_code || '-' },
               {
                 key: 'gift_image_blob_id',
                 label: 'Gift image',
@@ -194,7 +194,7 @@ export default function LeaderGiftsPage() {
               },
               {
                 key: 'details',
-                label: 'Details',
+                label: 'Chi tiết',
                 className: 'whitespace-nowrap',
                 render: (r) => (
                   <button
@@ -274,10 +274,10 @@ export default function LeaderGiftsPage() {
               {detailField('Message', g.message || '—')}
               {detailField('Status', <StatusBadge status={g.status} />)}
               {detailField('Carrier', g.carrier || '—')}
-              {detailField('Tracking', g.tracking_code || '—')}
+              {detailField('Mã vận đơn', g.tracking_code || '—')}
               {detailField('For child', g.is_for_child ? 'Yes' : 'No')}
               {detailField('Confirm received by', g.confirm_recieved_by ? truncateAddress(g.confirm_recieved_by) : '—')}
-              {detailField('Cancel reason', g.cancel_reason ?? '—')}
+              {detailField('Lý do hủy', g.cancel_reason ?? '—')}
               {detailField('Uploaded', formatDate(g.uploaded_at))}
               {detailField('Delivered', g.delivered_at ? formatDate(g.delivered_at) : '—')}
               {detailField('Updated', formatDate(g.updated_at))}

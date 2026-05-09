@@ -58,7 +58,7 @@ export default function LeaderProfilePage() {
         setForm(emptyForm);
       } else {
         console.error(e);
-        toast.error('Failed to load profile');
+        toast.error('Không tải được hồ sơ');
         setProfile(null);
       }
     } finally {
@@ -82,11 +82,11 @@ export default function LeaderProfilePage() {
       if (profile) {
         const res = await profileService.upload(profile.id, payload);
         setProfile(res.data);
-        toast.success('Profile updated');
+        toast.success('Đã cập nhật hồ sơ');
       } else if (user?.profileId) {
         const res = await profileService.upload(user.profileId, payload);
         setProfile(res.data);
-        toast.success('Profile created');
+        toast.success('Đã tạo hồ sơ');
       } else {
         toast.error('Profile ID not available');
         return;
@@ -94,7 +94,7 @@ export default function LeaderProfilePage() {
       setEditMode(false);
     } catch (err) {
       console.error(err);
-      toast.error(profile ? 'Failed to update profile' : 'Failed to upload profile');
+      toast.error(profile ? 'Không cập nhật được hồ sơ' : 'Không tải lên được hồ sơ');
     } finally {
       setSaving(false);
     }
@@ -257,7 +257,7 @@ export default function LeaderProfilePage() {
               disabled={saving}
               className="rounded-lg bg-blue-800 px-4 py-2 text-sm font-medium text-white transition hover:bg-blue-900 disabled:opacity-50"
             >
-              {saving ? 'Saving…' : profile ? 'Save changes' : 'Upload profile'}
+              {saving ? 'Đang lưu…' : profile ? 'Save changes' : 'Upload profile'}
             </button>
           </form>
         </div>

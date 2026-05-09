@@ -67,7 +67,7 @@ export default function LeaderCentersPage() {
       setCenters(normalizeCenterList(res.data));
       setTotalPages(Math.max(1, res.data.total_pages ?? 1));
     } catch (e: unknown) {
-      toast.error(getErrorMessage(e, 'Failed to load centers'));
+      toast.error(getErrorMessage(e, 'Không tải được danh sách trung tâm'));
       setCenters([]);
       setTotalPages(1);
     } finally {
@@ -80,7 +80,7 @@ export default function LeaderCentersPage() {
   }, [loadCenters]);
 
   const columns = [
-    { key: 'region', label: 'Region' },
+    { key: 'region', label: 'Vùng' },
     { key: 'center_address', label: 'Address' },
     { key: 'center_phone_number', label: 'Phone' },
     {
@@ -171,7 +171,7 @@ export default function LeaderCentersPage() {
             return (
               <div className="space-y-1">
                 {detailField('ID', <span className="font-mono text-xs break-all">{c.id}</span>)}
-                {detailField('Region', c.region)}
+                {detailField('Vùng', c.region)}
                 {detailField('Address', c.center_address)}
                 {detailField('Phone', c.center_phone_number)}
                 {detailField('Uploaded', formatDate(c.uploaded_at))}

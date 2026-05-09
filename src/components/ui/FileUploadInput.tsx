@@ -14,7 +14,7 @@ interface FileUploadInputProps {
   accept?: string;
   placeholder?: string;
   disabled?: boolean;
-  /** Where uploaded blobs resolve for preview (Walrus aggregator vs API /blobs). */
+  /** Preview source: Walrus aggregator vs in-app blob storage. */
   previewSource?: 'walrus' | 'api';
 }
 

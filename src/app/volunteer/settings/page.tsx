@@ -42,7 +42,7 @@ const MORE_LINKS = [
 
     label: 'Task proof history',
 
-    description: 'Submitted proofs and manual entry',
+    description: 'Bằng chứng đã gửi và nhập thủ công',
 
     icon: ClipboardCheck,
 

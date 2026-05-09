@@ -55,7 +55,7 @@ function PaymentCallbackContent() {
 
 export default function DonorPaymentCallbackPage() {
   return (
-    <Suspense fallback={<div className="p-8 text-center text-slate-500">Loading…</div>}>
+    <Suspense fallback={<div className="p-8 text-center text-slate-500">Đang tải…</div>}>
       <PaymentCallbackContent />
     </Suspense>
   );

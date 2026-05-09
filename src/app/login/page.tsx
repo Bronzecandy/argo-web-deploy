@@ -28,7 +28,7 @@ function LoginForm() {
     else if (user.role === ROLES.LOCAL_LEADER) router.replace('/leader');
     else if (user.role === ROLES.VOLUNTEER) router.replace('/volunteer');
     else if (user.role === ROLES.DONOR || user.role === ROLES.USER) router.replace('/donor');
-    else toast.error('Your role does not have access to this platform');
+    else toast.error('Vai trò của bạn chưa được truy cập nền tảng này');
   }, [isAuthenticated, user, router, returnUrl]);
 
   useEffect(() => {
@@ -48,10 +48,9 @@ function LoginForm() {
             </div>
             <h1 className="text-3xl font-bold">AgroTrust</h1>
           </div>
-          <h2 className="mb-4 text-2xl font-semibold">Transparent Child Support Platform</h2>
+          <h2 className="mb-4 text-2xl font-semibold">Nền tảng hỗ trợ trẻ minh bạch</h2>
           <p className="leading-relaxed text-blue-100">
-            Powered by blockchain technology. Every donation is traceable, every action is transparent. Together, we build trust for
-            a better future.
+            Ứng dụng công nghệ blockchain. Mỗi khoản quyên góp đều truy vết được, mọi thao tác đều minh bạch. Cùng nhau tạo niềm tin vì tương lai tốt đẹp hơn.
           </p>
           <div className="mt-8 grid grid-cols-3 gap-4 text-center">
             <div className="rounded-xl bg-white/10 p-4 backdrop-blur-sm">
@@ -80,18 +79,18 @@ function LoginForm() {
           </div>
 
           <div className="rounded-2xl border border-slate-200/80 bg-white p-8 shadow-sm">
-            <h2 className="mb-2 text-2xl font-bold text-slate-900">Welcome</h2>
-            <p className="mb-6 text-slate-500">Sign in with your Google account to continue</p>
+            <h2 className="mb-2 text-2xl font-bold text-slate-900">Chào mừng</h2>
+            <p className="mb-6 text-slate-500">Đăng nhập bằng Google để tiếp tục</p>
             <p className="mb-6 text-center text-sm">
               <Link href="/" className="font-medium text-blue-800 hover:underline">
-                ← Back to home
+                ← Về trang chủ
               </Link>
             </p>
 
             {isLoading ? (
               <div className="flex items-center justify-center py-4">
                 <div className="h-8 w-8 animate-spin rounded-full border-4 border-blue-800 border-t-transparent" />
-                <span className="ml-3 text-sm text-slate-500">Signing in...</span>
+                <span className="ml-3 text-sm text-slate-500">Đang đăng nhập...</span>
               </div>
             ) : (
               <div className="flex justify-center">
@@ -100,11 +99,11 @@ function LoginForm() {
                     if (credentialResponse.credential) {
                       dispatch(loginWithZKLogin(credentialResponse.credential));
                     } else {
-                      toast.error('No credential received from Google');
+                      toast.error('Không nhận được thông tin đăng nhập từ Google');
                     }
                   }}
                   onError={() => {
-                    toast.error('Google login failed');
+                    toast.error('Đăng nhập Google thất bại');
                   }}
                   size="large"
                   width="350"
@@ -116,9 +115,9 @@ function LoginForm() {
             )}
 
             <p className="mt-6 text-center text-xs text-slate-400">
-              By signing in, you agree to AgroTrust&apos;s Terms of Service and Privacy Policy.
+              Khi đăng nhập, bạn đồng ý với Điều khoản dịch vụ và Chính sách quyền riêng tư của AgroTrust.
               <br />
-              Authentication uses ZKLogin on Sui blockchain.
+              Xác thực dùng ZKLogin trên blockchain Sui.
             </p>
           </div>
         </div>

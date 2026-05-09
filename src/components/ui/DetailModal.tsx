@@ -40,7 +40,7 @@ export default function DetailModal({
             <X className="h-5 w-5" />
           </button>
         </div>
-        {loading && <p className="text-sm text-slate-500">Loading…</p>}
+        {loading && <p className="text-sm text-slate-500">Đang tải…</p>}
         {error && !loading && (
           <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">{error}</p>
         )}

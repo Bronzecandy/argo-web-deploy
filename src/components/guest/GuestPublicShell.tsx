@@ -41,7 +41,7 @@ export default function GuestPublicShell({
 
       {showFooter && (
         <footer className="border-t border-slate-200/80 bg-white/60 py-6 text-center text-xs text-slate-500">
-          Transparent child support · AgroTrust
+          Hỗ trợ trẻ minh bạch · AgroTrust
         </footer>
       )}
     </div>
