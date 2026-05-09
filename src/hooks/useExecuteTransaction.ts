@@ -29,6 +29,7 @@ function hasTxBytes(data: ExecuteApiPayload): data is BuildTransactionResponse {
 /**
  * Wraps API calls that return BuildTransactionResponse (on-chain) or MessageResponse only.
  * When tx_bytes is present it calls POST /tx/execute; otherwise shows success without execute.
+ * Use `quiet: true` to skip success toasts (e.g. batched calls with one summary toast).
  */
 export function useExecuteTransaction() {
   const [executing, setExecuting] = useState(false);
@@ -36,7 +37,7 @@ export function useExecuteTransaction() {
   const execute = useCallback(
     async (
       apiCall: () => Promise<{ data: ExecuteApiPayload }>,
-      options?: { successMessage?: string; skipExecute?: boolean },
+      options?: { successMessage?: string; skipExecute?: boolean; quiet?: boolean },
     ): Promise<boolean> => {
       setExecuting(true);
       try {
@@ -44,7 +45,9 @@ export function useExecuteTransaction() {
         const txData = res.data;
 
         if (!hasTxBytes(txData) || options?.skipExecute) {
-          toast.success(options?.successMessage || 'Action completed');
+          if (!options?.quiet) {
+            toast.success(options?.successMessage || 'Action completed');
+          }
           return true;
         }
 
@@ -58,7 +61,9 @@ export function useExecuteTransaction() {
         };
 
         await transactionService.execute(executeReq);
-        toast.success(options?.successMessage || 'Transaction executed on-chain');
+        if (!options?.quiet) {
+          toast.success(options?.successMessage || 'Transaction executed on-chain');
+        }
         return true;
       } catch (e: any) {
         const msg = e?.response?.data?.message || e?.message || 'Transaction failed';

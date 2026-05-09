@@ -2,11 +2,12 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { useAppSelector, useAppDispatch } from '@/src/store/hooks';
 import { logoutUser } from '@/src/store/authSlice';
 import { fetchLeaderPool, resetLeaderPool } from '@/src/store/leaderPoolSlice';
 import { truncateAddress } from '@/src/lib/formatters';
+import { useLeaderCenter } from '@/src/contexts/LeaderCenterContext';
 import {
   LayoutDashboard,
   Landmark,
@@ -26,15 +27,18 @@ import {
   User,
   UserPlus,
 } from 'lucide-react';
+import type { LucideIcon } from 'lucide-react';
 
-const NAV_ITEMS = [
+type NavItem = { label: string; href: string; icon: LucideIcon };
+
+const FULL_NAV_ITEMS: NavItem[] = [
   { label: 'Dashboard', href: '/leader', icon: LayoutDashboard },
   { label: 'Bank Account', href: '/leader/bank', icon: Landmark },
   { label: 'Volunteer registrations', href: '/leader/volunteers', icon: UserPlus },
   { label: 'Children', href: '/leader/children', icon: Baby },
   { label: 'Withdrawals', href: '/leader/withdrawals', icon: Wallet },
   { label: 'Centers', href: '/leader/centers', icon: Building2 },
-  { label: 'Đề xuất vùng hỗ trợ', href: '/leader/regions', icon: MapPin },
+  { label: 'Supported region suggestions', href: '/leader/regions', icon: MapPin },
   { label: 'Urgent Campaigns', href: '/leader/campaigns', icon: Megaphone },
   { label: 'Tasks', href: '/leader/tasks', icon: ListChecks },
   { label: 'Task Proofs', href: '/leader/task-proofs', icon: ClipboardCheck },
@@ -43,11 +47,27 @@ const NAV_ITEMS = [
   { label: 'Profile', href: '/leader/profile', icon: User },
 ];
 
+const NO_CENTER_NAV_ITEMS: NavItem[] = [
+  { label: 'Volunteer registrations', href: '/leader/volunteers', icon: UserPlus },
+  { label: 'Register center', href: '/leader/register-center', icon: Building2 },
+];
+
+function pathAllowedWithoutCenter(pathname: string) {
+  if (pathname === '/leader/volunteers') return true;
+  if (pathname === '/leader/register-center') return true;
+  return false;
+}
+
 export default function LeaderLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
+  const router = useRouter();
   const dispatch = useAppDispatch();
   const { user } = useAppSelector((state) => state.auth);
+  const { status: centerStatus, errorMessage } = useLeaderCenter();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+
+  const restrictedNav = centerStatus === 'no_center';
+  const navItems = restrictedNav ? NO_CENTER_NAV_ITEMS : FULL_NAV_ITEMS;
 
   useEffect(() => {
     const addr = user?.address?.trim();
@@ -58,10 +78,18 @@ export default function LeaderLayout({ children }: { children: React.ReactNode }
     void dispatch(fetchLeaderPool(addr));
   }, [dispatch, user?.address]);
 
+  useEffect(() => {
+    if (centerStatus !== 'no_center') return;
+    if (pathAllowedWithoutCenter(pathname)) return;
+    router.replace('/leader/volunteers');
+  }, [centerStatus, pathname, router]);
+
   const isActive = (href: string) => {
     if (href === '/leader') return pathname === '/leader';
     return pathname.startsWith(href);
   };
+
+  const showCenterLoading = centerStatus === 'loading';
 
   return (
     <div className="flex h-screen overflow-hidden bg-slate-50">
@@ -87,14 +115,19 @@ export default function LeaderLayout({ children }: { children: React.ReactNode }
               LEADER
             </span>
           </div>
-          <button className="ml-auto lg:hidden" onClick={() => setSidebarOpen(false)}>
+          <button type="button" className="ml-auto lg:hidden" onClick={() => setSidebarOpen(false)}>
             <X className="h-5 w-5 text-slate-400" />
           </button>
         </div>
 
         <nav className="flex-1 overflow-y-auto p-3">
+          {restrictedNav && (
+            <p className="mb-2 rounded-lg bg-amber-50 px-2 py-2 text-[11px] leading-snug text-amber-900">
+              No center assigned yet — use Volunteer review and Register center until your center is active.
+            </p>
+          )}
           <ul className="space-y-0.5">
-            {NAV_ITEMS.map((item) => {
+            {navItems.map((item) => {
               const Icon = item.icon;
               const active = isActive(item.href);
               return (
@@ -123,6 +156,7 @@ export default function LeaderLayout({ children }: { children: React.ReactNode }
             <p className="text-xs text-slate-400">{truncateAddress(user?.address || '')}</p>
           </div>
           <button
+            type="button"
             onClick={() => {
               dispatch(resetLeaderPool());
               void dispatch(logoutUser());
@@ -137,7 +171,7 @@ export default function LeaderLayout({ children }: { children: React.ReactNode }
 
       <div className="flex flex-1 flex-col overflow-hidden">
         <header className="flex h-16 items-center gap-4 border-b border-slate-200 bg-white px-4 lg:px-6">
-          <button className="lg:hidden" onClick={() => setSidebarOpen(true)}>
+          <button type="button" className="lg:hidden" onClick={() => setSidebarOpen(true)}>
             <Menu className="h-5 w-5 text-slate-600" />
           </button>
           <div className="flex-1" />
@@ -146,7 +180,21 @@ export default function LeaderLayout({ children }: { children: React.ReactNode }
             Connected
           </div>
         </header>
-        <main className="flex-1 overflow-y-auto p-4 lg:p-6">{children}</main>
+        <main className="flex-1 overflow-y-auto p-4 lg:p-6">
+          {centerStatus === 'error' && errorMessage && (
+            <div className="mb-4 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+              Could not verify center status ({errorMessage}). Full navigation is shown; try refreshing if something
+              looks wrong.
+            </div>
+          )}
+          {showCenterLoading ? (
+            <div className="flex min-h-[40vh] items-center justify-center">
+              <div className="h-8 w-8 animate-spin rounded-full border-4 border-blue-800 border-t-transparent" />
+            </div>
+          ) : (
+            children
+          )}
+        </main>
       </div>
     </div>
   );

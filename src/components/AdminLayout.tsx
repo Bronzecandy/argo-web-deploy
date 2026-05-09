@@ -32,7 +32,7 @@ const NAV_ITEMS = [
   { label: 'Payments', href: '/admin/payments', icon: CreditCard },
   { label: 'Treasury & Proposals', href: '/admin/treasury', icon: Wallet },
   { label: 'Transaction Records', href: '/admin/analytics', icon: BarChart3 },
-  { label: 'Yêu cầu vùng hỗ trợ', href: '/admin/regions', icon: MapPin },
+  { label: 'Region suggestions (admin)', href: '/admin/regions', icon: MapPin },
   { label: 'Config', href: '/admin/config', icon: Settings },
 ];
 

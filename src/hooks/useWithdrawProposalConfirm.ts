@@ -38,9 +38,9 @@ export function useWithdrawProposalConfirm() {
             open: true,
             url: data.url,
             paymentId,
-            title: 'Hoàn tất thanh toán PayOS',
+            title: 'Complete PayOS payment',
           });
-          toast.success('Mở PayOS để chuyển tiền. Kiểm tra trạng thái bên dưới.');
+          toast.success('Open PayOS to pay. Poll status below.');
           return true;
         }
 

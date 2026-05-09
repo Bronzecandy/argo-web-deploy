@@ -28,6 +28,41 @@ export function formatDateTime(dateString: string): string {
   }).format(date);
 }
 
+/** Full date/time including seconds (e.g. withdraw proposal `closed_at`). */
+export function formatDateTimeSeconds(dateString: string): string {
+  if (!dateString) return '-';
+  const date = new Date(dateString);
+  if (Number.isNaN(date.getTime())) return '-';
+  return new Intl.DateTimeFormat('vi-VN', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+  }).format(date);
+}
+
+export type WithdrawProposalUiStatusLabel = 'Voting' | 'Chờ nhận tiền' | 'Refused' | 'đã nhận tiền';
+
+export function getWithdrawProposalUiStatus(r: {
+  is_executed: boolean;
+  closed_at: string;
+  approve_weight: number;
+  withdraw_amount: number;
+}): WithdrawProposalUiStatusLabel {
+  if (r.is_executed) return 'đã nhận tiền';
+  const closed = r.closed_at?.trim();
+  if (!closed) return 'Voting';
+  const end = new Date(closed).getTime();
+  if (Number.isNaN(end)) return 'Voting';
+  if (Date.now() < end) return 'Voting';
+  if (!(r.withdraw_amount > 0)) return 'Refused';
+  const ratio = r.approve_weight / r.withdraw_amount;
+  if (ratio > 0.7) return 'Chờ nhận tiền';
+  return 'Refused';
+}
+
 /**
  * Convert yyyy-mm-dd (HTML date input) to dd/mm/yyyy (BE expected format).
  */
@@ -50,5 +85,8 @@ export function getStatusColor(status: string): string {
   if (s === 'pending' || s === 'pending_review') return 'text-amber-700 bg-amber-50 border-amber-200';
   if (s === 'refused' || s === 'rejected' || s === 'banned') return 'text-red-700 bg-red-50 border-red-200';
   if (s === 'closed' || s === 'executed') return 'text-slate-700 bg-slate-50 border-slate-200';
+  if (s === 'voting') return 'text-amber-700 bg-amber-50 border-amber-200';
+  if (s === 'chờ nhận tiền') return 'text-amber-800 bg-amber-50 border-amber-200';
+  if (s === 'đã nhận tiền') return 'text-blue-900 bg-blue-50 border-blue-200';
   return 'text-slate-600 bg-slate-50 border-slate-200';
 }

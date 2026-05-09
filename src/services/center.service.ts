@@ -32,6 +32,11 @@ class CenterService {
     return apiService.get<PaginationResponse<SupportCenter[]>>(`/centers/user/${walletAddress}`, { params });
   }
 
+  /** GET /centers/leader — assigned center for the authenticated Local Leader (Bearer token). */
+  async getLeaderCenter() {
+    return apiService.get<SupportCenter>('/centers/leader');
+  }
+
   /** Submit a new center registration request (Local Leader “Register new center”). */
   async create(data: CreateCenterRequest) {
     return apiService.post<CenterRequest>('/center-reqs', data);

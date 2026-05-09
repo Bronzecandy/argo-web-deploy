@@ -236,9 +236,10 @@ export interface Child {
   updated_at: string;
 }
 
+/** PUT /children/meal-need | books-need | health-insurance-need — need_id often empty when creating/configuring a new need. */
 export interface UpdateChildNeedRequest {
   child_id: string;
-  need_id: string;
+  need_id?: string;
   value?: number;
 }
 

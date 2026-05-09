@@ -41,7 +41,7 @@ export default function PayOSPaymentDialog({ state, onClose, onPaymentSuccess }:
       if (isPaymentSuccessStatus(status)) {
         resolvedRef.current = true;
         clearTimer();
-        toast.success('Thanh toán đã được ghi nhận.');
+        toast.success('Payment recorded.');
         onPaymentSuccess?.();
         onClose();
       }
@@ -91,7 +91,7 @@ export default function PayOSPaymentDialog({ state, onClose, onPaymentSuccess }:
     try {
       await checkOnce();
       if (!resolvedRef.current) {
-        toast.message(lastStatus ? `Trạng thái: ${lastStatus}` : 'Chưa nhận được thanh toán.');
+        toast.message(lastStatus ? `Status: ${lastStatus}` : 'No payment received yet.');
       }
     } finally {
       setChecking(false);
@@ -104,7 +104,7 @@ export default function PayOSPaymentDialog({ state, onClose, onPaymentSuccess }:
     <div className="fixed inset-0 z-[60] flex items-center justify-center bg-slate-900/50 p-4">
       <div className="w-full max-w-md rounded-xl border border-slate-200 bg-white p-5 shadow-xl">
         <div className="mb-3 flex items-center justify-between">
-          <h3 className="text-lg font-semibold text-slate-900">{state.title || 'Thanh toán PayOS'}</h3>
+          <h3 className="text-lg font-semibold text-slate-900">{state.title || 'PayOS payment'}</h3>
           <button
             type="button"
             onClick={onClose}
@@ -114,8 +114,8 @@ export default function PayOSPaymentDialog({ state, onClose, onPaymentSuccess }:
           </button>
         </div>
         <p className="mb-4 text-sm text-slate-600">
-          Nhấn &quot;Mở PayOS&quot; để hoàn tất chuyển tiền. Hệ thống sẽ tự kiểm tra trạng thái
-          {state.paymentId != null ? ' (đã có mã thanh toán).' : '.'}
+          Use &quot;Open PayOS&quot; to complete the transfer. Status is polled automatically
+          {state.paymentId != null ? ' (payment id available).' : '.'}
         </p>
         <div className="flex flex-wrap gap-2">
           <button
@@ -123,7 +123,7 @@ export default function PayOSPaymentDialog({ state, onClose, onPaymentSuccess }:
             onClick={openPayOS}
             className="rounded-lg bg-blue-800 px-4 py-2 text-sm font-medium text-white hover:bg-blue-900"
           >
-            Mở PayOS
+            Open PayOS
           </button>
           <button
             type="button"
@@ -131,18 +131,18 @@ export default function PayOSPaymentDialog({ state, onClose, onPaymentSuccess }:
             disabled={checking}
             className="rounded-lg border border-slate-200 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-50"
           >
-            {checking ? 'Đang kiểm tra…' : 'Kiểm tra thanh toán'}
+            {checking ? 'Checking…' : 'Check payment'}
           </button>
           <button
             type="button"
             onClick={onClose}
             className="rounded-lg px-4 py-2 text-sm text-slate-500 hover:bg-slate-50"
           >
-            Đóng
+            Close
           </button>
         </div>
         {lastStatus && (
-          <p className="mt-3 text-xs text-slate-500">Trạng thái gần nhất: {lastStatus}</p>
+          <p className="mt-3 text-xs text-slate-500">Latest status: {lastStatus}</p>
         )}
       </div>
     </div>

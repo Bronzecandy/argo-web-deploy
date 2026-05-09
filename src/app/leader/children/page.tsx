@@ -9,11 +9,12 @@ import StatusBadge from '@/src/components/ui/StatusBadge';
 import { formatDate, truncateAddress } from '@/src/lib/formatters';
 import { childUploadService } from '@/src/services/child-upload.service';
 import { childrenService } from '@/src/services/children.service';
+import { useExecuteTransaction } from '@/src/hooks/useExecuteTransaction';
 import type { Child, UploadChildRequestEntity } from '@/src/types/api.types';
 
 type Tab = 'review' | 'profiles' | 'list';
 
-/** Chỉ hiển thị dòng có review_status tương đương Approved (chuẩn hóa hoa/thường, khoảng trắng). */
+/** Rows where `review_status` normalizes to `approved` (case/spacing insensitive). */
 function isChildUploadReviewApproved(reviewStatus?: string) {
   const s = (reviewStatus || '').trim().toLowerCase().replace(/\s+/g, '_');
   return s === 'approved';
@@ -54,6 +55,7 @@ function getErrorMessage(e: unknown, fallback: string) {
 }
 
 export default function LeaderChildrenPage() {
+  const { execute, executing } = useExecuteTransaction();
   const [tab, setTab] = useState<Tab>('review');
 
   const [listLoading, setListLoading] = useState(false);
@@ -77,6 +79,16 @@ export default function LeaderChildrenPage() {
   const [voteBusyId, setVoteBusyId] = useState<string | null>(null);
   const [refuseModal, setRefuseModal] = useState<{ id: string; mode: 'review' | 'vote' } | null>(null);
   const [refuseReason, setRefuseReason] = useState('');
+
+  /** Approve (review OK) — configure needs before review + PUT needs (no child-upload confirm) */
+  const [approveModal, setApproveModal] = useState<UploadChildRequestEntity | null>(null);
+  const [needMeal, setNeedMeal] = useState(false);
+  const [needBooks, setNeedBooks] = useState(false);
+  const [needHealth, setNeedHealth] = useState(false);
+  const [mealValue, setMealValue] = useState('');
+  const [booksValue, setBooksValue] = useState('');
+  const [healthValue, setHealthValue] = useState('');
+  const [approveSubmitting, setApproveSubmitting] = useState(false);
 
   const loadList = useCallback(async () => {
     setListLoading(true);
@@ -150,20 +162,89 @@ export default function LeaderChildrenPage() {
     void loadProfiles();
   }, [tab, loadProfiles]);
 
-  async function runReview(id: string, isYes: boolean) {
+  function runReview(row: UploadChildRequestEntity, isYes: boolean) {
     if (!isYes) {
-      setRefuseModal({ id, mode: 'review' });
+      setRefuseModal({ id: row.id, mode: 'review' });
       setRefuseReason('');
       return;
     }
-    setBusyId(id);
+    setApproveModal(row);
+    setNeedMeal(false);
+    setNeedBooks(false);
+    setNeedHealth(false);
+    setMealValue('');
+    setBooksValue('');
+    setHealthValue('');
+  }
+
+  async function submitApproveWithNeeds() {
+    if (!approveModal) return;
+    const childId = (approveModal.profile_id || approveModal.id).trim();
+    if (!childId) {
+      toast.error('Missing profile / child id on this upload request');
+      return;
+    }
+
+    if (!needMeal && !needBooks && !needHealth) {
+      toast.error('Select at least one need type');
+      return;
+    }
+    const mOk = !needMeal || (Number(mealValue) > 0 && Number.isFinite(Number(mealValue)));
+    const bOk = !needBooks || (Number(booksValue) > 0 && Number.isFinite(Number(booksValue)));
+    const hOk = !needHealth || (Number(healthValue) > 0 && Number.isFinite(Number(healthValue)));
+    if (!mOk || !bOk || !hOk) {
+      toast.error('Enter a valid positive amount (VND) for each selected need');
+      return;
+    }
+
+    setApproveSubmitting(true);
+    setBusyId(approveModal.id);
     try {
-      await childUploadService.review(id, { is_vote_yes: true });
-      toast.success('Review recorded');
+      if (!isChildUploadReviewApproved(approveModal.review_status)) {
+        await childUploadService.review(approveModal.id, { is_vote_yes: true });
+      }
+
+      if (needMeal) {
+        const ok = await execute(
+          () =>
+            childrenService.updateMealNeed({
+              child_id: childId,
+              value: Number(mealValue),
+            }),
+          { quiet: true },
+        );
+        if (!ok) return;
+      }
+      if (needBooks) {
+        const ok = await execute(
+          () =>
+            childrenService.updateBooksNeed({
+              child_id: childId,
+              value: Number(booksValue),
+            }),
+          { quiet: true },
+        );
+        if (!ok) return;
+      }
+      if (needHealth) {
+        const ok = await execute(
+          () =>
+            childrenService.updateHealthInsuranceNeed({
+              child_id: childId,
+              value: Number(healthValue),
+            }),
+          { quiet: true },
+        );
+        if (!ok) return;
+      }
+
+      toast.success('Review saved and child needs updated');
+      setApproveModal(null);
       await loadUploads();
     } catch (e: unknown) {
-      toast.error(getErrorMessage(e, 'Review failed'));
+      toast.error(getErrorMessage(e, 'Operation failed'));
     } finally {
+      setApproveSubmitting(false);
       setBusyId(null);
     }
   }
@@ -236,6 +317,9 @@ export default function LeaderChildrenPage() {
 
   const refuseModalTitle = refuseModal?.mode === 'review' ? 'Refuse review' : 'Vote no';
   const busyRefuseId = refuseModal?.mode === 'review' ? busyId : voteBusyId;
+
+  const approveInputClass =
+    'w-full rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none ring-blue-800/20 focus:border-blue-800 focus:ring-2';
 
   return (
     <div>
@@ -366,16 +450,16 @@ export default function LeaderChildrenPage() {
                     <button
                       type="button"
                       disabled={busyId === u.id}
-                      onClick={() => void runReview(u.id, true)}
+                      onClick={() => runReview(u, true)}
                       className="inline-flex items-center gap-0.5 rounded border border-blue-200 bg-blue-50 px-1.5 py-0.5 text-[11px] font-medium text-blue-900 hover:bg-blue-100 disabled:opacity-50"
                     >
                       <ClipboardCheck className="h-3 w-3" />
-                      OK
+                      Approve
                     </button>
                     <button
                       type="button"
                       disabled={busyId === u.id}
-                      onClick={() => void runReview(u.id, false)}
+                      onClick={() => runReview(u, false)}
                       className="inline-flex items-center gap-0.5 rounded border border-amber-200 bg-amber-50 px-1.5 py-0.5 text-[11px] font-medium text-amber-900 hover:bg-amber-100 disabled:opacity-50"
                     >
                       Refuse
@@ -469,6 +553,147 @@ export default function LeaderChildrenPage() {
           onPageChange={setPage}
           emptyMessage="No children found"
         />
+      )}
+
+      {approveModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 p-4">
+          <div className="max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-xl border border-slate-200 bg-white p-5 shadow-xl">
+            <div className="mb-4 flex items-start justify-between gap-2">
+              <div>
+                <h3 className="text-lg font-semibold text-slate-900">Approve upload &amp; configure needs</h3>
+                <p className="mt-1 text-sm text-slate-600">
+                  {approveModal.first_name} {approveModal.last_name} · {approveModal.region}
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => !approveSubmitting && !executing && setApproveModal(null)}
+                className="shrink-0 rounded-lg p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-700 disabled:opacity-50"
+                aria-label="Close"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            <p className="mb-4 rounded-lg border border-blue-100 bg-blue-50/80 px-3 py-2 text-xs text-slate-700">
+              Select the needs to configure and enter the <strong>amount (VND)</strong> for each. On{' '}
+              <strong>Confirm</strong>, the app calls <code className="rounded bg-white px-1">POST /child-upload-reqs/{'{id}'}/review</code> (if needed), then{' '}
+              <code className="rounded bg-white px-1">PUT /children/meal-need</code>,{' '}
+              <code className="rounded bg-white px-1">PUT /children/books-need</code>, and/or{' '}
+              <code className="rounded bg-white px-1">PUT /children/health-insurance-need</code> with{' '}
+              <code className="rounded bg-white px-1">child_id</code> and <code className="rounded bg-white px-1">value</code>.
+            </p>
+
+            <div className="space-y-4 text-sm">
+              <label className="flex cursor-pointer items-start gap-3 rounded-lg border border-slate-200 p-3 hover:bg-slate-50/80">
+                <input
+                  type="checkbox"
+                  className="mt-1"
+                  checked={needMeal}
+                  onChange={(e) => setNeedMeal(e.target.checked)}
+                  disabled={approveSubmitting || executing}
+                />
+                <span className="flex-1">
+                  <span className="font-medium text-slate-900">Meal need</span>
+                  <span className="mt-0.5 block text-xs text-slate-500">Amount basis: per month (VND/month)</span>
+                  {needMeal && (
+                    <input
+                      type="number"
+                      min={1}
+                      step={1}
+                      className={`${approveInputClass} mt-2`}
+                      placeholder="e.g. 500000"
+                      value={mealValue}
+                      onChange={(e) => setMealValue(e.target.value)}
+                      disabled={approveSubmitting || executing}
+                    />
+                  )}
+                </span>
+              </label>
+
+              <label className="flex cursor-pointer items-start gap-3 rounded-lg border border-slate-200 p-3 hover:bg-slate-50/80">
+                <input
+                  type="checkbox"
+                  className="mt-1"
+                  checked={needBooks}
+                  onChange={(e) => setNeedBooks(e.target.checked)}
+                  disabled={approveSubmitting || executing}
+                />
+                <span className="flex-1">
+                  <span className="font-medium text-slate-900">Books need</span>
+                  <span className="mt-0.5 block text-xs text-slate-500">
+                    Amount basis: per semester (VND/semester; typically two per year)
+                  </span>
+                  {needBooks && (
+                    <input
+                      type="number"
+                      min={1}
+                      step={1}
+                      className={`${approveInputClass} mt-2`}
+                      placeholder="e.g. 800000"
+                      value={booksValue}
+                      onChange={(e) => setBooksValue(e.target.value)}
+                      disabled={approveSubmitting || executing}
+                    />
+                  )}
+                </span>
+              </label>
+
+              <label className="flex cursor-pointer items-start gap-3 rounded-lg border border-slate-200 p-3 hover:bg-slate-50/80">
+                <input
+                  type="checkbox"
+                  className="mt-1"
+                  checked={needHealth}
+                  onChange={(e) => setNeedHealth(e.target.checked)}
+                  disabled={approveSubmitting || executing}
+                />
+                <span className="flex-1">
+                  <span className="font-medium text-slate-900">Health insurance need</span>
+                  <span className="mt-0.5 block text-xs text-slate-500">Amount basis: per year (VND/year)</span>
+                  {needHealth && (
+                    <input
+                      type="number"
+                      min={1}
+                      step={1}
+                      className={`${approveInputClass} mt-2`}
+                      placeholder="e.g. 1200000"
+                      value={healthValue}
+                      onChange={(e) => setHealthValue(e.target.value)}
+                      disabled={approveSubmitting || executing}
+                    />
+                  )}
+                </span>
+              </label>
+            </div>
+
+            <p className="mt-3 text-[11px] text-slate-400">
+              Request body uses <code className="rounded bg-slate-100 px-1">child_id</code> (child profile id) and{' '}
+              <code className="rounded bg-slate-100 px-1">value</code>. On-chain steps use{' '}
+              <code className="rounded bg-slate-100 px-1">POST /tx/execute</code> when the API returns{' '}
+              <code className="rounded bg-slate-100 px-1">tx_bytes</code>.
+            </p>
+
+            <div className="mt-5 flex flex-wrap justify-end gap-2">
+              <button
+                type="button"
+                onClick={() => !approveSubmitting && !executing && setApproveModal(null)}
+                disabled={approveSubmitting || executing}
+                className="rounded-lg border border-slate-200 px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-50"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                disabled={approveSubmitting || executing}
+                onClick={() => void submitApproveWithNeeds()}
+                className="inline-flex items-center gap-1 rounded-lg bg-blue-800 px-3 py-2 text-sm font-medium text-white hover:bg-blue-900 disabled:opacity-50"
+              >
+                <Check className="h-4 w-4" />
+                {approveSubmitting || executing ? 'Processing…' : 'Confirm'}
+              </button>
+            </div>
+          </div>
+        </div>
       )}
 
       {refuseModal && (

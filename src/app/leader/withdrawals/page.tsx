@@ -34,17 +34,17 @@ function childOptionLabel(c: Child) {
   return `${c.first_name} ${c.last_name} · ${truncateAddress(c.id)}`;
 }
 
-/** Two `books_needs` entries are shown as học kỳ 1 & 2; more entries use numbered semesters. */
+/** When `books_needs` has two entries, label as semester 1 & 2 (order = API array order). */
 function bookNeedOptionLabel(needIds: string[], index: number, id: string): string {
   const idShort = truncateAddress(id);
   const n = needIds.length;
   if (n === 2) {
-    return `${index === 0 ? 'Học kỳ 1' : 'Học kỳ 2'} · ${idShort}`;
+    return `${index === 0 ? 'Semester 1' : 'Semester 2'} · ${idShort}`;
   }
   if (n === 1) {
-    return `Sách vở · ${idShort}`;
+    return `Books need · ${idShort}`;
   }
-  return `Học kỳ ${index + 1} · ${idShort}`;
+  return `Semester ${index + 1} · ${idShort}`;
 }
 
 export default function LeaderWithdrawalsPage() {
@@ -606,12 +606,11 @@ export default function LeaderWithdrawalsPage() {
 
               {needKind === 'books' && booksNeedOk && (
                 <div>
-                  <label className="mb-1.5 block text-sm font-medium text-slate-700">
-                    Nhu cầu sách
-                  </label>
+                  <label className="mb-1.5 block text-sm font-medium text-slate-700">books need</label>
                   {childDetail.books_needs.length === 2 && (
                     <p className="mb-1.5 text-xs text-slate-500">
-                      Hai mục tương ứng học kỳ 1 và học kỳ 2 — chọn đúng kỳ cần rút.
+                      Two <code className="rounded bg-slate-50 px-1">need_id</code> values map to semester 1 and 2 — pick
+                      the correct books need to withdraw.
                     </p>
                   )}
                   <select

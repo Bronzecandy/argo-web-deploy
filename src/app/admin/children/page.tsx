@@ -7,7 +7,9 @@ import PageHeader from '@/src/components/ui/PageHeader';
 import DataTable from '@/src/components/ui/DataTable';
 import DetailModal from '@/src/components/ui/DetailModal';
 import BlobImage from '@/src/components/ui/BlobImage';
+import WalrusFallbackImg from '@/src/components/ui/WalrusFallbackImg';
 import { BLOB_URL } from '@/src/lib/constants';
+import { blobService } from '@/src/services/blob.service';
 import { formatDate, truncateAddress } from '@/src/lib/formatters';
 import { childrenService } from '@/src/services/children.service';
 import type { Child } from '@/src/types/api.types';
@@ -205,6 +207,29 @@ export default function AdminChildrenPage() {
                   />
                 </div>
               )}
+              {(() => {
+                const homeBid = detailChild.home_blob_id?.trim();
+                if (!homeBid) return null;
+                const homeUrl = blobService.getUrl(homeBid);
+                return (
+                  <div>
+                    <p className="mb-1 text-xs font-medium text-slate-500">Home</p>
+                    {homeUrl ? (
+                      <a href={homeUrl} target="_blank" rel="noopener noreferrer" className="inline-block">
+                        <WalrusFallbackImg
+                          blobId={homeBid}
+                          className="h-24 w-24 rounded-lg border border-slate-200 object-cover"
+                        />
+                      </a>
+                    ) : (
+                      <WalrusFallbackImg
+                        blobId={homeBid}
+                        className="h-24 w-24 rounded-lg border border-slate-200 object-cover"
+                      />
+                    )}
+                  </div>
+                );
+              })()}
             </div>
             <p>
               <span className="text-slate-500">Name:</span>{' '}

@@ -7,7 +7,7 @@ import axios, {
 } from 'axios';
 import { API_BASE_URL, STORAGE_KEYS } from '@/src/lib/constants';
 
-/** 1 lần gọi đầu + 5 lần thử lại = 6 lần tối đa khi gặp HTTP 500 */
+/** First request + up to MAX_500_RETRIES retries when the server returns HTTP 500 */
 const MAX_500_RETRIES = 5;
 const RETRY_500_BASE_DELAY_MS = 500;
 
@@ -32,7 +32,7 @@ class ApiService {
     const url = typeof config.url === 'string' ? config.url : '';
     const fullUrl = `${base}${url}`;
     console.error(
-      `[API] Vẫn lỗi 500 sau ${MAX_500_RETRIES + 1} lần thử:`,
+      `[API] Still getting HTTP 500 after ${MAX_500_RETRIES + 1} attempt(s):`,
       method,
       fullUrl,
       'response:',
