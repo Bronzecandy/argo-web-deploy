@@ -10,7 +10,7 @@ import EntityBlobThumb from '@/src/components/ui/EntityBlobThumb';
 import GroupedNumericInput from '@/src/components/ui/GroupedNumericInput';
 import StatusBadge from '@/src/components/ui/StatusBadge';
 import CopyableTruncated from '@/src/components/ui/CopyableTruncated';
-import { collectBlobIdEntries } from '@/src/lib/blobFields';
+import { collectBlobIdEntries, blobFieldDisplayLabel } from '@/src/lib/blobFields';
 import { formatDate } from '@/src/lib/formatters';
 import { childUploadService } from '@/src/services/child-upload.service';
 import { childrenService } from '@/src/services/children.service';
@@ -896,7 +896,7 @@ export default function LeaderChildrenPage() {
                     {blobs.map(({ key, blobId }) => (
                       <div key={key} className="text-center">
                         <EntityBlobThumb blobId={blobId} source={childBlobThumbSource(key)} className="h-20 w-20 rounded-md border border-slate-200 object-cover" />
-                        <div className="mt-1 text-[10px] text-slate-500">{key}</div>
+                        <div className="mt-1 text-[10px] text-slate-500">{blobFieldDisplayLabel(key)}</div>
                       </div>
                     ))}
                   </div>
@@ -966,7 +966,7 @@ export default function LeaderChildrenPage() {
                             source={key.includes('avatar') ? 'api' : 'walrus'}
                             className="h-20 w-20 rounded-md border border-slate-200 object-cover"
                           />
-                          <div className="mt-1 text-[10px] text-slate-500">{key}</div>
+                          <div className="mt-1 text-[10px] text-slate-500">{blobFieldDisplayLabel(key)}</div>
                         </div>
                       ))}
                     </div>

@@ -19,6 +19,36 @@ export function pickFirstBlobId(obj: unknown, keys: readonly string[]): string |
   return undefined;
 }
 
+/** Vietnamese labels for `*_blob*` fields shown under thumbnails in detail modals. */
+const BLOB_FIELD_LABELS_VI: Record<string, string> = {
+  avatar_blob_id: 'Ảnh đại diện',
+  identity_card_blob_id: 'CCCD / CMND',
+  home_blob_id: 'Ảnh nhà / cảnh nhà',
+  birth_certificate_blob_id: 'Giấy khai sinh',
+  gift_image_blob_id: 'Ảnh quà tặng',
+  delivered_image_blob_id: 'Ảnh xác nhận đã nhận hàng',
+  image_blob_id: 'Ảnh minh chứng',
+  proof_blob_id: 'Ảnh bằng chứng',
+  center_image_blob_id: 'Ảnh trung tâm',
+};
+
+/** User-facing caption for a blob field key (detail modals). */
+function humanizeBlobKeyTail(fieldKey: string): string {
+  const known = BLOB_FIELD_LABELS_VI[fieldKey];
+  if (known) return known;
+  const stripped = fieldKey.replace(/_blob_id$/i, '').replace(/_blob$/i, '').replace(/_id$/i, '');
+  const words = stripped.split('_').filter(Boolean);
+  if (words.length === 0) return fieldKey;
+  return words.map((w) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(' ');
+}
+
+export function blobFieldDisplayLabel(fieldKey: string): string {
+  const guardian = fieldKey.match(/^(first_guardian|second_guardian)\.(.+)$/);
+  if (guardian)
+    return `${humanizeBlobKeyTail(guardian[2])} (${guardian[1] === 'first_guardian' ? 'Giám hộ thứ nhất' : 'Giám hộ thứ hai'})`;
+  return humanizeBlobKeyTail(fieldKey);
+}
+
 /** All non-empty blob-like string fields on a record (for detail “Images” sections). */
 export function collectBlobIdEntries(obj: unknown): { key: string; blobId: string }[] {
   if (!obj || typeof obj !== 'object') return [];

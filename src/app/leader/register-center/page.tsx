@@ -17,18 +17,24 @@ const MIN_LOCAL_LEADERS_APPROVED = 1;
 export default function LeaderRegisterCenterPage() {
   const router = useRouter();
   const { user } = useAppSelector((s) => s.auth);
-  const { poolName, status: poolStatus } = useAppSelector((s) => s.leaderPool);
-  const { refetch: refetchLeaderCenter } = useLeaderCenter();
+  const {
+    refetch: refetchLeaderCenter,
+    status: centerStatus,
+    leaderRegion,
+    errorMessage: centerError,
+  } = useLeaderCenter();
 
   const [modalOpen, setModalOpen] = useState(false);
   const [loading, setLoading] = useState(true);
   const [volunteerApproved, setVolunteerApproved] = useState(0);
   const [localLeaderApproved, setLocalLeaderApproved] = useState(0);
 
-  const canLoadCounts = poolStatus === 'succeeded' && !!poolName?.trim();
+  /** Cùng nguồn vùng với danh sách TNV: GET /centers/leader → `region`. */
+  const canLoadCounts = centerStatus !== 'loading' && !!leaderRegion?.trim();
 
   const loadCounts = useCallback(async () => {
-    if (!canLoadCounts || !poolName) {
+    const region = leaderRegion?.trim();
+    if (!canLoadCounts || !region) {
       setVolunteerApproved(0);
       setLocalLeaderApproved(0);
       setLoading(false);
@@ -41,14 +47,14 @@ export default function LeaderRegisterCenterPage() {
           page: 0,
           page_size: 1,
           register_role: 'Volunteer',
-          region: poolName,
+          region,
           status: 'approved',
         }),
         registrationService.list({
           page: 0,
           page_size: 1,
           register_role: 'LocalLeader',
-          region: poolName,
+          region,
           status: 'approved',
         }),
       ]);
@@ -60,7 +66,7 @@ export default function LeaderRegisterCenterPage() {
     } finally {
       setLoading(false);
     }
-  }, [canLoadCounts, poolName]);
+  }, [canLoadCounts, leaderRegion]);
 
   useEffect(() => {
     void loadCounts();
@@ -78,20 +84,23 @@ export default function LeaderRegisterCenterPage() {
         description="Create a proposal to establish a support center in your assigned region once minimum staffing is met."
       />
 
-      {poolStatus === 'loading' || poolStatus === 'idle' ? (
-        <p className="text-sm text-slate-600">Loading region assignment…</p>
-      ) : poolStatus === 'failed' || !poolName ? (
+      {centerStatus === 'loading' ? (
+        <p className="text-sm text-slate-600">Đang tải vùng từ trung tâm trưởng vùng (GET /centers/leader)…</p>
+      ) : !leaderRegion?.trim() ? (
         <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
-          Your leader pool / region could not be loaded. You need an assigned region to submit a center proposal.
+          Không có trường <code className="rounded bg-white px-1">region</code> từ GET /centers/leader — không kiểm tra
+          được điều kiện nhân sự theo vùng. Khi API trả về vùng được gán, trang sẽ tự cập nhật.
+          {centerError ? <span className="mt-2 block text-xs opacity-90">{centerError}</span> : null}
         </div>
       ) : null}
 
+      {canLoadCounts ? (
       <section className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
         <h2 className="mb-2 text-sm font-semibold text-slate-900">Minimum requirements</h2>
         <p className="mb-4 text-sm text-slate-600">
           At least {MIN_LOCAL_LEADERS_APPROVED} approved Local Leader registration(s) and{' '}
           {MIN_VOLUNTEERS_APPROVED} approved Volunteer registration(s) in region{' '}
-          <span className="font-medium text-slate-800">{poolName || '—'}</span>.
+          <span className="font-medium text-slate-800">{leaderRegion || '—'}</span>.
         </p>
         <ul className="space-y-3 text-sm">
           <li className="flex items-start gap-2">
@@ -145,11 +154,12 @@ export default function LeaderRegisterCenterPage() {
           )}
         </div>
       </section>
+      ) : null}
 
       <RegisterCenterModal
         open={modalOpen}
         onClose={() => setModalOpen(false)}
-        lockedRegion={poolName?.trim() || undefined}
+        lockedRegion={leaderRegion?.trim() || undefined}
         onSuccess={() => {
           void refetchLeaderCenter().then(() => router.push('/leader'));
         }}

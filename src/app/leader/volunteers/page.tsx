@@ -9,7 +9,7 @@ import DetailModal from '@/src/components/ui/DetailModal';
 import EntityBlobThumb from '@/src/components/ui/EntityBlobThumb';
 import StatusBadge from '@/src/components/ui/StatusBadge';
 import CopyableTruncated from '@/src/components/ui/CopyableTruncated';
-import { collectBlobIdEntries } from '@/src/lib/blobFields';
+import { collectBlobIdEntries, blobFieldDisplayLabel } from '@/src/lib/blobFields';
 import { formatDate } from '@/src/lib/formatters';
 import { registrationService } from '@/src/services/registration.service';
 import { useExecuteTransaction } from '@/src/hooks/useExecuteTransaction';
@@ -415,7 +415,7 @@ export default function LeaderVolunteersPage() {
                     {blobs.map(({ key, blobId }) => (
                       <div key={key} className="text-center">
                         <EntityBlobThumb blobId={blobId} />
-                        <div className="mt-1 text-[10px] text-slate-500">{key}</div>
+                        <div className="mt-1 text-[10px] text-slate-500">{blobFieldDisplayLabel(key)}</div>
                       </div>
                     ))}
                   </div>

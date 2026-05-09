@@ -7,7 +7,7 @@ import DataTable from '@/src/components/ui/DataTable';
 import DetailModal from '@/src/components/ui/DetailModal';
 import EntityBlobThumb from '@/src/components/ui/EntityBlobThumb';
 import RegisterCenterModal from '@/src/components/leader/RegisterCenterModal';
-import { collectBlobIdEntries } from '@/src/lib/blobFields';
+import { collectBlobIdEntries, blobFieldDisplayLabel } from '@/src/lib/blobFields';
 import { formatDate } from '@/src/lib/formatters';
 import { useLeaderCenter } from '@/src/contexts/LeaderCenterContext';
 import { useAppSelector } from '@/src/store/hooks';
@@ -183,7 +183,7 @@ export default function LeaderCentersPage() {
                       {blobs.map(({ key, blobId }) => (
                         <div key={key} className="text-center">
                           <EntityBlobThumb blobId={blobId} source="walrus" className="h-20 w-20 rounded-md border border-slate-200 object-cover" />
-                          <div className="mt-1 text-[10px] text-slate-500">{key}</div>
+                          <div className="mt-1 text-[10px] text-slate-500">{blobFieldDisplayLabel(key)}</div>
                         </div>
                       ))}
                     </div>

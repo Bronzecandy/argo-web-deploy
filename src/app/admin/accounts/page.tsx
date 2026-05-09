@@ -18,7 +18,7 @@ import StatusBadge from '@/src/components/ui/StatusBadge';
 import DetailModal from '@/src/components/ui/DetailModal';
 import CopyableTruncated from '@/src/components/ui/CopyableTruncated';
 import EntityBlobThumb from '@/src/components/ui/EntityBlobThumb';
-import { collectBlobIdEntries } from '@/src/lib/blobFields';
+import { collectBlobIdEntries, blobFieldDisplayLabel } from '@/src/lib/blobFields';
 import { formatDate, formatVND } from '@/src/lib/formatters';
 import { registrationService } from '@/src/services/registration.service';
 import { staffService } from '@/src/services/staff.service';
@@ -465,6 +465,35 @@ export default function AdminAccountsPage() {
             <DataTable<Staff>
               columns={[
                 {
+                  key: 'id',
+                  label: 'ID',
+                  className: 'whitespace-nowrap',
+                  render: (s) => <CopyableTruncated value={s.id} chars={8} />,
+                },
+                {
+                  key: 'name',
+                  label: 'Tên',
+                  render: (s) => (
+                    <span>
+                      {s.first_name} {s.last_name}
+                    </span>
+                  ),
+                },
+                { key: 'region', label: 'Vùng' },
+                {
+                  key: 'role',
+                  label: 'Vai trò',
+                  render: (s) => {
+                    const roles = [...new Set((s.nfts ?? []).map((n) => n.role).filter(Boolean))];
+                    if (!roles.length) return <span className="text-slate-400">—</span>;
+                    return (
+                      <span className="capitalize">
+                        {roles.map((r) => r.replace(/_/g, ' ')).join(', ')}
+                      </span>
+                    );
+                  },
+                },
+                {
                   key: 'details',
                   label: 'Chi tiết',
                   className: 'whitespace-nowrap',
@@ -482,18 +511,6 @@ export default function AdminAccountsPage() {
                     </button>
                   ),
                 },
-                {
-                  key: 'name',
-                  label: 'Tên',
-                  render: (s) => (
-                    <span>
-                      {s.first_name} {s.last_name}
-                    </span>
-                  ),
-                },
-                { key: 'region', label: 'Vùng' },
-                { key: 'email', label: 'Email' },
-                { key: 'phone_number', label: 'Điện thoại' },
               ]}
               data={staff}
               loading={staffLoading}
@@ -626,7 +643,7 @@ export default function AdminAccountsPage() {
                     {blobs.map(({ key, blobId }) => (
                       <div key={key} className="text-center">
                         <EntityBlobThumb blobId={blobId} />
-                        <div className="mt-1 text-[10px] text-slate-500">{key}</div>
+                        <div className="mt-1 text-[10px] text-slate-500">{blobFieldDisplayLabel(key)}</div>
                       </div>
                     ))}
                   </div>
@@ -671,7 +688,7 @@ export default function AdminAccountsPage() {
                     {staffBlobs.map(({ key, blobId }) => (
                       <div key={key} className="text-center">
                         <EntityBlobThumb blobId={blobId} />
-                        <div className="mt-1 text-[10px] text-slate-500">{key}</div>
+                        <div className="mt-1 text-[10px] text-slate-500">{blobFieldDisplayLabel(key)}</div>
                       </div>
                     ))}
                   </div>
@@ -690,7 +707,7 @@ export default function AdminAccountsPage() {
                           {collectBlobIdEntries(nft).map(({ key, blobId }) => (
                             <div key={`${nft.id}-${key}`}>
                               <EntityBlobThumb blobId={blobId} />
-                              <span className="text-[10px] text-slate-500">{key}</span>
+                              <span className="text-[10px] text-slate-500">{blobFieldDisplayLabel(key)}</span>
                             </div>
                           ))}
                         </div>

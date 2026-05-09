@@ -7,7 +7,7 @@ import DetailModal from '@/src/components/ui/DetailModal';
 import EntityBlobThumb from '@/src/components/ui/EntityBlobThumb';
 import StatusBadge from '@/src/components/ui/StatusBadge';
 import CopyableTruncated from '@/src/components/ui/CopyableTruncated';
-import { collectBlobIdEntries } from '@/src/lib/blobFields';
+import { collectBlobIdEntries, blobFieldDisplayLabel } from '@/src/lib/blobFields';
 import { formatDate, truncateAddress } from '@/src/lib/formatters';
 import { toast } from 'sonner';
 import { Plus } from 'lucide-react';
@@ -292,7 +292,7 @@ export default function LeaderRegionsPage() {
                     {blobs.map(({ key, blobId }) => (
                       <div key={key} className="text-center">
                         <EntityBlobThumb blobId={blobId} className="h-20 w-20 rounded-md border border-slate-200 object-cover" />
-                        <div className="mt-1 text-[10px] text-slate-500">{key}</div>
+                        <div className="mt-1 text-[10px] text-slate-500">{blobFieldDisplayLabel(key)}</div>
                       </div>
                     ))}
                   </div>
