@@ -13,7 +13,6 @@ import {
   Building2,
   Wallet,
   BarChart3,
-  Settings,
   LogOut,
   Menu,
   X,
@@ -33,7 +32,6 @@ const NAV_ITEMS = [
   { label: 'Đề xuất rút tiền', href: '/admin/treasury', icon: Wallet },
   { label: 'Giao dịch', href: '/admin/analytics', icon: BarChart3 },
   { label: 'Đề xuất vùng (admin)', href: '/admin/regions', icon: MapPin },
-  { label: 'Cấu hình', href: '/admin/config', icon: Settings },
 ];
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {

@@ -20,9 +20,10 @@ export function parseDigitsToNumber(s: string): number | null {
   return Number.isFinite(n) ? n : null;
 }
 
-export function formatDate(dateString: string): string {
-  if (!dateString) return '-';
+export function formatDate(dateString: string | null | undefined): string {
+  if (!dateString?.trim()) return '-';
   const date = new Date(dateString);
+  if (Number.isNaN(date.getTime())) return '-';
   return new Intl.DateTimeFormat('vi-VN', {
     day: '2-digit',
     month: '2-digit',
@@ -30,9 +31,10 @@ export function formatDate(dateString: string): string {
   }).format(date);
 }
 
-export function formatDateTime(dateString: string): string {
-  if (!dateString) return '-';
+export function formatDateTime(dateString: string | null | undefined): string {
+  if (!dateString?.trim()) return '-';
   const date = new Date(dateString);
+  if (Number.isNaN(date.getTime())) return '-';
   return new Intl.DateTimeFormat('vi-VN', {
     day: '2-digit',
     month: '2-digit',
