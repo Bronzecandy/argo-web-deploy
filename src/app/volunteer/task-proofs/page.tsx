@@ -5,8 +5,9 @@ import { toast } from 'sonner';
 import PageHeader from '@/src/components/ui/PageHeader';
 import DataTable from '@/src/components/ui/DataTable';
 import StatusBadge from '@/src/components/ui/StatusBadge';
+import CopyableTruncated from '@/src/components/ui/CopyableTruncated';
 import FileUploadInput from '@/src/components/ui/FileUploadInput';
-import { formatDate, truncateAddress } from '@/src/lib/formatters';
+import { formatDate } from '@/src/lib/formatters';
 import { taskProofService } from '@/src/services/task-proof.service';
 import { blobService } from '@/src/services/blob.service';
 import WalrusFallbackImg from '@/src/components/ui/WalrusFallbackImg';
@@ -108,11 +109,10 @@ export default function VolunteerTaskProofsPage() {
         <h2 className="mb-4 text-lg font-semibold text-slate-900">My Proofs</h2>
         <DataTable<TaskProof>
           columns={[
-            { key: 'id', label: 'ID', render: (r) => <span className="font-mono text-xs">{truncateAddress(r.id, 4)}</span> },
             {
               key: 'task_id',
               label: 'Task',
-              render: (r) => (r.task_id ? <span className="font-mono text-xs">{truncateAddress(r.task_id, 4)}</span> : '-'),
+              render: (r) => (r.task_id ? <CopyableTruncated value={r.task_id} chars={4} /> : '-'),
             },
             {
               key: 'image_blob_id',
@@ -128,7 +128,7 @@ export default function VolunteerTaskProofsPage() {
               },
             },
             { key: 'status', label: 'Status', render: (r) => <StatusBadge status={r.review_status ?? r.status ?? '—'} /> },
-            { key: 'reviewed_by', label: 'Reviewed by', render: (r) => (r.reviewed_by ? truncateAddress(r.reviewed_by) : '-') },
+            { key: 'reviewed_by', label: 'Reviewed by', render: (r) => (r.reviewed_by ? <CopyableTruncated value={r.reviewed_by} /> : '-') },
             { key: 'created_at', label: 'Ngày tạo', render: (r) => formatDate(r.created_at) },
           ]}
           data={rows}

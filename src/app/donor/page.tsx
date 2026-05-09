@@ -6,11 +6,12 @@ import { profileService } from '@/src/services/profile.service';
 import { transactionService } from '@/src/services/transaction.service';
 import { withdrawService } from '@/src/services/withdraw.service';
 import { childrenService } from '@/src/services/children.service';
-import { formatVND, formatDateTime, truncateAddress } from '@/src/lib/formatters';
+import { formatVND, formatDateTime } from '@/src/lib/formatters';
 import PageHeader from '@/src/components/ui/PageHeader';
 import StatsCard from '@/src/components/ui/StatsCard';
 import DataTable from '@/src/components/ui/DataTable';
 import StatusBadge from '@/src/components/ui/StatusBadge';
+import CopyableTruncated from '@/src/components/ui/CopyableTruncated';
 import type { PersonalWalletProfile, TransactionRecord, WithdrawProposal } from '@/src/types/api.types';
 import { Wallet, HandCoins, Baby, Vote, ArrowRight } from 'lucide-react';
 import Link from 'next/link';
@@ -119,7 +120,7 @@ export default function DonorDashboardPage() {
     {
       key: 'creator',
       label: 'Creator',
-      render: (item: WithdrawProposal) => truncateAddress(item.creator),
+      render: (item: WithdrawProposal) => <CopyableTruncated value={item.creator} />,
     },
     {
       key: 'status',

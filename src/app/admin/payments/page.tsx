@@ -8,7 +8,8 @@ import DataTable from '@/src/components/ui/DataTable';
 import StatusBadge from '@/src/components/ui/StatusBadge';
 import DetailModal from '@/src/components/ui/DetailModal';
 import BlobImage from '@/src/components/ui/BlobImage';
-import { formatDateTime, formatVND, truncateAddress } from '@/src/lib/formatters';
+import CopyableTruncated from '@/src/components/ui/CopyableTruncated';
+import { formatDateTime, formatVND } from '@/src/lib/formatters';
 import { paymentService } from '@/src/services/payment.service';
 import { useExecuteTransaction } from '@/src/hooks/useExecuteTransaction';
 import type { Payment } from '@/src/types/api.types';
@@ -160,8 +161,7 @@ export default function AdminPaymentsPage() {
 
       <DataTable<Payment>
         columns={[
-          { key: 'id', label: 'ID', render: (p) => <span className="font-mono text-xs">{truncateAddress(p.id, 8)}</span> },
-          { key: 'actor', label: 'Actor', render: (p) => truncateAddress(p.actor || '—') },
+          { key: 'actor', label: 'Actor', render: (p) => <CopyableTruncated value={p.actor} chars={6} /> },
           {
             key: 'amount',
             label: 'Amount',
@@ -248,7 +248,7 @@ export default function AdminPaymentsPage() {
           <div className="space-y-2 text-sm">
             <p className="font-mono text-xs break-all">{detailPayment.id}</p>
             <p>
-              <span className="text-slate-500">Actor:</span> {truncateAddress(detailPayment.actor || '—')}
+              <span className="text-slate-500">Actor:</span> <CopyableTruncated value={detailPayment.actor} chars={6} />
             </p>
             <p>
               <span className="text-slate-500">Amount:</span>{' '}

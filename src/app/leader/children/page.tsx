@@ -9,8 +9,9 @@ import DetailModal from '@/src/components/ui/DetailModal';
 import EntityBlobThumb from '@/src/components/ui/EntityBlobThumb';
 import GroupedNumericInput from '@/src/components/ui/GroupedNumericInput';
 import StatusBadge from '@/src/components/ui/StatusBadge';
+import CopyableTruncated from '@/src/components/ui/CopyableTruncated';
 import { collectBlobIdEntries } from '@/src/lib/blobFields';
-import { formatDate, truncateAddress } from '@/src/lib/formatters';
+import { formatDate } from '@/src/lib/formatters';
 import { childUploadService } from '@/src/services/child-upload.service';
 import { childrenService } from '@/src/services/children.service';
 import { useExecuteTransaction } from '@/src/hooks/useExecuteTransaction';
@@ -380,7 +381,6 @@ export default function LeaderChildrenPage() {
   }
 
   const listColumns = [
-    { key: 'id', label: 'ID', render: (row: Child) => <span className="font-mono text-xs">{truncateAddress(row.id, 8)}</span> },
     { key: 'first_name', label: 'First name' },
     { key: 'last_name', label: 'Last name' },
     { key: 'gender', label: 'Gender' },
@@ -390,7 +390,7 @@ export default function LeaderChildrenPage() {
       label: 'Ngày sinh',
       render: (row: Child) => formatDate(row.date_of_birth),
     },
-    { key: 'identity_code', label: 'Identity code' },
+    { key: 'identity_code', label: 'Identity code', render: (row: Child) => <CopyableTruncated value={row.identity_code} /> },
     {
       key: 'actions',
       label: 'Actions',
@@ -499,7 +499,6 @@ export default function LeaderChildrenPage() {
 
           <DataTable<UploadChildRequestEntity>
             columns={[
-              { key: 'id', label: 'ID', render: (u) => <span className="font-mono text-xs">{truncateAddress(u.id, 8)}</span> },
               {
                 key: 'name',
                 label: 'Name',
@@ -582,7 +581,6 @@ export default function LeaderChildrenPage() {
           </p>
           <DataTable<UploadChildRequestEntity>
             columns={[
-              { key: 'id', label: 'ID', render: (u) => <span className="font-mono text-xs">{truncateAddress(u.id, 8)}</span> },
               {
                 key: 'name',
                 label: 'Name',
@@ -859,17 +857,26 @@ export default function LeaderChildrenPage() {
           const gallery = (c.image_blob_ids ?? []).filter((id) => typeof id === 'string' && id.trim());
           return (
             <div className="space-y-1">
-              {detailField('ID', <span className="font-mono text-xs break-all">{c.id}</span>)}
+              {detailField('ID', <CopyableTruncated value={c.id} chars={8} />)}
               {detailField('Name', `${c.first_name} ${c.last_name}`)}
               {detailField('Gender', <span className="capitalize">{c.gender}</span>)}
               {detailField('Vùng', c.region)}
               {detailField('Ngày sinh', formatDate(c.date_of_birth))}
-              {detailField('Mã định danh', c.identity_code)}
+              {detailField('Mã định danh', <CopyableTruncated value={c.identity_code} />)}
               {detailField('Địa chỉ nhà', c.home_address || '—')}
-              {detailField('Meal need', c.meal_need ? truncateAddress(c.meal_need) : '—')}
-              {detailField('Health insurance need', c.health_insurance_need ? truncateAddress(c.health_insurance_need) : '—')}
-              {detailField('Books needs', (c.books_needs?.length ? c.books_needs : []).map((id) => truncateAddress(id)).join(', ') || '—')}
-              {detailField('Uploaded by', c.uploaded_by ? truncateAddress(c.uploaded_by) : '—')}
+              {detailField('Meal need', c.meal_need ? <CopyableTruncated value={c.meal_need} /> : '—')}
+              {detailField('Health insurance need', c.health_insurance_need ? <CopyableTruncated value={c.health_insurance_need} /> : '—')}
+              {detailField(
+                'Books needs',
+                c.books_needs?.length ? (
+                  <div className="flex flex-wrap gap-2">
+                    {c.books_needs.map((bid) => (
+                      <CopyableTruncated key={bid} value={bid} />
+                    ))}
+                  </div>
+                ) : '—',
+              )}
+              {detailField('Uploaded by', c.uploaded_by ? <CopyableTruncated value={c.uploaded_by} /> : '—')}
               {detailField('Uploaded', formatDate(c.uploaded_at))}
               {detailField('Updated', formatDate(c.updated_at))}
               {gallery.length > 0 && (
@@ -915,19 +922,19 @@ export default function LeaderChildrenPage() {
             const blobs = uploadBlobEntries(u);
             return (
               <div className="space-y-1">
-                {detailField('ID', <span className="font-mono text-xs break-all">{u.id}</span>)}
-                {detailField('Profile ID', <span className="font-mono text-xs break-all">{u.profile_id}</span>)}
+                {detailField('ID', <CopyableTruncated value={u.id} chars={8} />)}
+                {detailField('Profile ID', <CopyableTruncated value={u.profile_id} chars={8} />)}
                 {detailField('Name', `${u.first_name} ${u.last_name}`)}
                 {detailField('Gender', <span className="capitalize">{u.gender}</span>)}
                 {detailField('Vùng', u.region)}
-                {detailField('Mã định danh', u.identity_code)}
+                {detailField('Mã định danh', <CopyableTruncated value={u.identity_code} />)}
                 {detailField('Ngày sinh', formatDate(u.date_of_birth))}
                 {detailField('Địa chỉ nhà', u.home_address ?? '—')}
                 {detailField('Status', <StatusBadge status={u.status} />)}
                 {detailField('Review status', u.review_status ? <StatusBadge status={u.review_status} /> : <span className="text-slate-400">—</span>)}
-                {detailField('Reviewed by', u.reviewed_by ? truncateAddress(u.reviewed_by) : '—')}
+                {detailField('Reviewed by', u.reviewed_by ? <CopyableTruncated value={u.reviewed_by} /> : '—')}
                 {detailField('AI note', u.ai_evaluation ?? '—')}
-                {detailField('Người tạo', truncateAddress(u.created_by))}
+                {detailField('Người tạo', <CopyableTruncated value={u.created_by} />)}
                 {detailField('Ngày tạo', formatDate(u.created_at))}
                 {detailField('Updated', formatDate(u.updated_at))}
                 {detailField('Closed', formatDate(u.closed_at))}

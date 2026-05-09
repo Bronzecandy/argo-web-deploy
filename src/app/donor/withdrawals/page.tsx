@@ -4,9 +4,10 @@ import { useEffect, useState, useCallback } from 'react';
 import { withdrawService } from '@/src/services/withdraw.service';
 import { useAppSelector } from '@/src/store/hooks';
 import { useExecuteTransaction } from '@/src/hooks/useExecuteTransaction';
-import { formatVND, formatDateTime, truncateAddress } from '@/src/lib/formatters';
+import { formatVND, formatDateTime } from '@/src/lib/formatters';
 import PageHeader from '@/src/components/ui/PageHeader';
 import DataTable from '@/src/components/ui/DataTable';
+import CopyableTruncated from '@/src/components/ui/CopyableTruncated';
 import StatusBadge from '@/src/components/ui/StatusBadge';
 import type { WithdrawProposal } from '@/src/types/api.types';
 import { Vote, ThumbsUp, ThumbsDown, X } from 'lucide-react';
@@ -99,7 +100,7 @@ export default function DonorWithdrawalsPage() {
     {
       key: 'creator',
       label: 'Người tạo',
-      render: (item: WithdrawProposal) => truncateAddress(item.creator),
+      render: (item: WithdrawProposal) => <CopyableTruncated value={item.creator} />,
     },
     {
       key: 'votes',

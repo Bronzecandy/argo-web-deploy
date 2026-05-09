@@ -6,11 +6,12 @@ import { toast } from 'sonner';
 import PageHeader from '@/src/components/ui/PageHeader';
 import DataTable from '@/src/components/ui/DataTable';
 import DetailModal from '@/src/components/ui/DetailModal';
+import CopyableTruncated from '@/src/components/ui/CopyableTruncated';
 import BlobImage from '@/src/components/ui/BlobImage';
 import WalrusFallbackImg from '@/src/components/ui/WalrusFallbackImg';
 import { BLOB_URL } from '@/src/lib/constants';
 import { blobService } from '@/src/services/blob.service';
-import { formatDate, truncateAddress } from '@/src/lib/formatters';
+import { formatDate } from '@/src/lib/formatters';
 import { childrenService } from '@/src/services/children.service';
 import type { Child } from '@/src/types/api.types';
 
@@ -138,7 +139,6 @@ export default function AdminChildrenPage() {
 
         <DataTable<Child>
           columns={[
-            { key: 'id', label: 'ID', render: (c) => <span className="font-mono text-xs">{truncateAddress(c.id, 8)}</span> },
             {
               key: 'name',
               label: 'Name',
@@ -154,7 +154,7 @@ export default function AdminChildrenPage() {
             {
               key: 'identity_code',
               label: 'Identity',
-              render: (c) => <span className="font-mono text-xs">{truncateAddress(c.identity_code, 10)}</span>,
+              render: (c) => <CopyableTruncated value={c.identity_code} chars={10} />,
             },
             {
               key: 'actions',
@@ -237,9 +237,8 @@ export default function AdminChildrenPage() {
                 {detailChild.first_name} {detailChild.last_name}
               </span>
             </p>
-            <p>
-              <span className="text-slate-500">ID:</span>{' '}
-              <span className="font-mono text-xs break-all">{detailChild.id}</span>
+            <p className="flex flex-wrap items-center gap-2">
+              <span className="text-slate-500">ID:</span> <CopyableTruncated value={detailChild.id} chars={8} />
             </p>
             <p>
               <span className="text-slate-500">Region:</span> {detailChild.region}

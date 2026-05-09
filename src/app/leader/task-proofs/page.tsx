@@ -6,6 +6,7 @@ import DataTable from '@/src/components/ui/DataTable';
 import DetailModal from '@/src/components/ui/DetailModal';
 import EntityBlobThumb from '@/src/components/ui/EntityBlobThumb';
 import StatusBadge from '@/src/components/ui/StatusBadge';
+import CopyableTruncated from '@/src/components/ui/CopyableTruncated';
 import { collectBlobIdEntries } from '@/src/lib/blobFields';
 import { formatDate, truncateAddress } from '@/src/lib/formatters';
 import { toast } from 'sonner';
@@ -233,13 +234,12 @@ export default function LeaderTaskProofsPage() {
         </div>
         <DataTable<TaskProof>
           columns={[
-            { key: 'id', label: 'ID', render: (r) => <span className="font-mono text-xs">{truncateAddress(r.id, 4)}</span> },
             {
               key: 'task_id',
               label: 'Task',
-              render: (r) => (r.task_id ? <span className="font-mono text-xs">{truncateAddress(r.task_id, 4)}</span> : '-'),
+              render: (r) => (r.task_id ? <CopyableTruncated value={r.task_id} chars={4} /> : '-'),
             },
-            { key: 'actor_address', label: 'Actor', render: (r) => truncateAddress(r.actor_address) },
+            { key: 'actor_address', label: 'Actor', render: (r) => <CopyableTruncated value={r.actor_address} /> },
             {
               key: 'image_blob_id',
               label: 'Image',
@@ -261,7 +261,7 @@ export default function LeaderTaskProofsPage() {
                 return label ? <StatusBadge status={label} /> : <span className="text-slate-400">—</span>;
               },
             },
-            { key: 'reviewed_by', label: 'Reviewed by', render: (r) => (r.reviewed_by ? truncateAddress(r.reviewed_by) : '-') },
+            { key: 'reviewed_by', label: 'Reviewed by', render: (r) => (r.reviewed_by ? <CopyableTruncated value={r.reviewed_by} /> : '-') },
             { key: 'created_at', label: 'Ngày tạo', render: (r) => formatDate(r.created_at) },
             {
               key: 'actions',
@@ -341,15 +341,15 @@ export default function LeaderTaskProofsPage() {
           const label = proofReviewStatus(p);
           return (
             <div className="space-y-1">
-              {detailField('ID', <span className="font-mono text-xs break-all">{p.id}</span>)}
-              {detailField('Task ID', p.task_id ? <span className="font-mono text-xs break-all">{p.task_id}</span> : '—')}
-              {detailField('Actor', truncateAddress(p.actor_address))}
-              {detailField('Actor profile', p.actor_profile_id ? truncateAddress(p.actor_profile_id) : '—')}
+              {detailField('ID', <CopyableTruncated value={p.id} chars={4} />)}
+              {detailField('Task ID', p.task_id ? <CopyableTruncated value={p.task_id} chars={4} /> : '—')}
+              {detailField('Actor', <CopyableTruncated value={p.actor_address} />)}
+              {detailField('Actor profile', p.actor_profile_id ? <CopyableTruncated value={p.actor_profile_id} /> : '—')}
               {detailField('Status', label ? <StatusBadge status={label} /> : <span className="text-slate-400">—</span>)}
               {detailField('Description', p.description ?? '—')}
               {detailField('AI note', p.ai_evaluation ?? '—')}
               {detailField('Raw submit date', p.raw_submit_date ? formatDate(p.raw_submit_date) : '—')}
-              {detailField('Reviewed by', p.reviewed_by ? truncateAddress(p.reviewed_by) : '—')}
+              {detailField('Reviewed by', p.reviewed_by ? <CopyableTruncated value={p.reviewed_by} /> : '—')}
               {detailField('Ngày tạo', formatDate(p.created_at))}
               {detailField('Updated', formatDate(p.updated_at))}
               {blobs.length > 0 && (

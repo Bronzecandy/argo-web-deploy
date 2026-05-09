@@ -6,6 +6,7 @@ import DataTable from '@/src/components/ui/DataTable';
 import DetailModal from '@/src/components/ui/DetailModal';
 import EntityBlobThumb from '@/src/components/ui/EntityBlobThumb';
 import StatusBadge from '@/src/components/ui/StatusBadge';
+import CopyableTruncated from '@/src/components/ui/CopyableTruncated';
 import { collectBlobIdEntries } from '@/src/lib/blobFields';
 import { formatDate, truncateAddress } from '@/src/lib/formatters';
 import { toast } from 'sonner';
@@ -368,7 +369,6 @@ export default function LeaderTasksPage() {
         <h2 className="mb-4 text-lg font-semibold text-slate-900">Tasks in your region</h2>
         <DataTable<Task>
           columns={[
-            { key: 'id', label: 'ID', render: (r) => <span className="font-mono text-xs">{truncateAddress(r.id, 4)}</span> },
             {
               key: 'description',
               label: 'Description',
@@ -381,7 +381,7 @@ export default function LeaderTasksPage() {
             {
               key: 'assigned_staff',
               label: 'Assigned',
-              render: (r) => (r.assigned_staff ? truncateAddress(r.assigned_staff) : '-'),
+              render: (r) => (r.assigned_staff ? <CopyableTruncated value={r.assigned_staff} /> : '-'),
             },
             { key: 'created_at', label: 'Ngày tạo', render: (r) => formatDate(r.created_at) },
             {
@@ -646,8 +646,8 @@ export default function LeaderTasksPage() {
           <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-xl">
             <h3 className="mb-4 text-lg font-bold text-slate-900">Review Task</h3>
             <div className="mb-4 rounded-lg bg-slate-50 p-3 text-sm">
-              <p>
-                <span className="font-medium">Task:</span> {truncateAddress(reviewTask.id, 8)}
+              <p className="flex flex-wrap items-center gap-2">
+                <span className="font-medium">Task:</span> <CopyableTruncated value={reviewTask.id} chars={8} />
               </p>
               <p className="mt-1">
                 <span className="font-medium">Description:</span> {reviewTask.description}
@@ -728,14 +728,14 @@ export default function LeaderTasksPage() {
           const blobs = collectBlobIdEntries(t);
           return (
             <div className="space-y-1">
-              {detailField('ID', <span className="font-mono text-xs break-all">{t.id}</span>)}
+              {detailField('ID', <CopyableTruncated value={t.id} chars={4} />)}
               {detailField('Description', t.description)}
               {detailField('Vùng', t.region)}
               {detailField('Start', formatDate(t.start_period))}
               {detailField('End', formatDate(t.end_period))}
               {detailField('Status', <StatusBadge status={t.status} />)}
-              {detailField('Assigned staff', t.assigned_staff ? truncateAddress(t.assigned_staff) : '—')}
-              {detailField('Reviewed by', t.reviewed_by ? truncateAddress(t.reviewed_by) : '—')}
+              {detailField('Assigned staff', t.assigned_staff ? <CopyableTruncated value={t.assigned_staff} /> : '—')}
+              {detailField('Reviewed by', t.reviewed_by ? <CopyableTruncated value={t.reviewed_by} /> : '—')}
               {detailField('Ngày tạo', formatDate(t.created_at))}
               {detailField('Updated', formatDate(t.updated_at))}
               {blobs.length > 0 && (

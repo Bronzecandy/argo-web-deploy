@@ -4,7 +4,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { toast } from 'sonner';
 import PageHeader from '@/src/components/ui/PageHeader';
 import DataTable from '@/src/components/ui/DataTable';
-import { formatInteger, formatVND, truncateAddress } from '@/src/lib/formatters';
+import { formatInteger, formatVND } from '@/src/lib/formatters';
 import { donorService } from '@/src/services/donor.service';
 import type { Donor } from '@/src/types/api.types';
 import { HandCoins, Search, X } from 'lucide-react';
@@ -61,11 +61,6 @@ export default function AdminDonorsPage() {
   };
 
   const columns = [
-    {
-      key: 'id',
-      label: 'ID',
-      render: (d: Donor) => <span className="font-mono text-xs">{truncateAddress(d.id, 6)}</span>,
-    },
     {
       key: 'name',
       label: 'Name',

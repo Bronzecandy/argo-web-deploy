@@ -6,8 +6,9 @@ import { toast } from 'sonner';
 import PageHeader from '@/src/components/ui/PageHeader';
 import DataTable from '@/src/components/ui/DataTable';
 import StatusBadge from '@/src/components/ui/StatusBadge';
+import CopyableTruncated from '@/src/components/ui/CopyableTruncated';
 import FileUploadInput from '@/src/components/ui/FileUploadInput';
-import { formatDate, truncateAddress } from '@/src/lib/formatters';
+import { formatDate } from '@/src/lib/formatters';
 import { taskService } from '@/src/services/task.service';
 import { taskProofService } from '@/src/services/task-proof.service';
 import { useAppSelector } from '@/src/store/hooks';
@@ -144,7 +145,6 @@ export default function VolunteerTasksPage() {
         </p>
         <DataTable<Task>
           columns={[
-            { key: 'id', label: 'ID', render: (r) => <span className="font-mono text-xs">{truncateAddress(r.id, 4)}</span> },
             {
               key: 'description',
               label: 'Description',
@@ -183,7 +183,6 @@ export default function VolunteerTasksPage() {
         <h2 className="mb-3 text-base font-semibold text-slate-900">Browse &amp; claim</h2>
         <DataTable<Task>
         columns={[
-          { key: 'id', label: 'ID', render: (r) => <span className="font-mono text-xs">{truncateAddress(r.id, 4)}</span> },
           {
             key: 'description',
             label: 'Description',
@@ -196,7 +195,7 @@ export default function VolunteerTasksPage() {
           {
             key: 'assigned_staff',
             label: 'Assigned',
-            render: (r) => (r.assigned_staff ? truncateAddress(r.assigned_staff) : <span className="text-slate-400">Unassigned</span>),
+            render: (r) => (r.assigned_staff ? <CopyableTruncated value={r.assigned_staff} /> : <span className="text-slate-400">Unassigned</span>),
           },
           { key: 'created_at', label: 'Ngày tạo', render: (r) => formatDate(r.created_at) },
           {
@@ -244,8 +243,8 @@ export default function VolunteerTasksPage() {
                 <X className="h-5 w-5" />
               </button>
             </div>
-            <p className="mb-3 text-xs text-slate-500">
-              Task: <span className="font-mono">{proofTaskId ? truncateAddress(proofTaskId, 8) : '—'}</span>
+            <p className="mb-3 flex flex-wrap items-center gap-2 text-xs text-slate-500">
+              Task: {proofTaskId ? <CopyableTruncated value={proofTaskId} chars={8} /> : '—'}
             </p>
             <FileUploadInput label="Proof image (Walrus blob)" value={proofBlob} onChange={setProofBlob} accept="image/*" />
             <div className="mt-4 flex justify-end gap-2">

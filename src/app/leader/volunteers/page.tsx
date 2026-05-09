@@ -8,8 +8,9 @@ import DataTable from '@/src/components/ui/DataTable';
 import DetailModal from '@/src/components/ui/DetailModal';
 import EntityBlobThumb from '@/src/components/ui/EntityBlobThumb';
 import StatusBadge from '@/src/components/ui/StatusBadge';
+import CopyableTruncated from '@/src/components/ui/CopyableTruncated';
 import { collectBlobIdEntries } from '@/src/lib/blobFields';
-import { formatDate, truncateAddress } from '@/src/lib/formatters';
+import { formatDate } from '@/src/lib/formatters';
 import { registrationService } from '@/src/services/registration.service';
 import { useExecuteTransaction } from '@/src/hooks/useExecuteTransaction';
 import { useAppSelector } from '@/src/store/hooks';
@@ -200,7 +201,7 @@ export default function LeaderVolunteersPage() {
       )}
       {poolStatus === 'succeeded' && poolId && (
         <p className="mb-4 text-xs text-slate-500">
-          ID quỹ: <span className="font-mono">{truncateAddress(poolId, 10)}</span>
+          ID quỹ: <CopyableTruncated value={poolId} chars={10} />
         </p>
       )}
 
@@ -250,7 +251,6 @@ export default function LeaderVolunteersPage() {
 
         <DataTable<RegistrationRequest>
           columns={[
-            { key: 'id', label: 'ID', render: (r) => <span className="font-mono text-xs">{truncateAddress(r.id, 8)}</span> },
             {
               key: 'name',
               label: 'Tên',
@@ -395,7 +395,7 @@ export default function LeaderVolunteersPage() {
           const blobs = collectBlobIdEntries(r);
           return (
             <div className="space-y-1">
-              {detailField('ID', <span className="font-mono text-xs break-all">{r.id}</span>)}
+              {detailField('ID', <CopyableTruncated value={r.id} chars={8} />)}
               {detailField('Tên', `${r.first_name} ${r.last_name}`)}
               {detailField('Vai trò', <span className="capitalize">{r.register_role}</span>)}
               {detailField('Vùng', r.region)}
@@ -405,7 +405,7 @@ export default function LeaderVolunteersPage() {
               {detailField('Điện thoại', r.phone_number)}
               {detailField('Giới tính', r.gender)}
               {detailField('Ngày sinh', formatDate(r.date_of_birth))}
-              {detailField('Người tạo', truncateAddress(r.created_by))}
+              {detailField('Người tạo', <CopyableTruncated value={r.created_by} />)}
               {detailField('Ngày tạo', formatDate(r.created_at))}
               {detailField('Cập nhật', formatDate(r.updated_at))}
               {blobs.length > 0 && (

@@ -5,7 +5,8 @@ import { toast } from 'sonner';
 import PageHeader from '@/src/components/ui/PageHeader';
 import DataTable from '@/src/components/ui/DataTable';
 import DetailModal from '@/src/components/ui/DetailModal';
-import { formatDate, formatVND, truncateAddress } from '@/src/lib/formatters';
+import CopyableTruncated from '@/src/components/ui/CopyableTruncated';
+import { formatDate, formatVND } from '@/src/lib/formatters';
 import { transactionService } from '@/src/services/transaction.service';
 import type { TransactionRecord } from '@/src/types/api.types';
 
@@ -137,11 +138,10 @@ export default function AdminAnalyticsPage() {
         onPageChange={setPage}
         emptyMessage="No transactions match your filters"
         columns={[
-          { key: 'id', label: 'ID', render: (r) => <span className="font-mono text-xs">{truncateAddress(r.id, 4)}</span> },
           {
             key: 'actor_address',
             label: 'Actor',
-            render: (r) => <span title={r.actor_address}>{truncateAddress(r.actor_address)}</span>,
+            render: (r) => <CopyableTruncated value={r.actor_address} />,
           },
           { key: 'action_type', label: 'Action' },
           {
@@ -181,9 +181,11 @@ export default function AdminAnalyticsPage() {
       >
         {detailRow && (
           <div className="space-y-2 text-sm">
-            <p className="font-mono text-xs break-all">{detailRow.id}</p>
-            <p>
-              <span className="text-slate-500">Actor:</span> {truncateAddress(detailRow.actor_address)}
+            <p className="flex flex-wrap items-center gap-2">
+              <span className="text-slate-500">ID:</span> <CopyableTruncated value={detailRow.id} chars={4} />
+            </p>
+            <p className="flex flex-wrap items-center gap-2">
+              <span className="text-slate-500">Actor:</span> <CopyableTruncated value={detailRow.actor_address} />
             </p>
             <p>
               <span className="text-slate-500">Action:</span> {detailRow.action_type}

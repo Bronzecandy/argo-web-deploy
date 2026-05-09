@@ -8,7 +8,8 @@ import DataTable from '@/src/components/ui/DataTable';
 import StatusBadge from '@/src/components/ui/StatusBadge';
 import DetailModal from '@/src/components/ui/DetailModal';
 import BlobImage from '@/src/components/ui/BlobImage';
-import { formatDate, formatInteger, formatVND, truncateAddress } from '@/src/lib/formatters';
+import CopyableTruncated from '@/src/components/ui/CopyableTruncated';
+import { formatDate, formatInteger, formatVND } from '@/src/lib/formatters';
 import { centerService } from '@/src/services/center.service';
 import { useExecuteTransaction } from '@/src/hooks/useExecuteTransaction';
 import type { CenterRequest, SupportCenter } from '@/src/types/api.types';
@@ -27,19 +28,12 @@ type CentersTab = 'centers' | 'requests';
 
 /** On-chain registered support centers */
 const SUPPORT_CENTER_COLUMNS = [
-  {
-    key: 'id',
-    label: 'ID',
-    render: (c: SupportCenter) => <span className="font-mono text-xs">{truncateAddress(c.id, 8)}</span>,
-  },
   { key: 'region', label: 'Vùng' },
   {
     key: 'center_address',
     label: 'Address',
     render: (c: SupportCenter) => (
-      <span className="max-w-[240px] truncate text-slate-700" title={c.center_address}>
-        {c.center_address}
-      </span>
+      <CopyableTruncated value={c.center_address || ''} chars={14} mono={false} className="max-w-[240px] text-slate-700" />
     ),
   },
   { key: 'center_phone_number', label: 'Phone' },
@@ -57,26 +51,19 @@ const SUPPORT_CENTER_COLUMNS = [
 
 /** Center registration requests from leaders */
 const CENTER_REQUEST_COLUMNS = [
-  {
-    key: 'id',
-    label: 'ID',
-    render: (c: CenterRequest) => <span className="font-mono text-xs">{truncateAddress(c.id, 8)}</span>,
-  },
   { key: 'region', label: 'Vùng' },
   {
     key: 'address',
     label: 'Address',
     render: (c: CenterRequest) => (
-      <span className="max-w-[220px] truncate text-slate-700" title={c.address}>
-        {truncateAddress(c.address, 14)}
-      </span>
+      <CopyableTruncated value={c.address || ''} chars={14} mono={false} className="max-w-[220px] text-slate-700" />
     ),
   },
   { key: 'phone_number', label: 'Phone' },
   {
     key: 'created_by',
     label: 'Người tạo',
-    render: (c: CenterRequest) => <span className="font-mono text-xs">{truncateAddress(c.created_by, 8)}</span>,
+    render: (c: CenterRequest) => <CopyableTruncated value={c.created_by} chars={8} />,
   },
   { key: 'status', label: 'Status', render: (c: CenterRequest) => <StatusBadge status={c.status} /> },
   { key: 'created_at', label: 'Ngày tạo', render: (c: CenterRequest) => formatDate(c.created_at) },

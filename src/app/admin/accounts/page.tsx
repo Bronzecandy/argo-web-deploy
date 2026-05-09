@@ -16,9 +16,10 @@ import PageHeader from '@/src/components/ui/PageHeader';
 import DataTable from '@/src/components/ui/DataTable';
 import StatusBadge from '@/src/components/ui/StatusBadge';
 import DetailModal from '@/src/components/ui/DetailModal';
+import CopyableTruncated from '@/src/components/ui/CopyableTruncated';
 import EntityBlobThumb from '@/src/components/ui/EntityBlobThumb';
 import { collectBlobIdEntries } from '@/src/lib/blobFields';
-import { formatDate, formatVND, truncateAddress } from '@/src/lib/formatters';
+import { formatDate, formatVND } from '@/src/lib/formatters';
 import { registrationService } from '@/src/services/registration.service';
 import { staffService } from '@/src/services/staff.service';
 import { adminService } from '@/src/services/admin.service';
@@ -356,7 +357,6 @@ export default function AdminAccountsPage() {
 
           <DataTable<RegistrationRequest>
             columns={[
-              { key: 'id', label: 'ID', render: (r) => <span className="font-mono text-xs">{truncateAddress(r.id, 8)}</span> },
               {
                 key: 'name',
                 label: 'Tên',
@@ -464,7 +464,6 @@ export default function AdminAccountsPage() {
             <h2 className="mb-3 text-sm font-semibold text-slate-800">Nhân sự</h2>
             <DataTable<Staff>
               columns={[
-                { key: 'id', label: 'ID', render: (s) => <span className="font-mono text-xs">{truncateAddress(s.id, 8)}</span> },
                 {
                   key: 'details',
                   label: 'Chi tiết',
@@ -509,7 +508,6 @@ export default function AdminAccountsPage() {
             <h2 className="mb-3 text-sm font-semibold text-slate-800">Quản trị viên</h2>
             <DataTable<AdminRow>
               columns={[
-                { key: 'id', label: 'ID', render: (a) => <span className="font-mono text-xs">{truncateAddress(a.id, 8)}</span> },
                 {
                   key: 'details',
                   label: 'Chi tiết',
@@ -608,7 +606,7 @@ export default function AdminAccountsPage() {
           const blobs = collectBlobIdEntries(r);
           return (
             <div className="space-y-1">
-              {detailField('ID', <span className="font-mono text-xs break-all">{r.id}</span>)}
+              {detailField('ID', <CopyableTruncated value={r.id} chars={8} />)}
               {detailField('Tên', `${r.first_name} ${r.last_name}`)}
               {detailField('Vai trò', <span className="capitalize">{r.register_role}</span>)}
               {detailField('Vùng', r.region)}
@@ -618,7 +616,7 @@ export default function AdminAccountsPage() {
               {detailField('Điện thoại', r.phone_number)}
               {detailField('Giới tính', r.gender)}
               {detailField('Ngày sinh', formatDate(r.date_of_birth))}
-              {detailField('Người tạo', truncateAddress(r.created_by))}
+              {detailField('Người tạo', <CopyableTruncated value={r.created_by} chars={8} />)}
               {detailField('Ngày tạo', formatDate(r.created_at))}
               {detailField('Cập nhật', formatDate(r.updated_at))}
               {blobs.length > 0 && (
@@ -656,8 +654,8 @@ export default function AdminAccountsPage() {
           const staffBlobs = collectBlobIdEntries(s);
           return (
             <div className="space-y-1">
-              {detailField('ID', <span className="font-mono text-xs break-all">{s.id}</span>)}
-              {detailField('Người dùng', truncateAddress(s.user))}
+              {detailField('ID', <CopyableTruncated value={s.id} chars={8} />)}
+              {detailField('Người dùng', <CopyableTruncated value={s.user} chars={8} />)}
               {detailField('Tên', `${s.first_name} ${s.last_name}`)}
               {detailField('Vùng', s.region)}
               {detailField('Email', s.email)}
@@ -685,7 +683,9 @@ export default function AdminAccountsPage() {
                   <ul className="space-y-3">
                     {s.nfts.map((nft) => (
                       <li key={nft.id} className="rounded-lg border border-slate-100 p-2 text-sm">
-                        <div className="font-mono text-xs text-slate-600">{truncateAddress(nft.id, 6)}</div>
+                        <div className="flex items-center gap-1 font-mono text-xs text-slate-600">
+                          <CopyableTruncated value={nft.id} chars={6} />
+                        </div>
                         <div className="flex flex-wrap gap-3 pt-2">
                           {collectBlobIdEntries(nft).map(({ key, blobId }) => (
                             <div key={`${nft.id}-${key}`}>
@@ -713,7 +713,7 @@ export default function AdminAccountsPage() {
       >
         {adminDetailRow && (
           <div className="space-y-1">
-            {detailField('ID', <span className="font-mono text-xs break-all">{adminDetailRow.id}</span>)}
+            {detailField('ID', <CopyableTruncated value={adminDetailRow.id} chars={8} />)}
             {detailField(
               'Name',
               `${adminDetailRow.first_name ?? '—'} ${adminDetailRow.last_name ?? ''}`,

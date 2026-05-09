@@ -6,6 +6,7 @@ import DataTable from '@/src/components/ui/DataTable';
 import DetailModal from '@/src/components/ui/DetailModal';
 import EntityBlobThumb from '@/src/components/ui/EntityBlobThumb';
 import StatusBadge from '@/src/components/ui/StatusBadge';
+import CopyableTruncated from '@/src/components/ui/CopyableTruncated';
 import { collectBlobIdEntries } from '@/src/lib/blobFields';
 import { formatDate, truncateAddress } from '@/src/lib/formatters';
 import { toast } from 'sonner';
@@ -165,7 +166,7 @@ export default function LeaderRegionsPage() {
             {
               key: 'created_by',
               label: 'created_by',
-              render: (r) => truncateAddress(r.created_by),
+              render: (r) => <CopyableTruncated value={r.created_by} />,
             },
             { key: 'created_at', label: 'created_at', render: (r) => formatDate(r.created_at) },
             {
@@ -275,13 +276,13 @@ export default function LeaderRegionsPage() {
           const blobs = collectBlobIdEntries(r);
           return (
             <div className="space-y-1">
-              {detailField('ID', <span className="font-mono text-xs break-all">{r.id}</span>)}
-              {detailField('Profile ID', <span className="font-mono text-xs break-all">{r.profile_id}</span>)}
+              {detailField('ID', <CopyableTruncated value={r.id} chars={6} />)}
+              {detailField('Profile ID', <CopyableTruncated value={r.profile_id} chars={6} />)}
               {detailField('Vùng', r.region)}
               {detailField('Content', r.content)}
               {detailField('Status', <StatusBadge status={r.status || 'pending'} />)}
-              {detailField('Người tạo', truncateAddress(r.created_by))}
-              {detailField('Reviewed by', r.reviewed_by ? truncateAddress(r.reviewed_by) : '—')}
+              {detailField('Người tạo', <CopyableTruncated value={r.created_by} />)}
+              {detailField('Reviewed by', r.reviewed_by ? <CopyableTruncated value={r.reviewed_by} /> : '—')}
               {detailField('Ngày tạo', formatDate(r.created_at))}
               {detailField('Updated', formatDate(r.updated_at))}
               {blobs.length > 0 && (

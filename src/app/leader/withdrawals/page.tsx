@@ -307,7 +307,6 @@ export default function LeaderWithdrawalsPage() {
   }
 
   const columns = [
-    { key: 'id', label: 'ID' },
     { key: 'description', label: 'Mô tả' },
     { key: 'pool_name', label: 'Quỹ' },
     {

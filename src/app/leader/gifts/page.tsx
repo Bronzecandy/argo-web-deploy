@@ -6,6 +6,7 @@ import DataTable from '@/src/components/ui/DataTable';
 import DetailModal from '@/src/components/ui/DetailModal';
 import EntityBlobThumb from '@/src/components/ui/EntityBlobThumb';
 import StatusBadge from '@/src/components/ui/StatusBadge';
+import CopyableTruncated from '@/src/components/ui/CopyableTruncated';
 import { collectBlobIdEntries } from '@/src/lib/blobFields';
 import { formatDate, truncateAddress } from '@/src/lib/formatters';
 import { toast } from 'sonner';
@@ -164,7 +165,6 @@ export default function LeaderGiftsPage() {
         {appliedChildId ? (
           <DataTable<Gift>
             columns={[
-              { key: 'id', label: 'ID', render: (r) => <span className="font-mono text-xs">{truncateAddress(r.id, 4)}</span> },
               { key: 'category', label: 'Category' },
               {
                 key: 'description',
@@ -266,9 +266,9 @@ export default function LeaderGiftsPage() {
           const blobs = collectBlobIdEntries(g);
           return (
             <div className="space-y-1">
-              {detailField('ID', <span className="font-mono text-xs break-all">{g.id}</span>)}
-              {detailField('Sender', truncateAddress(g.sender))}
-              {detailField('Recipient', truncateAddress(g.recipient))}
+              {detailField('ID', <CopyableTruncated value={g.id} chars={4} />)}
+              {detailField('Sender', <CopyableTruncated value={g.sender} />)}
+              {detailField('Recipient', <CopyableTruncated value={g.recipient} />)}
               {detailField('Category', g.category)}
               {detailField('Description', g.description)}
               {detailField('Message', g.message || '—')}
@@ -276,7 +276,7 @@ export default function LeaderGiftsPage() {
               {detailField('Carrier', g.carrier || '—')}
               {detailField('Mã vận đơn', g.tracking_code || '—')}
               {detailField('For child', g.is_for_child ? 'Yes' : 'No')}
-              {detailField('Confirm received by', g.confirm_recieved_by ? truncateAddress(g.confirm_recieved_by) : '—')}
+              {detailField('Confirm received by', g.confirm_recieved_by ? <CopyableTruncated value={g.confirm_recieved_by} /> : '—')}
               {detailField('Lý do hủy', g.cancel_reason ?? '—')}
               {detailField('Uploaded', formatDate(g.uploaded_at))}
               {detailField('Delivered', g.delivered_at ? formatDate(g.delivered_at) : '—')}

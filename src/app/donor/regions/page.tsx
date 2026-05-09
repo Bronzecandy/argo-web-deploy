@@ -7,7 +7,8 @@ import { Plus } from 'lucide-react';
 import PageHeader from '@/src/components/ui/PageHeader';
 import DataTable from '@/src/components/ui/DataTable';
 import StatusBadge from '@/src/components/ui/StatusBadge';
-import { formatDate, truncateAddress } from '@/src/lib/formatters';
+import CopyableTruncated from '@/src/components/ui/CopyableTruncated';
+import { formatDate } from '@/src/lib/formatters';
 import { regionService } from '@/src/services/region.service';
 import { registrationService } from '@/src/services/registration.service';
 import { useAppSelector } from '@/src/store/hooks';
@@ -209,7 +210,7 @@ export default function DonorRegionsPage() {
             {
               key: 'created_by',
               label: 'Người tạo',
-              render: (r) => truncateAddress(r.created_by),
+              render: (r) => <CopyableTruncated value={r.created_by} />,
             },
             { key: 'created_at', label: 'Ngày tạo', render: (r) => formatDate(r.created_at) },
           ]}
@@ -229,11 +230,6 @@ export default function DonorRegionsPage() {
             onPageChange={() => {}}
             emptyMessage="Chưa có đăng ký cho ví này."
             columns={[
-              {
-                key: 'id',
-                label: 'ID',
-                render: (r) => <span className="font-mono text-xs">{truncateAddress(r.id, 6)}</span>,
-              },
               { key: 'region', label: 'Vùng' },
               { key: 'register_role', label: 'Vai trò', render: (r) => <span className="capitalize">{r.register_role}</span> },
               { key: 'status', label: 'Trạng thái', render: (r) => <StatusBadge status={r.status} /> },

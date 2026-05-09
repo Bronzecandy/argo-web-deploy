@@ -11,13 +11,13 @@ import BlobImage from '@/src/components/ui/BlobImage';
 import FileUploadInput from '@/src/components/ui/FileUploadInput';
 import GroupedNumericInput from '@/src/components/ui/GroupedNumericInput';
 import PayOSPaymentDialog from '@/src/components/ui/PayOSPaymentDialog';
+import CopyableTruncated from '@/src/components/ui/CopyableTruncated';
 import {
   formatDate,
   formatDateTimeSeconds,
   formatVND,
   getWithdrawProposalUiStatus,
   parseDigitsToNumber,
-  truncateAddress,
 } from '@/src/lib/formatters';
 import { withdrawService } from '@/src/services/withdraw.service';
 import { pendingWithdrawService } from '@/src/services/pending-withdraw.service';
@@ -169,7 +169,7 @@ function TreasuryPageContent() {
       }
     } catch (e) {
       console.error(e);
-      toast.error('Tải dữ liệu kho bạc thất bại');
+      toast.error('Tải dữ liệu đề xuất rút tiền thất bại');
       if (tab === 'proposals') setProposals([]);
       if (tab === 'pending') setPendingList([]);
       if (tab === 'special') setSpecialList([]);
@@ -418,11 +418,6 @@ function TreasuryPageContent() {
 
   const proposalColumns = (showLocalBadge: boolean) =>
     [
-      {
-        key: 'id',
-        label: 'ID',
-        render: (r: WithdrawProposal) => <span className="font-mono text-xs">{truncateAddress(r.id, 4)}</span>,
-      },
       ...(showLocalBadge
         ? [
             {
@@ -442,7 +437,7 @@ function TreasuryPageContent() {
       {
         key: 'creator',
         label: 'Người tạo',
-        render: (r: WithdrawProposal) => truncateAddress(r.creator),
+        render: (r: WithdrawProposal) => <CopyableTruncated value={r.creator} chars={6} />,
       },
       {
         key: 'description',
@@ -526,13 +521,8 @@ function TreasuryPageContent() {
             onPageChange={setPagePending}
             emptyMessage="Không có yêu cầu rút chờ duyệt phù hợp bộ lọc"
             columns={[
-              {
-                key: 'id',
-                label: 'ID',
-                render: (r) => <span className="font-mono text-xs">{truncateAddress(r.id, 4)}</span>,
-              },
               { key: 'poolName', label: 'Quỹ' },
-              { key: 'creator', label: 'Người tạo', render: (r) => truncateAddress(r.creator) },
+              { key: 'creator', label: 'Người tạo', render: (r) => <CopyableTruncated value={r.creator} chars={6} /> },
               {
                 key: 'description',
                 label: 'Mô tả',
@@ -570,12 +560,7 @@ function TreasuryPageContent() {
             onPageChange={setPageSpecial}
             emptyMessage="Không có nhu cầu đặc biệt chờ duyệt phù hợp bộ lọc"
             columns={[
-              {
-                key: 'id',
-                label: 'ID',
-                render: (r) => <span className="font-mono text-xs">{truncateAddress(r.id, 4)}</span>,
-              },
-              { key: 'child_id', label: 'Trẻ', render: (r) => truncateAddress(r.child_id, 4) },
+              { key: 'child_id', label: 'Trẻ', render: (r) => <CopyableTruncated value={r.child_id} chars={4} /> },
               {
                 key: 'description',
                 label: 'Mô tả',
@@ -628,7 +613,7 @@ function TreasuryPageContent() {
         {wd && (
           <div className="space-y-1">
             {detailField('ID', <span className="font-mono text-xs break-all">{wd.id}</span>)}
-            {detailField('Người tạo', truncateAddress(wd.creator))}
+            {detailField('Người tạo', <CopyableTruncated value={wd.creator} chars={6} />)}
             {detailField('Quỹ', wd.pool_name)}
             {detailField('Số tiền', formatVND(wd.withdraw_amount))}
             {detailField('Mô tả', wd.description || '—')}
@@ -701,7 +686,7 @@ function TreasuryPageContent() {
           <div className="space-y-1">
             {detailField('ID', <span className="font-mono text-xs break-all">{pendingDetailData.id}</span>)}
             {detailField('Quỹ', pendingDetailData.poolName)}
-            {detailField('Người tạo', truncateAddress(pendingDetailData.creator))}
+            {detailField('Người tạo', <CopyableTruncated value={pendingDetailData.creator} chars={6} />)}
             {detailField('Mô tả', pendingDetailData.description || '—')}
             {detailField('Số tiền', formatVND(pendingDetailData.withdrawAmount))}
             {detailField('Trạng thái', pendingDetailData.status)}
@@ -729,7 +714,7 @@ function TreasuryPageContent() {
         {specialDetailData && (
           <div className="space-y-1">
             {detailField('ID', <span className="font-mono text-xs break-all">{specialDetailData.id}</span>)}
-            {detailField('Trẻ', truncateAddress(specialDetailData.child_id))}
+            {detailField('Trẻ', <CopyableTruncated value={specialDetailData.child_id} chars={4} />)}
             {detailField('Vùng', specialDetailData.region)}
             {detailField('Mô tả', specialDetailData.description || '—')}
             {detailField('Mục tiêu', formatVND(specialDetailData.target))}

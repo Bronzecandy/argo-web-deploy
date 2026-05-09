@@ -30,7 +30,7 @@ const NAV_ITEMS = [
   { label: 'Trung tâm hỗ trợ', href: '/admin/centers', icon: Building2 },
   { label: 'Nhà hảo tâm', href: '/admin/donors', icon: HandCoins },
   { label: 'Thanh toán', href: '/admin/payments', icon: CreditCard },
-  { label: 'Kho bạc & đề xuất', href: '/admin/treasury', icon: Wallet },
+  { label: 'Đề xuất rút tiền', href: '/admin/treasury', icon: Wallet },
   { label: 'Giao dịch', href: '/admin/analytics', icon: BarChart3 },
   { label: 'Đề xuất vùng (admin)', href: '/admin/regions', icon: MapPin },
   { label: 'Cấu hình', href: '/admin/config', icon: Settings },

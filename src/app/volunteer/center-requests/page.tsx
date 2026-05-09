@@ -8,7 +8,8 @@ import DataTable from '@/src/components/ui/DataTable';
 import StatusBadge from '@/src/components/ui/StatusBadge';
 import BlobImage from '@/src/components/ui/BlobImage';
 import DetailModal from '@/src/components/ui/DetailModal';
-import { formatDate, truncateAddress } from '@/src/lib/formatters';
+import CopyableTruncated from '@/src/components/ui/CopyableTruncated';
+import { formatDate } from '@/src/lib/formatters';
 import { centerService } from '@/src/services/center.service';
 import { useExecuteTransaction } from '@/src/hooks/useExecuteTransaction';
 import type { CenterRequest } from '@/src/types/api.types';
@@ -123,16 +124,11 @@ export default function VolunteerCenterRequestsPage() {
         onPageChange={setPage}
         emptyMessage="No center requests"
         columns={[
-          {
-            key: 'id',
-            label: 'ID',
-            render: (r) => <span className="font-mono text-xs">{truncateAddress(r.id, 6)}</span>,
-          },
           { key: 'region', label: 'Vùng' },
           {
             key: 'address',
             label: 'Address',
-            render: (r) => <span className="max-w-[180px] truncate">{r.address}</span>,
+            render: (r) => <CopyableTruncated value={r.address} chars={10} />,
           },
           { key: 'phone_number', label: 'Phone' },
           { key: 'status', label: 'Status', render: (r) => <StatusBadge status={r.status} /> },
@@ -197,9 +193,13 @@ export default function VolunteerCenterRequestsPage() {
       >
         {detail && (
           <div className="space-y-2 text-sm">
-            <p className="font-mono text-xs break-all">{detail.id}</p>
+            <p className="flex flex-wrap items-center gap-2">
+              <span className="text-slate-500">ID:</span> <CopyableTruncated value={detail.id} chars={6} />
+            </p>
             <p><span className="text-slate-500">Region:</span> {detail.region}</p>
-            <p><span className="text-slate-500">Address:</span> {detail.address}</p>
+            <p className="flex flex-wrap items-center gap-2">
+              <span className="text-slate-500 shrink-0">Address:</span> <CopyableTruncated value={detail.address} chars={12} className="min-w-0 flex-1" />
+            </p>
             <p><span className="text-slate-500">Phone:</span> {detail.phone_number}</p>
             <p><span className="text-slate-500">Status:</span> <StatusBadge status={detail.status} /></p>
             {detail.image_blob_id && (

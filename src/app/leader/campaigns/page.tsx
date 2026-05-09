@@ -8,6 +8,7 @@ import DetailModal from '@/src/components/ui/DetailModal';
 import BlobImage from '@/src/components/ui/BlobImage';
 import FileUploadInput from '@/src/components/ui/FileUploadInput';
 import GroupedNumericInput from '@/src/components/ui/GroupedNumericInput';
+import CopyableTruncated from '@/src/components/ui/CopyableTruncated';
 import { formatDate, formatVND, truncateAddress } from '@/src/lib/formatters';
 import { toast } from 'sonner';
 import { Plus } from 'lucide-react';
@@ -128,8 +129,7 @@ export default function LeaderCampaignsPage() {
         <h2 className="mb-4 text-lg font-semibold text-slate-900">Pending special needs</h2>
         <DataTable<PendingSpecialNeedProposal>
           columns={[
-            { key: 'id', label: 'ID', render: (r) => <span className="font-mono text-xs">{truncateAddress(r.id, 4)}</span> },
-            { key: 'child_id', label: 'Child', render: (r) => <span className="font-mono text-xs">{truncateAddress(r.child_id, 4)}</span> },
+            { key: 'child_id', label: 'Child', render: (r) => <CopyableTruncated value={r.child_id} chars={4} /> },
             {
               key: 'description',
               label: 'Description',
@@ -179,9 +179,11 @@ export default function LeaderCampaignsPage() {
       >
         {detailRow && (
           <div className="space-y-2 text-sm">
-            <p className="font-mono text-xs break-all">{detailRow.id}</p>
-            <p>
-              <span className="text-slate-500">Child:</span> {truncateAddress(detailRow.child_id)}
+            <p className="flex flex-wrap items-center gap-2">
+              <span className="text-slate-500">ID:</span> <CopyableTruncated value={detailRow.id} chars={4} />
+            </p>
+            <p className="flex flex-wrap items-center gap-2">
+              <span className="text-slate-500">Child:</span> <CopyableTruncated value={detailRow.child_id} chars={4} />
             </p>
             <p>
               <span className="text-slate-500">Region:</span> {detailRow.region}

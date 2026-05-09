@@ -7,7 +7,8 @@ import PageHeader from '@/src/components/ui/PageHeader';
 import DataTable from '@/src/components/ui/DataTable';
 import StatusBadge from '@/src/components/ui/StatusBadge';
 import DetailModal from '@/src/components/ui/DetailModal';
-import { formatDate, truncateAddress } from '@/src/lib/formatters';
+import CopyableTruncated from '@/src/components/ui/CopyableTruncated';
+import { formatDate } from '@/src/lib/formatters';
 import { regionService } from '@/src/services/region.service';
 import type { SupportedRegionSuggestion } from '@/src/types/api.types';
 
@@ -186,7 +187,6 @@ export default function AdminRegionsPage() {
         onPageChange={setPage}
         emptyMessage="No suggestions"
         columns={[
-          { key: 'id', label: 'ID', render: (r) => <span className="font-mono text-xs">{truncateAddress(r.id, 6)}</span> },
           { key: 'region', label: 'region' },
           { key: 'content', label: 'content', render: (r) => <span className="max-w-md truncate">{r.content || '-'}</span> },
           {
@@ -194,8 +194,12 @@ export default function AdminRegionsPage() {
             label: 'status',
             render: (r) => <StatusBadge status={r.status || 'pending'} />,
           },
-          { key: 'created_by', label: 'created_by', render: (r) => truncateAddress(r.created_by) },
-          { key: 'reviewed_by', label: 'reviewed_by', render: (r) => (r.reviewed_by ? truncateAddress(r.reviewed_by) : '-') },
+          { key: 'created_by', label: 'created_by', render: (r) => <CopyableTruncated value={r.created_by} chars={6} /> },
+          {
+            key: 'reviewed_by',
+            label: 'reviewed_by',
+            render: (r) => (r.reviewed_by ? <CopyableTruncated value={r.reviewed_by} chars={6} /> : <span className="text-slate-400">—</span>),
+          },
           { key: 'created_at', label: 'created_at', render: (r) => formatDate(r.created_at) },
           {
             key: 'detail_btn',
@@ -256,7 +260,9 @@ export default function AdminRegionsPage() {
           if (!r) return null;
           return (
             <div className="space-y-2 text-sm">
-              <p className="font-mono text-xs break-all">{r.id}</p>
+              <p className="flex flex-wrap items-center gap-2">
+                <span className="text-slate-500">id:</span> <CopyableTruncated value={r.id} chars={6} />
+              </p>
               <p>
                 <span className="text-slate-500">region:</span> {r.region}
               </p>
@@ -264,7 +270,8 @@ export default function AdminRegionsPage() {
                 <span className="text-slate-500">content:</span> {r.content}
               </p>
               <p>
-                <span className="text-slate-500">created_by:</span> {truncateAddress(r.created_by)}
+                <span className="text-slate-500">created_by:</span>{' '}
+                <CopyableTruncated value={r.created_by} chars={6} />
               </p>
               <p>
                 <span className="text-slate-500">status:</span> <StatusBadge status={r.status || 'pending'} />
