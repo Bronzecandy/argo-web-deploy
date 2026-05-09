@@ -1,11 +1,14 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useState, type ReactNode } from 'react';
 import { Check, Search, ShieldCheck, ThumbsDown, ThumbsUp, X } from 'lucide-react';
 import { toast } from 'sonner';
 import PageHeader from '@/src/components/ui/PageHeader';
 import DataTable from '@/src/components/ui/DataTable';
+import DetailModal from '@/src/components/ui/DetailModal';
+import EntityBlobThumb from '@/src/components/ui/EntityBlobThumb';
 import StatusBadge from '@/src/components/ui/StatusBadge';
+import { collectBlobIdEntries } from '@/src/lib/blobFields';
 import { formatDate, truncateAddress } from '@/src/lib/formatters';
 import { registrationService } from '@/src/services/registration.service';
 import { useExecuteTransaction } from '@/src/hooks/useExecuteTransaction';
@@ -28,6 +31,15 @@ const REG_STATUS_OPTIONS = [
   { value: 'rejected', label: 'Rejected' },
 ];
 
+function detailField(label: string, value: ReactNode) {
+  return (
+    <div className="border-b border-slate-100 py-2 last:border-0">
+      <div className="text-xs font-medium text-slate-500">{label}</div>
+      <div className="text-sm text-slate-900">{value}</div>
+    </div>
+  );
+}
+
 export default function LeaderVolunteersPage() {
   const { execute } = useExecuteTransaction();
   const { poolName, poolId, status: poolStatus, error: poolError } = useAppSelector((s) => s.leaderPool);
@@ -45,6 +57,12 @@ export default function LeaderVolunteersPage() {
   const [confirmBusyId, setConfirmBusyId] = useState<string | null>(null);
   const [refuseModal, setRefuseModal] = useState<{ id: string } | null>(null);
   const [refuseReason, setRefuseReason] = useState('');
+
+  const [regDetailOpen, setRegDetailOpen] = useState(false);
+  const [regDetailId, setRegDetailId] = useState<string | null>(null);
+  const [regDetailListRow, setRegDetailListRow] = useState<RegistrationRequest | null>(null);
+  const [regDetailData, setRegDetailData] = useState<RegistrationRequest | null>(null);
+  const [regDetailLoading, setRegDetailLoading] = useState(false);
 
   const canLoad = poolStatus === 'succeeded' && !!poolName;
 
@@ -84,6 +102,20 @@ export default function LeaderVolunteersPage() {
   useEffect(() => {
     void loadRegistrations();
   }, [loadRegistrations]);
+
+  useEffect(() => {
+    if (!regDetailOpen || !regDetailId) {
+      setRegDetailData(null);
+      return;
+    }
+    setRegDetailLoading(true);
+    setRegDetailData(null);
+    void registrationService
+      .getById(regDetailId)
+      .then((res) => setRegDetailData(res.data))
+      .catch(() => setRegDetailData(null))
+      .finally(() => setRegDetailLoading(false));
+  }, [regDetailOpen, regDetailId]);
 
   async function handleVote(id: string, isYes: boolean) {
     if (!isYes) {
@@ -238,6 +270,17 @@ export default function LeaderVolunteersPage() {
                   >
                     <button
                       type="button"
+                      onClick={() => {
+                        setRegDetailListRow(r);
+                        setRegDetailId(r.id);
+                        setRegDetailOpen(true);
+                      }}
+                      className="inline-flex items-center gap-1 rounded-md border border-slate-200 bg-white px-2 py-1 text-xs font-medium text-slate-800 hover:bg-slate-50"
+                    >
+                      Details
+                    </button>
+                    <button
+                      type="button"
                       disabled={approved || voteBusyId === r.id || !canLoad}
                       onClick={() => handleVote(r.id, true)}
                       className="inline-flex items-center gap-1 rounded-md border border-blue-200 bg-blue-50 px-2 py-1 text-xs font-medium text-blue-900 hover:bg-blue-100 disabled:cursor-not-allowed disabled:opacity-50"
@@ -325,6 +368,54 @@ export default function LeaderVolunteersPage() {
           </div>
         </div>
       )}
+
+      <DetailModal
+        title="Registration request"
+        open={regDetailOpen}
+        onClose={() => {
+          setRegDetailOpen(false);
+          setRegDetailId(null);
+          setRegDetailListRow(null);
+        }}
+        loading={regDetailLoading}
+        wide
+      >
+        {(() => {
+          const r = regDetailData ?? regDetailListRow;
+          if (!r) return null;
+          const blobs = collectBlobIdEntries(r);
+          return (
+            <div className="space-y-1">
+              {detailField('ID', <span className="font-mono text-xs break-all">{r.id}</span>)}
+              {detailField('Name', `${r.first_name} ${r.last_name}`)}
+              {detailField('Role', <span className="capitalize">{r.register_role}</span>)}
+              {detailField('Region', r.region)}
+              {detailField('Status', <StatusBadge status={r.status} />)}
+              {detailField('Identity code', r.identity_code)}
+              {detailField('Email', r.email)}
+              {detailField('Phone', r.phone_number)}
+              {detailField('Gender', r.gender)}
+              {detailField('Date of birth', formatDate(r.date_of_birth))}
+              {detailField('Created by', truncateAddress(r.created_by))}
+              {detailField('Created', formatDate(r.created_at))}
+              {detailField('Updated', formatDate(r.updated_at))}
+              {blobs.length > 0 && (
+                <div className="border-t border-slate-100 pt-3">
+                  <div className="mb-2 text-xs font-medium text-slate-600">Images (Walrus)</div>
+                  <div className="flex flex-wrap gap-4">
+                    {blobs.map(({ key, blobId }) => (
+                      <div key={key} className="text-center">
+                        <EntityBlobThumb blobId={blobId} />
+                        <div className="mt-1 text-[10px] text-slate-500">{key}</div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          );
+        })()}
+      </DetailModal>
     </div>
   );
 }

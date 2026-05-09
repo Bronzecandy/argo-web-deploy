@@ -1,11 +1,14 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useState, type ReactNode } from 'react';
 import { Check, ClipboardCheck, ListChecks, ThumbsDown, ThumbsUp, X } from 'lucide-react';
 import { toast } from 'sonner';
 import PageHeader from '@/src/components/ui/PageHeader';
 import DataTable from '@/src/components/ui/DataTable';
+import DetailModal from '@/src/components/ui/DetailModal';
+import EntityBlobThumb from '@/src/components/ui/EntityBlobThumb';
 import StatusBadge from '@/src/components/ui/StatusBadge';
+import { collectBlobIdEntries } from '@/src/lib/blobFields';
 import { formatDate, truncateAddress } from '@/src/lib/formatters';
 import { childUploadService } from '@/src/services/child-upload.service';
 import { childrenService } from '@/src/services/children.service';
@@ -50,6 +53,36 @@ function getErrorMessage(e: unknown, fallback: string) {
   return fallback;
 }
 
+function detailField(label: string, value: ReactNode) {
+  return (
+    <div className="border-b border-slate-100 py-2 last:border-0">
+      <div className="text-xs font-medium text-slate-500">{label}</div>
+      <div className="text-sm text-slate-900">{value}</div>
+    </div>
+  );
+}
+
+/** Child avatars are typically served via GET /blobs/:id; other proof-style ids use Walrus URLs. */
+function childBlobThumbSource(key: string): 'api' | 'walrus' {
+  if (key === 'avatar_blob_id') return 'api';
+  return 'walrus';
+}
+
+function uploadBlobEntries(u: UploadChildRequestEntity): { key: string; blobId: string }[] {
+  const parts: { key: string; blobId: string }[] = [...collectBlobIdEntries(u)];
+  if (u.first_guardian_profile) {
+    for (const e of collectBlobIdEntries(u.first_guardian_profile)) {
+      parts.push({ key: `first_guardian.${e.key}`, blobId: e.blobId });
+    }
+  }
+  if (u.second_guardian_profile) {
+    for (const e of collectBlobIdEntries(u.second_guardian_profile)) {
+      parts.push({ key: `second_guardian.${e.key}`, blobId: e.blobId });
+    }
+  }
+  return parts;
+}
+
 export default function LeaderChildrenPage() {
   const { execute, executing } = useExecuteTransaction();
   const [tab, setTab] = useState<Tab>('review');
@@ -74,6 +107,15 @@ export default function LeaderChildrenPage() {
   const [voteBusyId, setVoteBusyId] = useState<string | null>(null);
   const [refuseModal, setRefuseModal] = useState<{ id: string; mode: 'review' | 'vote' } | null>(null);
   const [refuseReason, setRefuseReason] = useState('');
+
+  const [childDetailOpen, setChildDetailOpen] = useState(false);
+  const [childDetailId, setChildDetailId] = useState<string | null>(null);
+  const [childDetailRow, setChildDetailRow] = useState<Child | null>(null);
+  const [childDetailData, setChildDetailData] = useState<Child | null>(null);
+  const [childDetailLoading, setChildDetailLoading] = useState(false);
+
+  const [uploadDetailOpen, setUploadDetailOpen] = useState(false);
+  const [uploadDetailRow, setUploadDetailRow] = useState<UploadChildRequestEntity | null>(null);
 
   /** Approve (review OK) — configure needs before review + PUT needs (no child-upload confirm) */
   const [approveModal, setApproveModal] = useState<UploadChildRequestEntity | null>(null);
@@ -157,6 +199,20 @@ export default function LeaderChildrenPage() {
     if (tab !== 'profiles') return;
     void loadProfiles();
   }, [tab, loadProfiles]);
+
+  useEffect(() => {
+    if (!childDetailOpen || !childDetailId) {
+      setChildDetailData(null);
+      return;
+    }
+    setChildDetailLoading(true);
+    setChildDetailData(null);
+    void childrenService
+      .getById(childDetailId)
+      .then((res) => setChildDetailData(res.data ?? null))
+      .catch(() => setChildDetailData(null))
+      .finally(() => setChildDetailLoading(false));
+  }, [childDetailOpen, childDetailId]);
 
   function runReview(row: UploadChildRequestEntity, isYes: boolean) {
     if (!isYes) {
@@ -322,7 +378,8 @@ export default function LeaderChildrenPage() {
     }
   }
 
-  const columns = [
+  const listColumns = [
+    { key: 'id', label: 'ID', render: (row: Child) => <span className="font-mono text-xs">{truncateAddress(row.id, 8)}</span> },
     { key: 'first_name', label: 'First name' },
     { key: 'last_name', label: 'Last name' },
     { key: 'gender', label: 'Gender' },
@@ -333,6 +390,25 @@ export default function LeaderChildrenPage() {
       render: (row: Child) => formatDate(row.date_of_birth),
     },
     { key: 'identity_code', label: 'Identity code' },
+    {
+      key: 'actions',
+      label: 'Actions',
+      className: 'whitespace-nowrap',
+      render: (row: Child) => (
+        <button
+          type="button"
+          onClick={(e) => {
+            e.stopPropagation();
+            setChildDetailRow(row);
+            setChildDetailId(row.id);
+            setChildDetailOpen(true);
+          }}
+          className="rounded-lg border border-slate-200 bg-white px-2 py-1 text-xs font-medium text-slate-800 hover:bg-slate-50"
+        >
+          Details
+        </button>
+      ),
+    },
   ];
 
   const refuseModalTitle = refuseModal?.mode === 'review' ? 'Refuse review' : 'Vote no';
@@ -458,6 +534,16 @@ export default function LeaderChildrenPage() {
                   <div className="flex flex-wrap gap-1" onClick={(e) => e.stopPropagation()}>
                     <button
                       type="button"
+                      onClick={() => {
+                        setUploadDetailRow(u);
+                        setUploadDetailOpen(true);
+                      }}
+                      className="inline-flex items-center gap-0.5 rounded border border-slate-200 bg-white px-1.5 py-0.5 text-[11px] font-medium text-slate-800 hover:bg-slate-50"
+                    >
+                      Details
+                    </button>
+                    <button
+                      type="button"
                       disabled={busyId === u.id}
                       onClick={() => runReview(u, true)}
                       className="inline-flex items-center gap-0.5 rounded border border-blue-200 bg-blue-50 px-1.5 py-0.5 text-[11px] font-medium text-blue-900 hover:bg-blue-100 disabled:opacity-50"
@@ -522,6 +608,16 @@ export default function LeaderChildrenPage() {
                   <div className="flex flex-wrap gap-1" onClick={(e) => e.stopPropagation()}>
                     <button
                       type="button"
+                      onClick={() => {
+                        setUploadDetailRow(u);
+                        setUploadDetailOpen(true);
+                      }}
+                      className="inline-flex items-center gap-0.5 rounded-md border border-slate-200 bg-white px-2 py-1 text-xs font-medium text-slate-800 hover:bg-slate-50"
+                    >
+                      Details
+                    </button>
+                    <button
+                      type="button"
                       disabled={voteBusyId === u.id}
                       onClick={() => void handleVoteYes(u.id)}
                       className="inline-flex items-center gap-0.5 rounded-md border border-blue-200 bg-blue-50 px-2 py-1 text-xs font-medium text-blue-900 hover:bg-blue-100 disabled:opacity-50"
@@ -554,7 +650,7 @@ export default function LeaderChildrenPage() {
 
       {tab === 'list' && (
         <DataTable<Child>
-          columns={columns}
+          columns={listColumns}
           data={children}
           loading={listLoading}
           page={page}
@@ -757,6 +853,135 @@ export default function LeaderChildrenPage() {
           </div>
         </div>
       )}
+
+      <DetailModal
+        title="Child profile"
+        open={childDetailOpen}
+        onClose={() => {
+          setChildDetailOpen(false);
+          setChildDetailId(null);
+          setChildDetailRow(null);
+        }}
+        loading={childDetailLoading}
+        wide
+      >
+        {(() => {
+          const c = childDetailData ?? childDetailRow;
+          if (!c) return null;
+          const blobs = collectBlobIdEntries(c);
+          const gallery = (c.image_blob_ids ?? []).filter((id) => typeof id === 'string' && id.trim());
+          return (
+            <div className="space-y-1">
+              {detailField('ID', <span className="font-mono text-xs break-all">{c.id}</span>)}
+              {detailField('Name', `${c.first_name} ${c.last_name}`)}
+              {detailField('Gender', <span className="capitalize">{c.gender}</span>)}
+              {detailField('Region', c.region)}
+              {detailField('Date of birth', formatDate(c.date_of_birth))}
+              {detailField('Identity code', c.identity_code)}
+              {detailField('Home address', c.home_address || '—')}
+              {detailField('Meal need', c.meal_need ? truncateAddress(c.meal_need) : '—')}
+              {detailField('Health insurance need', c.health_insurance_need ? truncateAddress(c.health_insurance_need) : '—')}
+              {detailField('Books needs', (c.books_needs?.length ? c.books_needs : []).map((id) => truncateAddress(id)).join(', ') || '—')}
+              {detailField('Uploaded by', c.uploaded_by ? truncateAddress(c.uploaded_by) : '—')}
+              {detailField('Uploaded', formatDate(c.uploaded_at))}
+              {detailField('Updated', formatDate(c.updated_at))}
+              {gallery.length > 0 && (
+                <div className="border-t border-slate-100 pt-3">
+                  <div className="mb-2 text-xs font-medium text-slate-600">Gallery (API)</div>
+                  <div className="flex flex-wrap gap-4">
+                    {gallery.map((blobId) => (
+                      <EntityBlobThumb key={blobId} blobId={blobId} source="api" className="h-20 w-20 rounded-md border border-slate-200 object-cover" />
+                    ))}
+                  </div>
+                </div>
+              )}
+              {blobs.length > 0 && (
+                <div className="border-t border-slate-100 pt-3">
+                  <div className="mb-2 text-xs font-medium text-slate-600">Blob images</div>
+                  <div className="flex flex-wrap gap-4">
+                    {blobs.map(({ key, blobId }) => (
+                      <div key={key} className="text-center">
+                        <EntityBlobThumb blobId={blobId} source={childBlobThumbSource(key)} className="h-20 w-20 rounded-md border border-slate-200 object-cover" />
+                        <div className="mt-1 text-[10px] text-slate-500">{key}</div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          );
+        })()}
+      </DetailModal>
+
+      <DetailModal
+        title="Child upload request"
+        open={uploadDetailOpen}
+        onClose={() => {
+          setUploadDetailOpen(false);
+          setUploadDetailRow(null);
+        }}
+        wide
+      >
+        {uploadDetailRow &&
+          (() => {
+            const u = uploadDetailRow;
+            const blobs = uploadBlobEntries(u);
+            return (
+              <div className="space-y-1">
+                {detailField('ID', <span className="font-mono text-xs break-all">{u.id}</span>)}
+                {detailField('Profile ID', <span className="font-mono text-xs break-all">{u.profile_id}</span>)}
+                {detailField('Name', `${u.first_name} ${u.last_name}`)}
+                {detailField('Gender', <span className="capitalize">{u.gender}</span>)}
+                {detailField('Region', u.region)}
+                {detailField('Identity code', u.identity_code)}
+                {detailField('Date of birth', formatDate(u.date_of_birth))}
+                {detailField('Home address', u.home_address ?? '—')}
+                {detailField('Status', <StatusBadge status={u.status} />)}
+                {detailField('Review status', u.review_status ? <StatusBadge status={u.review_status} /> : <span className="text-slate-400">—</span>)}
+                {detailField('Reviewed by', u.reviewed_by ? truncateAddress(u.reviewed_by) : '—')}
+                {detailField('AI note', u.ai_evaluation ?? '—')}
+                {detailField('Created by', truncateAddress(u.created_by))}
+                {detailField('Created', formatDate(u.created_at))}
+                {detailField('Updated', formatDate(u.updated_at))}
+                {detailField('Closed', formatDate(u.closed_at))}
+                {detailField('Confirm upload', u.is_confirm_upload ? 'Yes' : 'No')}
+                {u.first_guardian_profile && (
+                  <div className="border-t border-slate-100 py-2">
+                    <div className="text-xs font-medium text-slate-500">First guardian</div>
+                    <div className="mt-1 text-sm text-slate-800">
+                      {u.first_guardian_profile.full_name} · {u.first_guardian_profile.relation} · {u.first_guardian_profile.phone_number}
+                    </div>
+                  </div>
+                )}
+                {u.second_guardian_profile && (
+                  <div className="border-t border-slate-100 py-2">
+                    <div className="text-xs font-medium text-slate-500">Second guardian</div>
+                    <div className="mt-1 text-sm text-slate-800">
+                      {u.second_guardian_profile.full_name} · {u.second_guardian_profile.relation} · {u.second_guardian_profile.phone_number}
+                    </div>
+                  </div>
+                )}
+                {blobs.length > 0 && (
+                  <div className="border-t border-slate-100 pt-3">
+                    <div className="mb-2 text-xs font-medium text-slate-600">Images</div>
+                    <div className="flex flex-wrap gap-4">
+                      {blobs.map(({ key, blobId }) => (
+                        <div key={key} className="text-center">
+                          <EntityBlobThumb
+                            blobId={blobId}
+                            source={key.includes('avatar') ? 'api' : 'walrus'}
+                            className="h-20 w-20 rounded-md border border-slate-200 object-cover"
+                          />
+                          <div className="mt-1 text-[10px] text-slate-500">{key}</div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            );
+          })()}
+      </DetailModal>
     </div>
   );
 }

@@ -175,7 +175,7 @@ export default function LeaderWithdrawalsPage() {
     void childrenService
       .getById(selectedChildId)
       .then((res) => {
-        if (!cancelled) setChildDetail(res.data);
+        if (!cancelled) setChildDetail(res.data ?? null);
       })
       .catch((e: unknown) => {
         if (!cancelled) {

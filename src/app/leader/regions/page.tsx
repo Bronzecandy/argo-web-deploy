@@ -1,9 +1,12 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useState, type ReactNode } from 'react';
 import PageHeader from '@/src/components/ui/PageHeader';
 import DataTable from '@/src/components/ui/DataTable';
+import DetailModal from '@/src/components/ui/DetailModal';
+import EntityBlobThumb from '@/src/components/ui/EntityBlobThumb';
 import StatusBadge from '@/src/components/ui/StatusBadge';
+import { collectBlobIdEntries } from '@/src/lib/blobFields';
 import { formatDate, truncateAddress } from '@/src/lib/formatters';
 import { toast } from 'sonner';
 import { Plus } from 'lucide-react';
@@ -12,6 +15,15 @@ import { regionService } from '@/src/services/region.service';
 import type { CreateSupportedRegionSuggestionRequest, SupportedRegionSuggestion } from '@/src/types/api.types';
 
 const PAGE_SIZE = 20;
+
+function detailField(label: string, value: ReactNode) {
+  return (
+    <div className="border-b border-slate-100 py-2 last:border-0">
+      <div className="text-xs font-medium text-slate-500">{label}</div>
+      <div className="text-sm text-slate-900">{value}</div>
+    </div>
+  );
+}
 
 export default function LeaderRegionsPage() {
   const { user } = useAppSelector((state) => state.auth);
@@ -24,6 +36,12 @@ export default function LeaderRegionsPage() {
   const [content, setContent] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [proposeOpen, setProposeOpen] = useState(false);
+
+  const [detailOpen, setDetailOpen] = useState(false);
+  const [detailId, setDetailId] = useState<string | null>(null);
+  const [detailListRow, setDetailListRow] = useState<SupportedRegionSuggestion | null>(null);
+  const [detailData, setDetailData] = useState<SupportedRegionSuggestion | null>(null);
+  const [detailLoading, setDetailLoading] = useState(false);
 
   useEffect(() => {
     regionService.listRegions().then((res) => setRegions(res.data.regions || [])).catch(() => {});
@@ -63,6 +81,20 @@ export default function LeaderRegionsPage() {
   useEffect(() => {
     void loadPage(page);
   }, [page, loadPage]);
+
+  useEffect(() => {
+    if (!detailOpen || !detailId) {
+      setDetailData(null);
+      return;
+    }
+    setDetailLoading(true);
+    setDetailData(null);
+    void regionService
+      .getSuggestionById(detailId)
+      .then((res) => setDetailData(res.data ?? null))
+      .catch(() => setDetailData(null))
+      .finally(() => setDetailLoading(false));
+  }, [detailOpen, detailId]);
 
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -136,6 +168,25 @@ export default function LeaderRegionsPage() {
               render: (r) => truncateAddress(r.created_by),
             },
             { key: 'created_at', label: 'created_at', render: (r) => formatDate(r.created_at) },
+            {
+              key: 'detail',
+              label: 'Details',
+              className: 'whitespace-nowrap',
+              render: (r) => (
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setDetailListRow(r);
+                    setDetailId(r.id);
+                    setDetailOpen(true);
+                  }}
+                  className="rounded-lg border border-slate-200 px-2 py-1 text-xs font-medium text-slate-700 hover:bg-slate-50"
+                >
+                  Details
+                </button>
+              ),
+            },
           ]}
           data={rows}
           loading={loading}
@@ -207,6 +258,50 @@ export default function LeaderRegionsPage() {
           </div>
         </div>
       )}
+
+      <DetailModal
+        title="Supported region suggestion"
+        open={detailOpen}
+        onClose={() => {
+          setDetailOpen(false);
+          setDetailId(null);
+          setDetailListRow(null);
+        }}
+        loading={detailLoading}
+        wide
+      >
+        {(() => {
+          const r = detailData ?? detailListRow;
+          if (!r) return null;
+          const blobs = collectBlobIdEntries(r);
+          return (
+            <div className="space-y-1">
+              {detailField('ID', <span className="font-mono text-xs break-all">{r.id}</span>)}
+              {detailField('Profile ID', <span className="font-mono text-xs break-all">{r.profile_id}</span>)}
+              {detailField('Region', r.region)}
+              {detailField('Content', r.content)}
+              {detailField('Status', <StatusBadge status={r.status || 'pending'} />)}
+              {detailField('Created by', truncateAddress(r.created_by))}
+              {detailField('Reviewed by', r.reviewed_by ? truncateAddress(r.reviewed_by) : '—')}
+              {detailField('Created', formatDate(r.created_at))}
+              {detailField('Updated', formatDate(r.updated_at))}
+              {blobs.length > 0 && (
+                <div className="border-t border-slate-100 pt-3">
+                  <div className="mb-2 text-xs font-medium text-slate-600">Images</div>
+                  <div className="flex flex-wrap gap-4">
+                    {blobs.map(({ key, blobId }) => (
+                      <div key={key} className="text-center">
+                        <EntityBlobThumb blobId={blobId} className="h-20 w-20 rounded-md border border-slate-200 object-cover" />
+                        <div className="mt-1 text-[10px] text-slate-500">{key}</div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          );
+        })()}
+      </DetailModal>
     </div>
   );
 }

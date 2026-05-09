@@ -1,3 +1,4 @@
+import { API_BASE_URL } from '@/src/lib/constants';
 import { apiService } from './api.service';
 import type {
   PaginationResponse,
@@ -8,6 +9,14 @@ import type {
   BuildTransactionResponse,
   MessageResponse,
 } from '@/src/types/api.types';
+
+function resolvePaymentCallbackUrl(callback: string): string {
+  const c = callback.trim();
+  if (!c) return c;
+  if (/^https?:\/\//i.test(c)) return c;
+  const base = API_BASE_URL.replace(/\/+$/, '');
+  return `${base}${c.startsWith('/') ? c : `/${c}`}`;
+}
 
 class PaymentService {
   async donate(data: DonateRequest) {
@@ -33,6 +42,12 @@ class PaymentService {
 
   async refuse(id: string) {
     return apiService.post<MessageResponse>(`/payments/${id}/refuse`, null);
+  }
+
+  /** Manual bank transfer: POST proof blob to `payment_callback` from withdraw confirm response. */
+  async submitWithdrawAuthCallback(callbackUrl: string, blobId: string) {
+    const url = resolvePaymentCallbackUrl(callbackUrl);
+    return apiService.post(url, { blob_id: blobId.trim() });
   }
 }
 

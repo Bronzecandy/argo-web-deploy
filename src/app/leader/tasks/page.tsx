@@ -1,9 +1,12 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useState, type ReactNode } from 'react';
 import PageHeader from '@/src/components/ui/PageHeader';
 import DataTable from '@/src/components/ui/DataTable';
+import DetailModal from '@/src/components/ui/DetailModal';
+import EntityBlobThumb from '@/src/components/ui/EntityBlobThumb';
 import StatusBadge from '@/src/components/ui/StatusBadge';
+import { collectBlobIdEntries } from '@/src/lib/blobFields';
 import { formatDate, truncateAddress } from '@/src/lib/formatters';
 import { toast } from 'sonner';
 import { useAppSelector } from '@/src/store/hooks';
@@ -12,6 +15,15 @@ import type { Task } from '@/src/types/api.types';
 import { Hand, ClipboardCheck, ThumbsUp, ThumbsDown, Plus } from 'lucide-react';
 
 const PAGE_SIZE = 20;
+
+function detailField(label: string, value: ReactNode) {
+  return (
+    <div className="border-b border-slate-100 py-2 last:border-0">
+      <div className="text-xs font-medium text-slate-500">{label}</div>
+      <div className="text-sm text-slate-900">{value}</div>
+    </div>
+  );
+}
 
 export default function LeaderTasksPage() {
   const { user } = useAppSelector((state) => state.auth);
@@ -33,6 +45,12 @@ export default function LeaderTasksPage() {
   const [reviewReason, setReviewReason] = useState('');
 
   const [createOpen, setCreateOpen] = useState(false);
+
+  const [taskDetailOpen, setTaskDetailOpen] = useState(false);
+  const [taskDetailId, setTaskDetailId] = useState<string | null>(null);
+  const [taskDetailRow, setTaskDetailRow] = useState<Task | null>(null);
+  const [taskDetailData, setTaskDetailData] = useState<Task | null>(null);
+  const [taskDetailLoading, setTaskDetailLoading] = useState(false);
 
   const canUsePool = poolStatus === 'succeeded' && !!poolName;
 
@@ -74,6 +92,20 @@ export default function LeaderTasksPage() {
   useEffect(() => {
     void loadPage(page);
   }, [page, loadPage, listVersion]);
+
+  useEffect(() => {
+    if (!taskDetailOpen || !taskDetailId) {
+      setTaskDetailData(null);
+      return;
+    }
+    setTaskDetailLoading(true);
+    setTaskDetailData(null);
+    void taskService
+      .getById(taskDetailId)
+      .then((res) => setTaskDetailData(res.data ?? null))
+      .catch(() => setTaskDetailData(null))
+      .finally(() => setTaskDetailLoading(false));
+  }, [taskDetailOpen, taskDetailId]);
 
   const refresh = () => void loadPage(page);
 
@@ -201,6 +233,17 @@ export default function LeaderTasksPage() {
                 const isAssigned = !!r.assigned_staff;
                 return (
                   <div className="flex flex-wrap gap-1" onClick={(e) => e.stopPropagation()}>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setTaskDetailRow(r);
+                        setTaskDetailId(r.id);
+                        setTaskDetailOpen(true);
+                      }}
+                      className="inline-flex items-center gap-1 rounded-md border border-slate-200 bg-white px-2 py-1 text-xs font-medium text-slate-800 hover:bg-slate-50"
+                    >
+                      Details
+                    </button>
                     {!isAssigned && (s === 'pending' || s === 'open') && (
                       <button
                         type="button"
@@ -388,6 +431,51 @@ export default function LeaderTasksPage() {
           </div>
         </div>
       )}
+
+      <DetailModal
+        title="Task"
+        open={taskDetailOpen}
+        onClose={() => {
+          setTaskDetailOpen(false);
+          setTaskDetailId(null);
+          setTaskDetailRow(null);
+        }}
+        loading={taskDetailLoading}
+        wide
+      >
+        {(() => {
+          const t = taskDetailData ?? taskDetailRow;
+          if (!t) return null;
+          const blobs = collectBlobIdEntries(t);
+          return (
+            <div className="space-y-1">
+              {detailField('ID', <span className="font-mono text-xs break-all">{t.id}</span>)}
+              {detailField('Description', t.description)}
+              {detailField('Region', t.region)}
+              {detailField('Start', formatDate(t.start_period))}
+              {detailField('End', formatDate(t.end_period))}
+              {detailField('Status', <StatusBadge status={t.status} />)}
+              {detailField('Assigned staff', t.assigned_staff ? truncateAddress(t.assigned_staff) : '—')}
+              {detailField('Reviewed by', t.reviewed_by ? truncateAddress(t.reviewed_by) : '—')}
+              {detailField('Created', formatDate(t.created_at))}
+              {detailField('Updated', formatDate(t.updated_at))}
+              {blobs.length > 0 && (
+                <div className="border-t border-slate-100 pt-3">
+                  <div className="mb-2 text-xs font-medium text-slate-600">Images</div>
+                  <div className="flex flex-wrap gap-4">
+                    {blobs.map(({ key, blobId }) => (
+                      <div key={key} className="text-center">
+                        <EntityBlobThumb blobId={blobId} className="h-20 w-20 rounded-md border border-slate-200 object-cover" />
+                        <div className="mt-1 text-[10px] text-slate-500">{key}</div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          );
+        })()}
+      </DetailModal>
     </div>
   );
 }

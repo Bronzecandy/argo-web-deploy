@@ -75,7 +75,7 @@ export default function AdminChildrenPage() {
     setDetailErr(null);
     void childrenService
       .getById(detailId)
-      .then((res) => setDetailChild(res.data))
+      .then((res) => setDetailChild(res.data ?? null))
       .catch((e: unknown) => {
         const msg =
           e && typeof e === 'object' && 'response' in e

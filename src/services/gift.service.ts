@@ -1,3 +1,4 @@
+import { unwrapEntityFromGetById } from '@/src/lib/paginationUnwrap';
 import { apiService } from './api.service';
 import type {
   PaginationResponse,
@@ -12,7 +13,8 @@ class GiftService {
   }
 
   async getById(id: string) {
-    return apiService.get<Gift>(`/gifts/${id}`);
+    const res = await apiService.get<unknown>(`/gifts/${id}`);
+    return { ...res, data: unwrapEntityFromGetById<Gift>(res.data) };
   }
 
   async create(data: {

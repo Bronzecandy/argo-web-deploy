@@ -285,11 +285,26 @@ export interface WithdrawProposal {
   closed_at: string;
 }
 
-/** POST /withdraw-proposals/{id}/confirm — PayOS URL, on-chain tx bytes, or plain message. */
+/**
+ * POST /withdraw-proposals/{id}/confirm — when PayOS is not used (manual bank transfer).
+ * Client must POST proof `blob_id` to `payment_callback` after this response.
+ */
+export interface ManualBankTransferConfirmResponse {
+  amount: string;
+  bank_code: string;
+  bank_org: string;
+  description: string;
+  owner: string;
+  payment_callback: string;
+  payment_id: string;
+}
+
+/** POST /withdraw-proposals/{id}/confirm — PayOS URL, manual bank callback, on-chain tx bytes, or plain message. */
 export type WithdrawProposalConfirmResponse =
   | BuildTransactionResponse
   | MessageResponse
-  | PaymentRedirectResponse;
+  | PaymentRedirectResponse
+  | ManualBankTransferConfirmResponse;
 
 /** GET /pools/leader/{walletAddress} — pool for the leader's assigned region */
 export interface LeaderPoolDetail {

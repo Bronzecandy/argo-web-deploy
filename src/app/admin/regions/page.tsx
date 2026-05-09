@@ -79,7 +79,7 @@ export default function AdminRegionsPage() {
     setDetailLoading(true);
     void regionService
       .getSuggestionById(detailId)
-      .then((res) => setDetailRow(res.data))
+      .then((res) => setDetailRow(res.data ?? null))
       .catch(() => setDetailRow(null))
       .finally(() => setDetailLoading(false));
   }, [detailId]);
@@ -260,26 +260,30 @@ export default function AdminRegionsPage() {
         loading={detailLoading}
         wide
       >
-        {detailRow && (
-          <div className="space-y-2 text-sm">
-            <p className="font-mono text-xs break-all">{detailRow.id}</p>
-            <p>
-              <span className="text-slate-500">region:</span> {detailRow.region}
-            </p>
-            <p>
-              <span className="text-slate-500">content:</span> {detailRow.content}
-            </p>
-            <p>
-              <span className="text-slate-500">created_by:</span> {truncateAddress(detailRow.created_by)}
-            </p>
-            <p>
-              <span className="text-slate-500">status:</span> <StatusBadge status={detailRow.status || 'pending'} />
-            </p>
-            <p>
-              <span className="text-slate-500">created_at:</span> {formatDate(detailRow.created_at)}
-            </p>
-          </div>
-        )}
+        {(() => {
+          const r = detailRow ?? (detailId ? (rows.find((x) => x.id === detailId) ?? null) : null);
+          if (!r) return null;
+          return (
+            <div className="space-y-2 text-sm">
+              <p className="font-mono text-xs break-all">{r.id}</p>
+              <p>
+                <span className="text-slate-500">region:</span> {r.region}
+              </p>
+              <p>
+                <span className="text-slate-500">content:</span> {r.content}
+              </p>
+              <p>
+                <span className="text-slate-500">created_by:</span> {truncateAddress(r.created_by)}
+              </p>
+              <p>
+                <span className="text-slate-500">status:</span> <StatusBadge status={r.status || 'pending'} />
+              </p>
+              <p>
+                <span className="text-slate-500">created_at:</span> {formatDate(r.created_at)}
+              </p>
+            </div>
+          );
+        })()}
       </DetailModal>
 
       {refuseModal && (

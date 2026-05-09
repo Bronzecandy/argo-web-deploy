@@ -31,8 +31,9 @@ export default function PublicChildDetailPage() {
     setBooksNeeds([]);
     try {
       const res = await childrenService.getById(id);
-      const c = res.data;
+      const c = res.data ?? null;
       setChild(c);
+      if (!c) return;
 
       const promises: Promise<void>[] = [];
 

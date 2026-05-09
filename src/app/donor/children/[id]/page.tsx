@@ -57,8 +57,9 @@ export default function DonorChildDetailPage() {
     setLoading(true);
     try {
       const res = await childrenService.getById(id);
-      const c = res.data;
+      const c = res.data ?? null;
       setChild(c);
+      if (!c) return;
 
       const promises: Promise<void>[] = [];
 

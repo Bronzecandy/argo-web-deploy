@@ -1,3 +1,4 @@
+import { unwrapEntityFromGetById } from '@/src/lib/paginationUnwrap';
 import { apiService } from './api.service';
 import type { PaginationResponse, Staff, StaffQueryParams } from '@/src/types/api.types';
 
@@ -7,7 +8,8 @@ class StaffService {
   }
 
   async getById(id: string) {
-    return apiService.get<Staff>(`/staffs/${id}`);
+    const res = await apiService.get<unknown>(`/staffs/${id}`);
+    return { ...res, data: unwrapEntityFromGetById<Staff>(res.data) };
   }
 }
 

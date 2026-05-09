@@ -1,7 +1,8 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useState, type ReactNode } from 'react';
 import PageHeader from '@/src/components/ui/PageHeader';
+import DetailModal from '@/src/components/ui/DetailModal';
 import { formatDate, truncateAddress } from '@/src/lib/formatters';
 import { toast } from 'sonner';
 import { useAppSelector } from '@/src/store/hooks';
@@ -11,12 +12,23 @@ import { ChevronLeft, ChevronRight } from 'lucide-react';
 
 const PAGE_SIZE = 20;
 
+function detailField(label: string, value: ReactNode) {
+  return (
+    <div className="border-b border-slate-100 py-2 last:border-0">
+      <div className="text-xs font-medium text-slate-500">{label}</div>
+      <div className="text-sm text-slate-900">{value}</div>
+    </div>
+  );
+}
+
 export default function LeaderNotificationsPage() {
   const { user } = useAppSelector((state) => state.auth);
   const [page, setPage] = useState(0);
   const [items, setItems] = useState<Notification[]>([]);
   const [totalPages, setTotalPages] = useState(1);
   const [loading, setLoading] = useState(true);
+  const [detailOpen, setDetailOpen] = useState(false);
+  const [detailItem, setDetailItem] = useState<Notification | null>(null);
 
   const load = useCallback(async () => {
     const addr = user?.address || '';
@@ -77,6 +89,16 @@ export default function LeaderNotificationsPage() {
                   <div className="mt-3 flex flex-wrap items-center gap-2 text-xs text-slate-500">
                     <span className="rounded-full bg-blue-50 px-2 py-0.5 font-medium text-blue-900">{n.region || '—'}</span>
                     <span>{formatDate(n.created_at)}</span>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setDetailItem(n);
+                        setDetailOpen(true);
+                      }}
+                      className="ml-auto rounded-md border border-slate-200 bg-white px-2 py-0.5 font-medium text-slate-700 hover:bg-slate-50"
+                    >
+                      Details
+                    </button>
                   </div>
                 </article>
               </li>
@@ -110,6 +132,26 @@ export default function LeaderNotificationsPage() {
           </div>
         )}
       </div>
+
+      <DetailModal
+        title="Notification"
+        open={detailOpen}
+        onClose={() => {
+          setDetailOpen(false);
+          setDetailItem(null);
+        }}
+        wide
+      >
+        {detailItem && (
+          <div className="space-y-1">
+            {detailField('ID', <span className="font-mono text-xs break-all">{detailItem.id}</span>)}
+            {detailField('Content', detailItem.content)}
+            {detailField('Region', detailItem.region || '—')}
+            {detailField('Created', formatDate(detailItem.created_at))}
+            {detailField('Updated', formatDate(detailItem.updated_at))}
+          </div>
+        )}
+      </DetailModal>
     </div>
   );
 }

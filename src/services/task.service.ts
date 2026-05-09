@@ -1,3 +1,4 @@
+import { unwrapEntityFromGetById } from '@/src/lib/paginationUnwrap';
 import { apiService } from './api.service';
 import type {
   PaginationResponse,
@@ -12,7 +13,8 @@ class TaskService {
   }
 
   async getById(id: string) {
-    return apiService.get<Task>(`/tasks/${id}`);
+    const res = await apiService.get<unknown>(`/tasks/${id}`);
+    return { ...res, data: unwrapEntityFromGetById<Task>(res.data) };
   }
 
   async create(data: { description: string; region: string; start_period: string; end_period: string }) {

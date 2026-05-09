@@ -1,3 +1,4 @@
+import { unwrapEntityFromGetById } from '@/src/lib/paginationUnwrap';
 import { apiService } from './api.service';
 import type {
   PaginationResponse,
@@ -13,7 +14,8 @@ class TaskProofService {
   }
 
   async getById(id: string) {
-    return apiService.get<TaskProof>(`/task-proofs/${id}`);
+    const res = await apiService.get<unknown>(`/task-proofs/${id}`);
+    return { ...res, data: unwrapEntityFromGetById<TaskProof>(res.data) };
   }
 
   async submit(taskId: string, image_blob_id: string) {

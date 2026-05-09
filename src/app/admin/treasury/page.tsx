@@ -44,7 +44,7 @@ function detailField(label: string, value: ReactNode) {
 function TreasuryPageContent() {
   const searchParams = useSearchParams();
   const { execute } = useExecuteTransaction();
-  const { busy, payOS, closePayOS, runConfirm, runMainPoolConfirm } = useWithdrawProposalConfirm();
+  const { busy, payOS, closePayOS, runConfirmWithProof, runMainPoolConfirm } = useWithdrawProposalConfirm();
 
   const [tab, setTab] = useState<TabId>('proposals');
   const [minInput, setMinInput] = useState('');
@@ -74,6 +74,11 @@ function TreasuryPageContent() {
   const [withdrawDetailLoading, setWithdrawDetailLoading] = useState(false);
   const [withdrawDetailData, setWithdrawDetailData] = useState<WithdrawProposal | null>(null);
   const [withdrawDetailErr, setWithdrawDetailErr] = useState<string | null>(null);
+  const [withdrawConfirmModal, setWithdrawConfirmModal] = useState<{ open: boolean; proposalId: string | null }>({
+    open: false,
+    proposalId: null,
+  });
+  const [withdrawConfirmProofBlob, setWithdrawConfirmProofBlob] = useState('');
   const [mainPoolBlobId, setMainPoolBlobId] = useState('');
 
   const [pendingDetail, setPendingDetail] = useState<{
@@ -237,10 +242,26 @@ function TreasuryPageContent() {
       .finally(() => setSpecialDetailLoading(false));
   }, [specialDetail.open, specialDetail.id]);
 
-  const handleConfirmWithdraw = async (id: string) => {
-    const ok = await runConfirm(id, { successMessage: 'Proposal confirmed & executed' });
+  const openWithdrawConfirmModal = (id: string) => {
+    setWithdrawConfirmProofBlob('');
+    setWithdrawConfirmModal({ open: true, proposalId: id });
+  };
+
+  const closeWithdrawConfirmModal = () => {
+    if (busy) return;
+    setWithdrawConfirmModal({ open: false, proposalId: null });
+    setWithdrawConfirmProofBlob('');
+  };
+
+  const handleWithdrawConfirmModalSubmit = async () => {
+    const id = withdrawConfirmModal.proposalId;
+    if (!id) return;
+    const ok = await runConfirmWithProof(id, withdrawConfirmProofBlob.trim(), {
+      successMessage: 'Proposal confirmed & executed',
+    });
     if (ok) {
       refresh();
+      closeWithdrawConfirmModal();
       setWithdrawDetail((d) => (d.id === id ? { ...d, open: false } : d));
     }
   };
@@ -423,7 +444,7 @@ function TreasuryPageContent() {
             {actionBtn('Details', () =>
               setWithdrawDetail({ open: true, id: r.id, row: r }),
             )}
-            {!r.is_executed && actionBtn('Confirm', () => void handleConfirmWithdraw(r.id), 'muted')}
+            {!r.is_executed && actionBtn('Confirm', () => openWithdrawConfirmModal(r.id), 'muted')}
           </div>
         ),
       },
@@ -559,6 +580,8 @@ function TreasuryPageContent() {
         onClose={() => {
           setWithdrawDetail({ open: false, id: null });
           setMainPoolBlobId('');
+          setWithdrawConfirmModal({ open: false, proposalId: null });
+          setWithdrawConfirmProofBlob('');
         }}
         loading={withdrawDetailLoading}
         error={withdrawDetailErr}
@@ -593,17 +616,18 @@ function TreasuryPageContent() {
               <div className="mt-4 space-y-3 border-t border-slate-100 pt-4">
                 <p className="text-xs font-medium text-slate-600">Confirm transfer</p>
                 <p className="text-xs text-slate-500">
-                  Automatic / PayOS: uses bank PayOS credentials when available. Manual (non-PayOS): upload proof and
-                  confirm main pool transfer.
+                  PayOS / on-chain: opens payment or executes tx. Manual (non-PayOS) bank: after confirm, your proof
+                  image is sent to the server <code className="rounded bg-slate-100 px-0.5 text-[10px]">payment_callback</code>.
+                  Main pool manual path below uses a separate API.
                 </p>
                 <div className="flex flex-wrap gap-2">
                   <button
                     type="button"
                     disabled={busy}
-                    onClick={() => wd.id && void handleConfirmWithdraw(wd.id)}
+                    onClick={() => wd.id && openWithdrawConfirmModal(wd.id)}
                     className="rounded-lg bg-blue-800 px-3 py-2 text-sm font-medium text-white hover:bg-blue-900 disabled:opacity-50"
                   >
-                    {busy ? 'Working…' : 'Confirm (PayOS / on-chain)'}
+                    {busy ? 'Working…' : 'Confirm transfer…'}
                   </button>
                 </div>
                 <div className="rounded-lg bg-slate-50 p-3">
@@ -686,6 +710,46 @@ function TreasuryPageContent() {
           </div>
         )}
       </DetailModal>
+
+      {withdrawConfirmModal.open && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-slate-900/40 p-4">
+          <div className="max-h-[90vh] w-full max-w-md overflow-y-auto rounded-xl border border-slate-200 bg-white p-5 shadow-xl">
+            <h3 className="text-lg font-semibold text-slate-900">Confirm withdrawal</h3>
+            <p className="mt-2 text-xs leading-relaxed text-slate-600">
+              Bước 1: <code className="rounded bg-slate-100 px-1 text-[11px]">POST /withdraw-proposals/{'{id}'}/confirm</code>.
+              Bước 2 (ngân hàng không PayOS): server trả <code className="rounded bg-slate-100 px-1 text-[11px]">payment_callback</code>{' '}
+              — ảnh chứng từ sẽ được gửi kèm <code className="rounded bg-slate-100 px-1 text-[11px]">blob_id</code> tới URL đó.
+              Luồng PayOS / on-chain không bắt buộc ảnh; có thể để trống nếu bạn chắc chắn.
+            </p>
+            <div className="mt-4">
+              <FileUploadInput
+                label="Proof image (Walrus blob)"
+                value={withdrawConfirmProofBlob}
+                onChange={setWithdrawConfirmProofBlob}
+                accept="image/*"
+              />
+            </div>
+            <div className="mt-5 flex flex-wrap justify-end gap-2">
+              <button
+                type="button"
+                disabled={busy}
+                onClick={closeWithdrawConfirmModal}
+                className="rounded-lg border border-slate-200 px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-50"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                disabled={busy}
+                onClick={() => void handleWithdrawConfirmModalSubmit()}
+                className="rounded-lg bg-blue-800 px-3 py-2 text-sm font-medium text-white hover:bg-blue-900 disabled:opacity-50"
+              >
+                {busy ? 'Processing…' : 'Confirm'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       <PayOSPaymentDialog
         state={payOS}

@@ -151,7 +151,7 @@ export default function LeaderRegisterCenterPage() {
         onClose={() => setModalOpen(false)}
         lockedRegion={poolName?.trim() || undefined}
         onSuccess={() => {
-          void refetchLeaderCenter().then(() => router.push('/leader/centers'));
+          void refetchLeaderCenter().then(() => router.push('/leader'));
         }}
       />
     </div>

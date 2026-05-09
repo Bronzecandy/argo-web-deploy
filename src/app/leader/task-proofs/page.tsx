@@ -1,9 +1,12 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useState, type ReactNode } from 'react';
 import PageHeader from '@/src/components/ui/PageHeader';
 import DataTable from '@/src/components/ui/DataTable';
+import DetailModal from '@/src/components/ui/DetailModal';
+import EntityBlobThumb from '@/src/components/ui/EntityBlobThumb';
 import StatusBadge from '@/src/components/ui/StatusBadge';
+import { collectBlobIdEntries } from '@/src/lib/blobFields';
 import { formatDate, truncateAddress } from '@/src/lib/formatters';
 import { toast } from 'sonner';
 import { useAppSelector } from '@/src/store/hooks';
@@ -57,6 +60,15 @@ function proofReviewStatus(r: TaskProof): string {
   return (r.review_status ?? r.status ?? '').trim();
 }
 
+function detailField(label: string, value: ReactNode) {
+  return (
+    <div className="border-b border-slate-100 py-2 last:border-0">
+      <div className="text-xs font-medium text-slate-500">{label}</div>
+      <div className="text-sm text-slate-900">{value}</div>
+    </div>
+  );
+}
+
 export default function LeaderTaskProofsPage() {
   const { user } = useAppSelector((state) => state.auth);
   const [page, setPage] = useState(0);
@@ -68,6 +80,12 @@ export default function LeaderTaskProofsPage() {
   const [imageBlobId, setImageBlobId] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [listVersion, setListVersion] = useState(0);
+
+  const [proofDetailOpen, setProofDetailOpen] = useState(false);
+  const [proofDetailId, setProofDetailId] = useState<string | null>(null);
+  const [proofDetailRow, setProofDetailRow] = useState<TaskProof | null>(null);
+  const [proofDetailData, setProofDetailData] = useState<TaskProof | null>(null);
+  const [proofDetailLoading, setProofDetailLoading] = useState(false);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -92,6 +110,20 @@ export default function LeaderTaskProofsPage() {
   useEffect(() => {
     void load();
   }, [load]);
+
+  useEffect(() => {
+    if (!proofDetailOpen || !proofDetailId) {
+      setProofDetailData(null);
+      return;
+    }
+    setProofDetailLoading(true);
+    setProofDetailData(null);
+    void taskProofService
+      .getById(proofDetailId)
+      .then((res) => setProofDetailData(res.data ?? null))
+      .catch(() => setProofDetailData(null))
+      .finally(() => setProofDetailLoading(false));
+  }, [proofDetailOpen, proofDetailId]);
 
   const { execute } = useExecuteTransaction();
   const refresh = () => void load();
@@ -241,6 +273,18 @@ export default function LeaderTaskProofsPage() {
                   <div className="flex flex-wrap gap-1">
                     <button
                       type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setProofDetailRow(r);
+                        setProofDetailId(r.id);
+                        setProofDetailOpen(true);
+                      }}
+                      className="rounded-lg border border-slate-200 bg-white px-2 py-1 text-xs font-medium text-slate-800 hover:bg-slate-50"
+                    >
+                      Details
+                    </button>
+                    <button
+                      type="button"
                       disabled={!actionable}
                       title={actionable ? undefined : 'This proof is already reviewed'}
                       onClick={(e) => {
@@ -278,6 +322,53 @@ export default function LeaderTaskProofsPage() {
           emptyMessage="No task proofs match your filters"
         />
       </section>
+
+      <DetailModal
+        title="Task proof"
+        open={proofDetailOpen}
+        onClose={() => {
+          setProofDetailOpen(false);
+          setProofDetailId(null);
+          setProofDetailRow(null);
+        }}
+        loading={proofDetailLoading}
+        wide
+      >
+        {(() => {
+          const p = proofDetailData ?? proofDetailRow;
+          if (!p) return null;
+          const blobs = collectBlobIdEntries(p);
+          const label = proofReviewStatus(p);
+          return (
+            <div className="space-y-1">
+              {detailField('ID', <span className="font-mono text-xs break-all">{p.id}</span>)}
+              {detailField('Task ID', p.task_id ? <span className="font-mono text-xs break-all">{p.task_id}</span> : '—')}
+              {detailField('Actor', truncateAddress(p.actor_address))}
+              {detailField('Actor profile', p.actor_profile_id ? truncateAddress(p.actor_profile_id) : '—')}
+              {detailField('Status', label ? <StatusBadge status={label} /> : <span className="text-slate-400">—</span>)}
+              {detailField('Description', p.description ?? '—')}
+              {detailField('AI note', p.ai_evaluation ?? '—')}
+              {detailField('Raw submit date', p.raw_submit_date ? formatDate(p.raw_submit_date) : '—')}
+              {detailField('Reviewed by', p.reviewed_by ? truncateAddress(p.reviewed_by) : '—')}
+              {detailField('Created', formatDate(p.created_at))}
+              {detailField('Updated', formatDate(p.updated_at))}
+              {blobs.length > 0 && (
+                <div className="border-t border-slate-100 pt-3">
+                  <div className="mb-2 text-xs font-medium text-slate-600">Images (Walrus)</div>
+                  <div className="flex flex-wrap gap-4">
+                    {blobs.map(({ key, blobId }) => (
+                      <div key={key} className="text-center">
+                        <EntityBlobThumb blobId={blobId} className="h-24 w-24 rounded-md border border-slate-200 object-cover" />
+                        <div className="mt-1 text-[10px] text-slate-500">{key}</div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          );
+        })()}
+      </DetailModal>
     </div>
   );
 }

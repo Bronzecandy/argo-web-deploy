@@ -1,9 +1,12 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useState, type ReactNode } from 'react';
 import PageHeader from '@/src/components/ui/PageHeader';
 import DataTable from '@/src/components/ui/DataTable';
+import DetailModal from '@/src/components/ui/DetailModal';
+import EntityBlobThumb from '@/src/components/ui/EntityBlobThumb';
 import StatusBadge from '@/src/components/ui/StatusBadge';
+import { collectBlobIdEntries } from '@/src/lib/blobFields';
 import { formatDate, truncateAddress } from '@/src/lib/formatters';
 import { toast } from 'sonner';
 import { useAppSelector } from '@/src/store/hooks';
@@ -16,6 +19,15 @@ import type { Gift } from '@/src/types/api.types';
 
 const PAGE_SIZE = 20;
 
+function detailField(label: string, value: ReactNode) {
+  return (
+    <div className="border-b border-slate-100 py-2 last:border-0">
+      <div className="text-xs font-medium text-slate-500">{label}</div>
+      <div className="text-sm text-slate-900">{value}</div>
+    </div>
+  );
+}
+
 export default function LeaderGiftsPage() {
   const { user } = useAppSelector((state) => state.auth);
   const [childId, setChildId] = useState('');
@@ -26,6 +38,12 @@ export default function LeaderGiftsPage() {
   const [loading, setLoading] = useState(false);
   const [deliveredInputs, setDeliveredInputs] = useState<Record<string, string>>({});
   const [confirmingId, setConfirmingId] = useState<string | null>(null);
+
+  const [giftDetailOpen, setGiftDetailOpen] = useState(false);
+  const [giftDetailId, setGiftDetailId] = useState<string | null>(null);
+  const [giftDetailRow, setGiftDetailRow] = useState<Gift | null>(null);
+  const [giftDetailData, setGiftDetailData] = useState<Gift | null>(null);
+  const [giftDetailLoading, setGiftDetailLoading] = useState(false);
 
   const load = useCallback(async () => {
     if (!appliedChildId.trim()) {
@@ -50,6 +68,20 @@ export default function LeaderGiftsPage() {
   useEffect(() => {
     void load();
   }, [load]);
+
+  useEffect(() => {
+    if (!giftDetailOpen || !giftDetailId) {
+      setGiftDetailData(null);
+      return;
+    }
+    setGiftDetailLoading(true);
+    setGiftDetailData(null);
+    void giftService
+      .getById(giftDetailId)
+      .then((res) => setGiftDetailData(res.data ?? null))
+      .catch(() => setGiftDetailData(null))
+      .finally(() => setGiftDetailLoading(false));
+  }, [giftDetailOpen, giftDetailId]);
 
   const applyChildId = () => {
     const id = childId.trim();
@@ -160,6 +192,25 @@ export default function LeaderGiftsPage() {
                   );
                 },
               },
+              {
+                key: 'details',
+                label: 'Details',
+                className: 'whitespace-nowrap',
+                render: (r) => (
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setGiftDetailRow(r);
+                      setGiftDetailId(r.id);
+                      setGiftDetailOpen(true);
+                    }}
+                    className="rounded-lg border border-slate-200 bg-white px-2 py-1 text-xs font-medium text-slate-800 hover:bg-slate-50"
+                  >
+                    Details
+                  </button>
+                ),
+              },
               { key: 'uploaded_at', label: 'Uploaded', render: (r) => formatDate(r.uploaded_at) },
               {
                 key: 'confirm',
@@ -197,6 +248,56 @@ export default function LeaderGiftsPage() {
           />
         ) : null}
       </section>
+
+      <DetailModal
+        title="Gift"
+        open={giftDetailOpen}
+        onClose={() => {
+          setGiftDetailOpen(false);
+          setGiftDetailId(null);
+          setGiftDetailRow(null);
+        }}
+        loading={giftDetailLoading}
+        wide
+      >
+        {(() => {
+          const g = giftDetailData ?? giftDetailRow;
+          if (!g) return null;
+          const blobs = collectBlobIdEntries(g);
+          return (
+            <div className="space-y-1">
+              {detailField('ID', <span className="font-mono text-xs break-all">{g.id}</span>)}
+              {detailField('Sender', truncateAddress(g.sender))}
+              {detailField('Recipient', truncateAddress(g.recipient))}
+              {detailField('Category', g.category)}
+              {detailField('Description', g.description)}
+              {detailField('Message', g.message || '—')}
+              {detailField('Status', <StatusBadge status={g.status} />)}
+              {detailField('Carrier', g.carrier || '—')}
+              {detailField('Tracking', g.tracking_code || '—')}
+              {detailField('For child', g.is_for_child ? 'Yes' : 'No')}
+              {detailField('Confirm received by', g.confirm_recieved_by ? truncateAddress(g.confirm_recieved_by) : '—')}
+              {detailField('Cancel reason', g.cancel_reason ?? '—')}
+              {detailField('Uploaded', formatDate(g.uploaded_at))}
+              {detailField('Delivered', g.delivered_at ? formatDate(g.delivered_at) : '—')}
+              {detailField('Updated', formatDate(g.updated_at))}
+              {blobs.length > 0 && (
+                <div className="border-t border-slate-100 pt-3">
+                  <div className="mb-2 text-xs font-medium text-slate-600">Images (Walrus · gift_image_blob_id / delivered_image_blob_id)</div>
+                  <div className="flex flex-wrap gap-4">
+                    {blobs.map(({ key, blobId }) => (
+                      <div key={key} className="text-center">
+                        <EntityBlobThumb blobId={blobId} className="h-24 w-24 rounded-md border border-slate-200 object-cover" />
+                        <div className="mt-1 text-[10px] text-slate-500">{key}</div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          );
+        })()}
+      </DetailModal>
     </div>
   );
 }

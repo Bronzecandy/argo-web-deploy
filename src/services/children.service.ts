@@ -1,3 +1,4 @@
+import { unwrapEntityFromGetById } from '@/src/lib/paginationUnwrap';
 import { apiService } from './api.service';
 import type {
   PaginationResponse,
@@ -23,7 +24,8 @@ class ChildrenService {
   }
 
   async getById(id: string) {
-    return apiService.get<Child>(`/children/${id}`);
+    const res = await apiService.get<unknown>(`/children/${id}`);
+    return { ...res, data: unwrapEntityFromGetById<Child>(res.data) };
   }
 
   /** GET /children/user/{wallet}/supported — children the donor has supported (My Track). */

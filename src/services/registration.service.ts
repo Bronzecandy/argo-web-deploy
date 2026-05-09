@@ -1,3 +1,4 @@
+import { unwrapEntityFromGetById } from '@/src/lib/paginationUnwrap';
 import { apiService } from './api.service';
 import type {
   PaginationResponse,
@@ -14,8 +15,10 @@ class RegistrationService {
     return apiService.get<PaginationResponse<RegistrationRequest[]>>('/registrations', { params });
   }
 
+  /** GET may return entity or PaginationDataResponse wrapper — normalized to single registration or null. */
   async getById(id: string) {
-    return apiService.get<PaginationResponse>(`/registrations/${id}`);
+    const res = await apiService.get<unknown>(`/registrations/${id}`);
+    return { ...res, data: unwrapEntityFromGetById<RegistrationRequest>(res.data) };
   }
 
   async getByWallet(walletAddress: string) {

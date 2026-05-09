@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useState, type ReactNode } from 'react';
 import {
   Check,
   Search,
@@ -15,6 +15,9 @@ import { toast } from 'sonner';
 import PageHeader from '@/src/components/ui/PageHeader';
 import DataTable from '@/src/components/ui/DataTable';
 import StatusBadge from '@/src/components/ui/StatusBadge';
+import DetailModal from '@/src/components/ui/DetailModal';
+import EntityBlobThumb from '@/src/components/ui/EntityBlobThumb';
+import { collectBlobIdEntries } from '@/src/lib/blobFields';
 import { formatDate, formatVND, truncateAddress } from '@/src/lib/formatters';
 import { registrationService } from '@/src/services/registration.service';
 import { staffService } from '@/src/services/staff.service';
@@ -49,6 +52,15 @@ type AdminRow = {
   phone_number?: string;
 };
 
+function detailField(label: string, value: ReactNode) {
+  return (
+    <div className="border-b border-slate-100 py-2 last:border-0">
+      <div className="text-xs font-medium text-slate-500">{label}</div>
+      <div className="text-sm text-slate-900">{value}</div>
+    </div>
+  );
+}
+
 export default function AdminAccountsPage() {
   const { execute } = useExecuteTransaction();
   const [activeTab, setActiveTab] = useState<Tab>('registrations');
@@ -78,6 +90,20 @@ export default function AdminAccountsPage() {
   const [confirmBusyId, setConfirmBusyId] = useState<string | null>(null);
   const [refuseModal, setRefuseModal] = useState<{ id: string } | null>(null);
   const [refuseReason, setRefuseReason] = useState('');
+
+  const [regDetailOpen, setRegDetailOpen] = useState(false);
+  const [regDetailId, setRegDetailId] = useState<string | null>(null);
+  const [regDetailListRow, setRegDetailListRow] = useState<RegistrationRequest | null>(null);
+  const [regDetailData, setRegDetailData] = useState<RegistrationRequest | null>(null);
+  const [regDetailLoading, setRegDetailLoading] = useState(false);
+
+  const [staffDetailOpen, setStaffDetailOpen] = useState(false);
+  const [staffDetailId, setStaffDetailId] = useState<string | null>(null);
+  const [staffDetailListRow, setStaffDetailListRow] = useState<Staff | null>(null);
+  const [staffDetailData, setStaffDetailData] = useState<Staff | null>(null);
+  const [staffDetailLoading, setStaffDetailLoading] = useState(false);
+
+  const [adminDetailRow, setAdminDetailRow] = useState<AdminRow | null>(null);
 
   const loadRegistrations = useCallback(async () => {
     setRegLoading(true);
@@ -160,6 +186,34 @@ export default function AdminAccountsPage() {
     void loadStaff();
     void loadAdmins();
   }, [activeTab, loadStaff, loadAdmins]);
+
+  useEffect(() => {
+    if (!regDetailOpen || !regDetailId) {
+      setRegDetailData(null);
+      return;
+    }
+    setRegDetailLoading(true);
+    setRegDetailData(null);
+    void registrationService
+      .getById(regDetailId)
+      .then((res) => setRegDetailData(res.data))
+      .catch(() => setRegDetailData(null))
+      .finally(() => setRegDetailLoading(false));
+  }, [regDetailOpen, regDetailId]);
+
+  useEffect(() => {
+    if (!staffDetailOpen || !staffDetailId) {
+      setStaffDetailData(null);
+      return;
+    }
+    setStaffDetailLoading(true);
+    setStaffDetailData(null);
+    void staffService
+      .getById(staffDetailId)
+      .then((res) => setStaffDetailData(res.data))
+      .catch(() => setStaffDetailData(null))
+      .finally(() => setStaffDetailLoading(false));
+  }, [staffDetailOpen, staffDetailId]);
 
   async function handleVote(id: string, isYes: boolean) {
     if (!isYes) {
@@ -329,6 +383,17 @@ export default function AdminAccountsPage() {
                     >
                       <button
                         type="button"
+                        onClick={() => {
+                          setRegDetailListRow(r);
+                          setRegDetailId(r.id);
+                          setRegDetailOpen(true);
+                        }}
+                        className="inline-flex items-center gap-1 rounded-md border border-slate-200 bg-white px-2 py-1 text-xs font-medium text-slate-800 hover:bg-slate-50"
+                      >
+                        Details
+                      </button>
+                      <button
+                        type="button"
                         disabled={approved || voteBusyId === r.id}
                         onClick={() => handleVote(r.id, true)}
                         className="inline-flex items-center gap-1 rounded-md border border-blue-200 bg-blue-50 px-2 py-1 text-xs font-medium text-blue-900 hover:bg-blue-100 disabled:cursor-not-allowed disabled:opacity-50"
@@ -401,6 +466,24 @@ export default function AdminAccountsPage() {
               columns={[
                 { key: 'id', label: 'ID', render: (s) => <span className="font-mono text-xs">{truncateAddress(s.id, 8)}</span> },
                 {
+                  key: 'details',
+                  label: 'Details',
+                  className: 'whitespace-nowrap',
+                  render: (s) => (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setStaffDetailListRow(s);
+                        setStaffDetailId(s.id);
+                        setStaffDetailOpen(true);
+                      }}
+                      className="rounded-md border border-blue-200 px-2 py-1 text-xs font-medium text-blue-900 hover:bg-blue-50"
+                    >
+                      Details
+                    </button>
+                  ),
+                },
+                {
                   key: 'name',
                   label: 'Name',
                   render: (s) => (
@@ -427,6 +510,19 @@ export default function AdminAccountsPage() {
             <DataTable<AdminRow>
               columns={[
                 { key: 'id', label: 'ID', render: (a) => <span className="font-mono text-xs">{truncateAddress(a.id, 8)}</span> },
+                {
+                  key: 'details',
+                  label: 'Details',
+                  render: (a) => (
+                    <button
+                      type="button"
+                      onClick={() => setAdminDetailRow(a)}
+                      className="rounded-md border border-blue-200 px-2 py-1 text-xs font-medium text-blue-900 hover:bg-blue-50"
+                    >
+                      Details
+                    </button>
+                  ),
+                },
                 {
                   key: 'name',
                   label: 'Name',
@@ -494,6 +590,143 @@ export default function AdminAccountsPage() {
           </div>
         </div>
       )}
+
+      <DetailModal
+        title="Registration request"
+        open={regDetailOpen}
+        onClose={() => {
+          setRegDetailOpen(false);
+          setRegDetailId(null);
+          setRegDetailListRow(null);
+        }}
+        loading={regDetailLoading}
+        wide
+      >
+        {(() => {
+          const r = regDetailData ?? regDetailListRow;
+          if (!r) return null;
+          const blobs = collectBlobIdEntries(r);
+          return (
+            <div className="space-y-1">
+              {detailField('ID', <span className="font-mono text-xs break-all">{r.id}</span>)}
+              {detailField('Name', `${r.first_name} ${r.last_name}`)}
+              {detailField('Role', <span className="capitalize">{r.register_role}</span>)}
+              {detailField('Region', r.region)}
+              {detailField('Status', <StatusBadge status={r.status} />)}
+              {detailField('Identity code', r.identity_code)}
+              {detailField('Email', r.email)}
+              {detailField('Phone', r.phone_number)}
+              {detailField('Gender', r.gender)}
+              {detailField('Date of birth', formatDate(r.date_of_birth))}
+              {detailField('Created by', truncateAddress(r.created_by))}
+              {detailField('Created', formatDate(r.created_at))}
+              {detailField('Updated', formatDate(r.updated_at))}
+              {blobs.length > 0 && (
+                <div className="border-t border-slate-100 pt-3">
+                  <div className="mb-2 text-xs font-medium text-slate-600">Images (Walrus)</div>
+                  <div className="flex flex-wrap gap-4">
+                    {blobs.map(({ key, blobId }) => (
+                      <div key={key} className="text-center">
+                        <EntityBlobThumb blobId={blobId} />
+                        <div className="mt-1 text-[10px] text-slate-500">{key}</div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          );
+        })()}
+      </DetailModal>
+
+      <DetailModal
+        title="Staff"
+        open={staffDetailOpen}
+        onClose={() => {
+          setStaffDetailOpen(false);
+          setStaffDetailId(null);
+          setStaffDetailListRow(null);
+        }}
+        loading={staffDetailLoading}
+        wide
+      >
+        {(() => {
+          const s = staffDetailData ?? staffDetailListRow;
+          if (!s) return null;
+          const staffBlobs = collectBlobIdEntries(s);
+          return (
+            <div className="space-y-1">
+              {detailField('ID', <span className="font-mono text-xs break-all">{s.id}</span>)}
+              {detailField('User', truncateAddress(s.user))}
+              {detailField('Name', `${s.first_name} ${s.last_name}`)}
+              {detailField('Region', s.region)}
+              {detailField('Email', s.email)}
+              {detailField('Phone', s.phone_number)}
+              {detailField('Gender', s.gender)}
+              {detailField('Identity code', s.identity_code)}
+              {s.date_of_birth && detailField('Date of birth', formatDate(s.date_of_birth))}
+              {detailField('Uploaded', formatDate(s.uploaded_at))}
+              {staffBlobs.length > 0 && (
+                <div className="border-t border-slate-100 pt-3">
+                  <div className="mb-2 text-xs font-medium text-slate-600">Images (Walrus)</div>
+                  <div className="flex flex-wrap gap-4">
+                    {staffBlobs.map(({ key, blobId }) => (
+                      <div key={key} className="text-center">
+                        <EntityBlobThumb blobId={blobId} />
+                        <div className="mt-1 text-[10px] text-slate-500">{key}</div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+              {Array.isArray(s.nfts) && s.nfts.length > 0 && (
+                <div className="border-t border-slate-100 pt-3">
+                  <div className="mb-2 text-xs font-medium text-slate-600">NFT-linked profiles</div>
+                  <ul className="space-y-3">
+                    {s.nfts.map((nft) => (
+                      <li key={nft.id} className="rounded-lg border border-slate-100 p-2 text-sm">
+                        <div className="font-mono text-xs text-slate-600">{truncateAddress(nft.id, 6)}</div>
+                        <div className="flex flex-wrap gap-3 pt-2">
+                          {collectBlobIdEntries(nft).map(({ key, blobId }) => (
+                            <div key={`${nft.id}-${key}`}>
+                              <EntityBlobThumb blobId={blobId} />
+                              <span className="text-[10px] text-slate-500">{key}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+            </div>
+          );
+        })()}
+      </DetailModal>
+
+      <DetailModal
+        title="Administrator"
+        open={adminDetailRow != null}
+        onClose={() => setAdminDetailRow(null)}
+        loading={false}
+        wide
+      >
+        {adminDetailRow && (
+          <div className="space-y-1">
+            {detailField('ID', <span className="font-mono text-xs break-all">{adminDetailRow.id}</span>)}
+            {detailField(
+              'Name',
+              `${adminDetailRow.first_name ?? '—'} ${adminDetailRow.last_name ?? ''}`,
+            )}
+            {detailField('Region', adminDetailRow.region ?? '—')}
+            {detailField('Email', adminDetailRow.email ?? '—')}
+            {detailField('Phone', adminDetailRow.phone_number ?? '—')}
+            <p className="pt-2 text-xs text-slate-500">
+              No GET-by-id in API — details are from the list response only.
+            </p>
+          </div>
+        )}
+      </DetailModal>
 
       <span className="sr-only">{formatVND(0)}</span>
     </div>

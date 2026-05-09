@@ -1,5 +1,6 @@
 import type {
   BuildTransactionResponse,
+  ManualBankTransferConfirmResponse,
   MessageResponse,
   PaymentRedirectResponse,
   WithdrawProposalConfirmResponse,
@@ -22,6 +23,19 @@ export function isPaymentRedirect(data: unknown): data is PaymentRedirectRespons
     'url' in data &&
     typeof (data as PaymentRedirectResponse).url === 'string' &&
     !!(data as PaymentRedirectResponse).url
+  );
+}
+
+/** Non-PayOS manual transfer: upload proof to `payment_callback` (full or relative URL). */
+export function isManualBankTransferConfirm(data: unknown): data is ManualBankTransferConfirmResponse {
+  return (
+    typeof data === 'object' &&
+    data !== null &&
+    'payment_callback' in data &&
+    typeof (data as ManualBankTransferConfirmResponse).payment_callback === 'string' &&
+    !!(data as ManualBankTransferConfirmResponse).payment_callback.trim() &&
+    !isPaymentRedirect(data) &&
+    !hasTxBytes(data)
   );
 }
 

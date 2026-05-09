@@ -1,3 +1,4 @@
+import { unwrapEntityFromGetById } from '@/src/lib/paginationUnwrap';
 import { apiService } from './api.service';
 import type {
   PaginationResponse,
@@ -31,7 +32,8 @@ class RegionService {
   }
 
   async getSuggestionById(id: string) {
-    return apiService.get<SupportedRegionSuggestion>(`/regions/supported-suggestions/${id}`);
+    const res = await apiService.get<unknown>(`/regions/supported-suggestions/${id}`);
+    return { ...res, data: unwrapEntityFromGetById<SupportedRegionSuggestion>(res.data) };
   }
 
   async createSuggestion(data: CreateSupportedRegionSuggestionRequest) {

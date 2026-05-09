@@ -24,6 +24,15 @@ type LeaderCenterContextValue = {
 
 const LeaderCenterContext = createContext<LeaderCenterContextValue | null>(null);
 
+/** GET /centers/leader may return 200 with a stub row before address/phone are set — treat as no center yet. */
+function isCompleteLeaderCenter(data: unknown): data is SupportCenter {
+  if (data == null || typeof data !== 'object') return false;
+  const o = data as Record<string, unknown>;
+  const addr = typeof o.center_address === 'string' ? o.center_address.trim() : '';
+  const phone = typeof o.center_phone_number === 'string' ? o.center_phone_number.trim() : '';
+  return Boolean(addr && phone);
+}
+
 function getAxiosStatus(e: unknown): number | undefined {
   if (e && typeof e === 'object' && 'response' in e) {
     const s = (e as { response?: { status?: number } }).response?.status;
@@ -50,8 +59,14 @@ export function LeaderCenterProvider({ children }: { children: ReactNode }) {
     setErrorMessage(null);
     try {
       const res = await centerService.getLeaderCenter();
-      setCenter(res.data);
-      setStatus('has_center');
+      const body = res.data;
+      if (isCompleteLeaderCenter(body)) {
+        setCenter(body);
+        setStatus('has_center');
+      } else {
+        setCenter(null);
+        setStatus('no_center');
+      }
     } catch (e: unknown) {
       const http = getAxiosStatus(e);
       if (http === 400 || http === 404) {
