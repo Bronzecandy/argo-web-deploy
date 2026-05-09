@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useAppSelector, useAppDispatch } from '@/src/store/hooks';
@@ -9,116 +9,203 @@ import { truncateAddress } from '@/src/lib/formatters';
 import {
   LayoutDashboard,
   ClipboardList,
-  ClipboardCheck,
-  User,
-  Bell,
+  Building2,
+  Settings,
   LogOut,
   Menu,
   X,
   Leaf,
+  Wallet,
+  Compass,
 } from 'lucide-react';
+import { ROLES } from '@/src/lib/constants';
+import { userHasAnyRole } from '@/src/services/auth.service';
 
-const NAV_ITEMS = [
-  { label: 'Dashboard', href: '/volunteer', icon: LayoutDashboard },
-  { label: 'Tasks', href: '/volunteer/tasks', icon: ClipboardList },
-  { label: 'Task Proofs', href: '/volunteer/task-proofs', icon: ClipboardCheck },
-  { label: 'Notifications', href: '/volunteer/notifications', icon: Bell },
-  { label: 'Profile', href: '/volunteer/profile', icon: User },
+/** Aligned with mobile: overview → tasks/welfare → center requests → settings (extras under Settings). */
+const NAV_PRIMARY: { label: string; href: string; icon: typeof LayoutDashboard }[] = [
+  { label: 'Home', href: '/volunteer', icon: LayoutDashboard },
+  { label: 'Tasks & welfare', href: '/volunteer/tasks', icon: ClipboardList },
+  { label: 'Center requests', href: '/volunteer/center-requests', icon: Building2 },
+  { label: 'Settings', href: '/volunteer/settings', icon: Settings },
 ];
+
+const SETTINGS_SUBPATHS = [
+  '/volunteer/settings',
+  '/volunteer/task-proofs',
+  '/volunteer/notifications',
+  '/volunteer/profile',
+];
+
+function VolNavLink({
+  href,
+  label,
+  icon: Icon,
+  active,
+  onClick,
+}: {
+  href: string;
+  label: string;
+  icon: typeof LayoutDashboard;
+  active: boolean;
+  onClick?: () => void;
+}) {
+  return (
+    <Link
+      href={href}
+      onClick={onClick}
+      className={`flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-lg px-3 py-2 text-sm font-medium transition ${
+        active
+          ? 'bg-blue-50 text-blue-900 shadow-sm ring-1 ring-blue-800/15'
+          : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
+      }`}
+    >
+      <Icon className={`h-3.5 w-3.5 sm:h-4 sm:w-4 ${active ? 'text-blue-800' : 'text-slate-400'}`} />
+      {label}
+    </Link>
+  );
+}
 
 export default function VolunteerLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const dispatch = useAppDispatch();
   const { user } = useAppSelector((state) => state.auth);
-  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
+  const showDonorLink = user ? userHasAnyRole(user, [ROLES.DONOR, ROLES.USER]) : false;
 
   const isActive = (href: string) => {
     if (href === '/volunteer') return pathname === '/volunteer';
     return pathname.startsWith(href);
   };
 
+  const settingsActive = SETTINGS_SUBPATHS.some((p) => pathname === p || pathname.startsWith(`${p}/`));
+
+  useEffect(() => {
+    setMobileMenuOpen(false);
+  }, [pathname]);
+
+  useEffect(() => {
+    if (!mobileMenuOpen) return;
+    const close = (e: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) setMobileMenuOpen(false);
+    };
+    document.addEventListener('click', close);
+    return () => document.removeEventListener('click', close);
+  }, [mobileMenuOpen]);
+
+  const closeMobile = () => setMobileMenuOpen(false);
+
+  const renderPrimaryNav = (onNavigate?: () => void) => (
+    <div className="flex flex-wrap gap-1">
+      {NAV_PRIMARY.map((item) => {
+        const active = item.href === '/volunteer/settings' ? settingsActive : isActive(item.href);
+        return (
+          <VolNavLink
+            key={item.href}
+            href={item.href}
+            label={item.label}
+            icon={item.icon}
+            active={active}
+            onClick={onNavigate}
+          />
+        );
+      })}
+    </div>
+  );
+
   return (
-    <div className="flex h-screen overflow-hidden bg-slate-50">
-      {sidebarOpen && (
-        <div
-          className="fixed inset-0 z-40 bg-black/30 lg:hidden"
-          onClick={() => setSidebarOpen(false)}
-        />
-      )}
-
-      <aside
-        className={`fixed inset-y-0 left-0 z-50 flex w-64 flex-col border-r border-slate-200 bg-white transition-transform lg:static lg:translate-x-0 ${
-          sidebarOpen ? 'translate-x-0' : '-translate-x-full'
-        }`}
-      >
-        <div className="flex h-16 items-center gap-3 border-b border-slate-200 px-5">
-          <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-blue-800">
-            <Leaf className="h-5 w-5 text-white" />
-          </div>
-          <div>
-            <span className="font-bold text-slate-900">AgroTrust</span>
-            <span className="ml-1.5 rounded bg-orange-100 px-1.5 py-0.5 text-[10px] font-semibold text-orange-700">
-              VOLUNTEER
+    <div className="flex min-h-screen flex-col bg-slate-50/90">
+      <header className="sticky top-0 z-30 border-b border-slate-200/90 bg-white/95 shadow-sm shadow-slate-900/5 backdrop-blur-md">
+        <div className="mx-auto flex h-14 max-w-6xl items-center justify-between gap-3 px-4 lg:px-6">
+          <Link href="/" className="flex min-w-0 items-center gap-2.5">
+            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-blue-800 to-blue-950 shadow-md shadow-blue-900/20">
+              <Leaf className="h-5 w-5 text-white" />
             </span>
-          </div>
-          <button className="ml-auto lg:hidden" onClick={() => setSidebarOpen(false)}>
-            <X className="h-5 w-5 text-slate-400" />
-          </button>
-        </div>
+            <span className="min-w-0">
+              <span className="block truncate font-bold leading-tight text-slate-900">AgroTrust</span>
+              <span className="inline-block rounded-md bg-orange-100 px-1.5 py-0.5 text-[10px] font-semibold text-orange-900">
+                VOLUNTEER
+              </span>
+            </span>
+          </Link>
 
-        <nav className="flex-1 overflow-y-auto p-3">
-          <ul className="space-y-0.5">
-            {NAV_ITEMS.map((item) => {
-              const Icon = item.icon;
-              const active = isActive(item.href);
-              return (
-                <li key={item.href}>
-                  <Link
-                    href={item.href}
-                    onClick={() => setSidebarOpen(false)}
-                    className={`flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition ${
-                      active
-                        ? 'bg-blue-50 text-blue-900'
-                        : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
-                    }`}
-                  >
-                    <Icon className={`h-[18px] w-[18px] ${active ? 'text-blue-800' : 'text-slate-400'}`} />
-                    {item.label}
+          <div className="flex shrink-0 items-center gap-2">
+            <Link
+              href="/explore"
+              className="hidden items-center gap-1 rounded-lg px-2.5 py-1.5 text-xs font-medium text-slate-600 hover:bg-slate-100 sm:inline-flex"
+            >
+              <Compass className="h-3.5 w-3.5" />
+              Explore
+            </Link>
+            {showDonorLink && (
+              <Link
+                href="/donor"
+                className="hidden items-center gap-1 rounded-lg border border-blue-200 bg-blue-50 px-2.5 py-1.5 text-xs font-semibold text-blue-900 sm:inline-flex"
+              >
+                <Wallet className="h-3.5 w-3.5" />
+                Member
+              </Link>
+            )}
+            <span className="hidden max-w-[100px] truncate font-mono text-[11px] text-slate-500 md:inline" title={user?.address}>
+              {truncateAddress(user?.address || '')}
+            </span>
+            <button
+              type="button"
+              onClick={() => dispatch(logoutUser())}
+              className="hidden items-center gap-1 rounded-lg border border-slate-200 px-2.5 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50 sm:inline-flex"
+            >
+              <LogOut className="h-3.5 w-3.5" />
+              <span className="hidden lg:inline">Logout</span>
+            </button>
+
+            <div className="relative sm:hidden" ref={menuRef}>
+              <button
+                type="button"
+                onClick={() => setMobileMenuOpen((v) => !v)}
+                className="flex h-10 w-10 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-700"
+                aria-expanded={mobileMenuOpen}
+                aria-label="Menu"
+              >
+                {mobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+              </button>
+              {mobileMenuOpen && (
+                <div className="absolute right-0 top-full z-50 mt-2 w-[min(92vw,18rem)] rounded-xl border border-slate-200 bg-white p-3 shadow-lg">
+                  {showDonorLink && (
+                    <Link
+                      href="/donor"
+                      onClick={closeMobile}
+                      className="mb-2 flex items-center gap-2 rounded-lg border border-blue-100 bg-blue-50/80 px-3 py-2 text-xs font-semibold text-blue-900"
+                    >
+                      <Wallet className="h-4 w-4" /> Donor / member area
+                    </Link>
+                  )}
+                  <Link href="/explore" onClick={closeMobile} className="mb-2 flex items-center gap-2 rounded-lg px-3 py-2 text-sm hover:bg-slate-50">
+                    <Compass className="h-4 w-4" /> Public Explore
                   </Link>
-                </li>
-              );
-            })}
-          </ul>
-        </nav>
-
-        <div className="border-t border-slate-200 p-3">
-          <div className="mb-2 rounded-lg bg-slate-50 px-3 py-2">
-            <p className="text-xs font-medium text-slate-700">Volunteer</p>
-            <p className="text-xs text-slate-400">{truncateAddress(user?.address || '')}</p>
+                  <div className="border-t border-slate-100 pt-2">{renderPrimaryNav(closeMobile)}</div>
+                  <p className="mt-3 truncate border-t border-slate-100 pt-3 font-mono text-[10px] text-slate-500">{user?.address}</p>
+                  <button
+                    type="button"
+                    onClick={() => dispatch(logoutUser())}
+                    className="mt-2 flex w-full items-center justify-center gap-2 rounded-lg py-2 text-sm font-medium text-red-600 hover:bg-red-50"
+                  >
+                    <LogOut className="h-4 w-4" /> Logout
+                  </button>
+                </div>
+              )}
+            </div>
           </div>
-          <button
-            onClick={() => dispatch(logoutUser())}
-            className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm text-red-600 transition hover:bg-red-50"
-          >
-            <LogOut className="h-4 w-4" />
-            Logout
-          </button>
         </div>
-      </aside>
 
-      <div className="flex flex-1 flex-col overflow-hidden">
-        <header className="flex h-16 items-center gap-4 border-b border-slate-200 bg-white px-4 lg:px-6">
-          <button className="lg:hidden" onClick={() => setSidebarOpen(true)}>
-            <Menu className="h-5 w-5 text-slate-600" />
-          </button>
-          <div className="flex-1" />
-          <div className="flex items-center gap-2 text-sm text-slate-500">
-            <div className="h-2 w-2 rounded-full bg-blue-600" />
-            Connected
-          </div>
-        </header>
-        <main className="flex-1 overflow-y-auto p-4 lg:p-6">{children}</main>
-      </div>
+        <nav
+          className="mx-auto hidden max-w-6xl flex-wrap items-center gap-2 border-t border-slate-100/90 px-4 py-2 sm:flex lg:px-6"
+          aria-label="Volunteer main"
+        >
+          {renderPrimaryNav()}
+        </nav>
+      </header>
+
+      <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-6 sm:py-8 lg:px-6">{children}</main>
     </div>
   );
 }

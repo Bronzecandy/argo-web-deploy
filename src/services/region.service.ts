@@ -45,6 +45,11 @@ class RegionService {
   async getUserSuggestions(walletAddress: string, params?: { page?: number; page_size?: number }) {
     return apiService.get<PaginationResponse>(`/regions/user/${walletAddress}/supported-suggestions`, { params });
   }
+
+  /** GET /regions/established — regions that accept child submissions (mobile). */
+  async listEstablishedRegions() {
+    return apiService.get<string[] | { regions?: string[]; data?: string[] }>('/regions/established');
+  }
 }
 
 export const regionService = new RegionService();

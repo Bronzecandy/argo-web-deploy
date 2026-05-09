@@ -236,10 +236,10 @@ export interface Child {
   updated_at: string;
 }
 
-/** PUT /children/meal-need | books-need | health-insurance-need — need_id often empty when creating/configuring a new need. */
+/** PUT /children/meal-need | books-need | health-insurance-need — include need_id from the child record (meal_need, books_needs[], health_insurance_need); use empty string when creating a need before ids exist. */
 export interface UpdateChildNeedRequest {
   child_id: string;
-  need_id?: string;
+  need_id: string;
   value?: number;
 }
 
@@ -465,6 +465,26 @@ export interface CreateSupportedRegionSuggestionRequest {
   content: string;
 }
 
+/** Child row under GET /regions/established/{region}. */
+export interface EstablishedRegionChild {
+  id: string;
+  first_name?: string;
+  last_name?: string;
+  gender?: string;
+  identity_code?: string;
+}
+
+/** GET /regions/established/{region} — pool + children (mobile CampaignDetail). */
+export interface EstablishedRegionDetail {
+  region: string;
+  pool_id: string;
+  center_phone_number: string;
+  center_address: string;
+  center_image_blob_id: string;
+  total_donated: number;
+  children: PaginationResponse<EstablishedRegionChild[]>;
+}
+
 // ─── Notification ────────────────────────────────────────
 export interface Notification {
   id: string;
@@ -629,6 +649,8 @@ export interface ChildrenQueryParams extends PaginationParams {
   region?: string;
   gender?: string;
   year_of_birth?: number;
+  /** If supported by BE, narrows GET /children (e.g. identity fragment). */
+  keyword?: string;
 }
 
 export interface WithdrawQueryParams extends PaginationParams {

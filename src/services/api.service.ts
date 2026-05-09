@@ -6,6 +6,7 @@ import axios, {
   InternalAxiosRequestConfig,
 } from 'axios';
 import { API_BASE_URL, STORAGE_KEYS } from '@/src/lib/constants';
+import { isPublicPath } from '@/src/lib/public-routes';
 
 /** First request + up to MAX_500_RETRIES retries when the server returns HTTP 500 */
 const MAX_500_RETRIES = 5;
@@ -74,7 +75,7 @@ class ApiService {
 
         if (error.response?.status === 401) {
           this.clearTokens();
-          if (typeof window !== 'undefined') {
+          if (typeof window !== 'undefined' && !isPublicPath(window.location.pathname)) {
             window.location.href = '/login';
           }
         }

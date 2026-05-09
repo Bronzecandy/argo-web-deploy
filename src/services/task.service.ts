@@ -23,6 +23,11 @@ class TaskService {
     return apiService.post<MessageResponse>(`/tasks/${id}/claim`, null);
   }
 
+  /** GET /tasks/staff/{wallet} — tasks assigned to this volunteer (mobile Update screen). */
+  async listStaffByWallet(walletAddress: string) {
+    return apiService.get<Task[] | PaginationResponse<Task[]>>(`/tasks/staff/${walletAddress}`);
+  }
+
   async review(id: string, is_vote_yes: boolean, refuse_reason?: string) {
     const params: Record<string, any> = { is_vote_yes };
     if (refuse_reason) params.refuse_reason = refuse_reason;

@@ -1,28 +1,35 @@
 'use client';
 
-import { useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { Suspense, useEffect } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { GoogleOAuthProvider, GoogleLogin } from '@react-oauth/google';
 import { useAppDispatch, useAppSelector } from '@/src/store/hooks';
 import { loginWithZKLogin, clearError } from '@/src/store/authSlice';
 import { ROLES, GOOGLE_CLIENT_ID } from '@/src/lib/constants';
+import { getSafeReturnPath } from '@/src/lib/safe-return-url';
+import Link from 'next/link';
 import { Leaf } from 'lucide-react';
 import { toast } from 'sonner';
 
-export default function LoginPage() {
+function LoginForm() {
   const dispatch = useAppDispatch();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { isAuthenticated, isLoading, user, error } = useAppSelector((state) => state.auth);
+  const returnUrl = getSafeReturnPath(searchParams.get('returnUrl'));
 
   useEffect(() => {
-    if (isAuthenticated && user) {
-      if (user.role === ROLES.ADMIN) router.replace('/admin');
-      else if (user.role === ROLES.LOCAL_LEADER) router.replace('/leader');
-      else if (user.role === ROLES.VOLUNTEER) router.replace('/volunteer');
-      else if (user.role === ROLES.DONOR || user.role === ROLES.USER) router.replace('/donor');
-      else toast.error('Your role does not have access to this platform');
+    if (!isAuthenticated || !user) return;
+    if (returnUrl) {
+      router.replace(returnUrl);
+      return;
     }
-  }, [isAuthenticated, user, router]);
+    if (user.role === ROLES.ADMIN) router.replace('/admin');
+    else if (user.role === ROLES.LOCAL_LEADER) router.replace('/leader');
+    else if (user.role === ROLES.VOLUNTEER) router.replace('/volunteer');
+    else if (user.role === ROLES.DONOR || user.role === ROLES.USER) router.replace('/donor');
+    else toast.error('Your role does not have access to this platform');
+  }, [isAuthenticated, user, router, returnUrl]);
 
   useEffect(() => {
     if (error) {
@@ -32,10 +39,8 @@ export default function LoginPage() {
   }, [error, dispatch]);
 
   return (
-    <GoogleOAuthProvider clientId={GOOGLE_CLIENT_ID}>
     <div className="flex min-h-screen">
-      {/* Left Panel */}
-      <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-blue-800 to-blue-900 items-center justify-center p-12">
+      <div className="hidden items-center justify-center bg-gradient-to-br from-blue-800 to-blue-900 p-12 lg:flex lg:w-1/2">
         <div className="max-w-md text-white">
           <div className="mb-8 flex items-center gap-3">
             <div className="flex h-14 w-14 items-center justify-center rounded-xl bg-white/20 backdrop-blur-sm">
@@ -43,32 +48,29 @@ export default function LoginPage() {
             </div>
             <h1 className="text-3xl font-bold">AgroTrust</h1>
           </div>
-          <h2 className="mb-4 text-2xl font-semibold">
-            Transparent Child Support Platform
-          </h2>
-          <p className="text-blue-100 leading-relaxed">
-            Powered by blockchain technology. Every donation is traceable, every action is transparent.
-            Together, we build trust for a better future.
+          <h2 className="mb-4 text-2xl font-semibold">Transparent Child Support Platform</h2>
+          <p className="leading-relaxed text-blue-100">
+            Powered by blockchain technology. Every donation is traceable, every action is transparent. Together, we build trust for
+            a better future.
           </p>
           <div className="mt-8 grid grid-cols-3 gap-4 text-center">
             <div className="rounded-xl bg-white/10 p-4 backdrop-blur-sm">
               <div className="text-2xl font-bold">100%</div>
-              <div className="text-xs text-blue-200 mt-1">Transparent</div>
+              <div className="mt-1 text-xs text-blue-200">Transparent</div>
             </div>
             <div className="rounded-xl bg-white/10 p-4 backdrop-blur-sm">
               <div className="text-2xl font-bold">On-chain</div>
-              <div className="text-xs text-blue-200 mt-1">Verified</div>
+              <div className="mt-1 text-xs text-blue-200">Verified</div>
             </div>
             <div className="rounded-xl bg-white/10 p-4 backdrop-blur-sm">
               <div className="text-2xl font-bold">Sui</div>
-              <div className="text-xs text-blue-200 mt-1">Blockchain</div>
+              <div className="mt-1 text-xs text-blue-200">Blockchain</div>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Right Panel */}
-      <div className="flex w-full lg:w-1/2 items-center justify-center p-8">
+      <div className="flex w-full items-center justify-center p-8 lg:w-1/2">
         <div className="w-full max-w-md">
           <div className="mb-8 text-center lg:hidden">
             <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-xl bg-blue-800">
@@ -77,10 +79,13 @@ export default function LoginPage() {
             <h1 className="text-2xl font-bold text-blue-900">AgroTrust</h1>
           </div>
 
-          <div className="rounded-2xl border border-slate-200 bg-white p-8 shadow-sm">
+          <div className="rounded-2xl border border-slate-200/80 bg-white p-8 shadow-sm">
             <h2 className="mb-2 text-2xl font-bold text-slate-900">Welcome</h2>
-            <p className="mb-8 text-slate-500">
-              Sign in with your Google account to continue
+            <p className="mb-6 text-slate-500">Sign in with your Google account to continue</p>
+            <p className="mb-6 text-center text-sm">
+              <Link href="/" className="font-medium text-blue-800 hover:underline">
+                ← Back to home
+              </Link>
             </p>
 
             {isLoading ? (
@@ -119,6 +124,21 @@ export default function LoginPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <GoogleOAuthProvider clientId={GOOGLE_CLIENT_ID}>
+      <Suspense
+        fallback={
+          <div className="flex min-h-screen items-center justify-center bg-slate-50">
+            <div className="h-10 w-10 animate-spin rounded-full border-4 border-blue-800 border-t-transparent" />
+          </div>
+        }
+      >
+        <LoginForm />
+      </Suspense>
     </GoogleOAuthProvider>
   );
 }

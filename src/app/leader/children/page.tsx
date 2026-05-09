@@ -20,15 +20,11 @@ function isChildUploadReviewApproved(reviewStatus?: string) {
   return s === 'approved';
 }
 
-const PAGE_SIZE = 20;
+function normalizeChildUploadListStatus(status?: string) {
+  return (status || '').trim().toLowerCase().replace(/\s+/g, '_');
+}
 
-const STATUS_OPTIONS = [
-  { value: '', label: 'All statuses' },
-  { value: 'pending', label: 'Pending' },
-  { value: 'pending_review', label: 'Pending review' },
-  { value: 'approved', label: 'Approved' },
-  { value: 'refused', label: 'Refused' },
-];
+const PAGE_SIZE = 20;
 
 const GENDER_OPTIONS = [
   { value: '', label: 'All genders' },
@@ -67,7 +63,6 @@ export default function LeaderChildrenPage() {
   const [uploads, setUploads] = useState<UploadChildRequestEntity[]>([]);
   const [uploadPage, setUploadPage] = useState(0);
   const [uploadTotalPages, setUploadTotalPages] = useState(1);
-  const [uploadStatus, setUploadStatus] = useState('');
   const [uploadRegion, setUploadRegion] = useState('');
   const [uploadGender, setUploadGender] = useState('');
   const [busyId, setBusyId] = useState<string | null>(null);
@@ -116,12 +111,13 @@ export default function LeaderChildrenPage() {
       const res = await childUploadService.list({
         page: uploadPage,
         page_size: PAGE_SIZE,
-        status: uploadStatus || undefined,
+        status: 'pending',
         region: uploadRegion.trim() || undefined,
         gender: uploadGender || undefined,
       });
       const body = res.data;
-      setUploads(Array.isArray(body.data) ? body.data : []);
+      const raw = Array.isArray(body.data) ? body.data : [];
+      setUploads(raw.filter((u) => normalizeChildUploadListStatus(u.status) === 'pending'));
       setUploadTotalPages(Math.max(1, body.total_pages ?? 1));
     } catch (e: unknown) {
       toast.error(getErrorMessage(e, 'Failed to load upload requests'));
@@ -129,7 +125,7 @@ export default function LeaderChildrenPage() {
     } finally {
       setUploadLoading(false);
     }
-  }, [uploadPage, uploadStatus, uploadRegion, uploadGender]);
+  }, [uploadPage, uploadRegion, uploadGender]);
 
   useEffect(() => {
     if (tab !== 'review') return;
@@ -179,9 +175,9 @@ export default function LeaderChildrenPage() {
 
   async function submitApproveWithNeeds() {
     if (!approveModal) return;
-    const childId = (approveModal.profile_id || approveModal.id).trim();
-    if (!childId) {
-      toast.error('Missing profile / child id on this upload request');
+    const identityCode = (approveModal.identity_code || '').trim();
+    if (!identityCode) {
+      toast.error('Missing identity code on this upload request');
       return;
     }
 
@@ -204,33 +200,57 @@ export default function LeaderChildrenPage() {
         await childUploadService.review(approveModal.id, { is_vote_yes: true });
       }
 
+      const child = await childrenService.findChildByIdentityCode(identityCode, {
+        first_name: approveModal.first_name,
+        last_name: approveModal.last_name,
+        region: approveModal.region,
+      });
+      if (!child) {
+        toast.error('Không tìm thấy child với identity_code này trong danh sách /children');
+        return;
+      }
+      const childId = child.id.trim();
+      if (!childId) {
+        toast.error('Resolved child record has no id');
+        return;
+      }
+
+      const booksNeeds = (child.books_needs || []).map((id) => id.trim());
+      if (needBooks && (!booksNeeds[0] || !booksNeeds[1])) {
+        toast.error(
+          'Books: hồ sơ trẻ cần đủ books_needs[0] và books_needs[1] sau khi duyệt — hiện thiếu một hoặc cả hai need_id',
+        );
+        return;
+      }
+
       if (needMeal) {
         const ok = await execute(
           () =>
             childrenService.updateMealNeed({
               child_id: childId,
+              need_id: (child.meal_need || '').trim(),
               value: Number(mealValue),
             }),
           { quiet: true },
         );
         if (!ok) return;
       }
-      if (needBooks) {
-        const ok = await execute(
-          () =>
-            childrenService.updateBooksNeed({
-              child_id: childId,
-              value: Number(booksValue),
-            }),
-          { quiet: true },
-        );
-        if (!ok) return;
+      if (needBooks && booksNeeds[0] && booksNeeds[1]) {
+        const amount = Number(booksValue);
+        for (const need_id of [booksNeeds[0], booksNeeds[1]] as const) {
+          const ok = await execute(
+            () => childrenService.updateBooksNeed({ child_id: childId, need_id, value: amount }),
+            { quiet: true },
+          );
+          if (!ok) return;
+        }
       }
       if (needHealth) {
         const ok = await execute(
           () =>
             childrenService.updateHealthInsuranceNeed({
               child_id: childId,
+              need_id: (child.health_insurance_need || '').trim(),
               value: Number(healthValue),
             }),
           { quiet: true },
@@ -369,21 +389,10 @@ export default function LeaderChildrenPage() {
       {tab === 'review' && (
         <div className="space-y-4">
           <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
-            <div className="flex flex-wrap gap-3">
-              <select
-                value={uploadStatus}
-                onChange={(e) => {
-                  setUploadStatus(e.target.value);
-                  setUploadPage(0);
-                }}
-                className="rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none ring-blue-800/20 focus:ring-2"
-              >
-                {STATUS_OPTIONS.map((o) => (
-                  <option key={o.value || 'all-s'} value={o.value}>
-                    {o.label}
-                  </option>
-                ))}
-              </select>
+            <div className="flex flex-wrap items-center gap-3">
+              <span className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs font-medium text-amber-900">
+                Pending requests only
+              </span>
               <input
                 type="text"
                 placeholder="Region"
@@ -564,6 +573,9 @@ export default function LeaderChildrenPage() {
                 <p className="mt-1 text-sm text-slate-600">
                   {approveModal.first_name} {approveModal.last_name} · {approveModal.region}
                 </p>
+                <p className="mt-0.5 font-mono text-[11px] text-slate-500">
+                  identity_code: {approveModal.identity_code || '—'}
+                </p>
               </div>
               <button
                 type="button"
@@ -576,12 +588,14 @@ export default function LeaderChildrenPage() {
             </div>
 
             <p className="mb-4 rounded-lg border border-blue-100 bg-blue-50/80 px-3 py-2 text-xs text-slate-700">
-              Select the needs to configure and enter the <strong>amount (VND)</strong> for each. On{' '}
-              <strong>Confirm</strong>, the app calls <code className="rounded bg-white px-1">POST /child-upload-reqs/{'{id}'}/review</code> (if needed), then{' '}
-              <code className="rounded bg-white px-1">PUT /children/meal-need</code>,{' '}
-              <code className="rounded bg-white px-1">PUT /children/books-need</code>, and/or{' '}
-              <code className="rounded bg-white px-1">PUT /children/health-insurance-need</code> with{' '}
-              <code className="rounded bg-white px-1">child_id</code> and <code className="rounded bg-white px-1">value</code>.
+              Chọn nhu cầu và nhập <strong>số tiền (VND)</strong>. Khi <strong>Confirm</strong>:{' '}
+              <code className="rounded bg-white px-1">POST …/child-upload-reqs/{'{id}'}/review</code> (nếu cần), rồi các{' '}
+              <code className="rounded bg-white px-1">PUT</code> need; <strong>Books</strong> dùng một ô tiền nhưng gọi{' '}
+              <code className="rounded bg-white px-1">PUT /children/books-need</code> <strong>hai lần</strong> (cùng số tiền) với{' '}
+              <code className="rounded bg-white px-1">books_needs[0]</code> và{' '}
+              <code className="rounded bg-white px-1">books_needs[1]</code> sau khi duyệt —{' '}
+              <code className="rounded bg-white px-1">child_id</code> lấy qua <code className="rounded bg-white px-1">identity_code</code> +{' '}
+              <code className="rounded bg-white px-1">GET /children</code>.
             </p>
 
             <div className="space-y-4 text-sm">
@@ -622,7 +636,10 @@ export default function LeaderChildrenPage() {
                 <span className="flex-1">
                   <span className="font-medium text-slate-900">Books need</span>
                   <span className="mt-0.5 block text-xs text-slate-500">
-                    Amount basis: per semester (VND/semester; typically two per year)
+                    Một mức tiền (VND/kì). Sau khi review, hệ thống gửi hai lần{' '}
+                    <code className="rounded bg-slate-100 px-0.5">PUT …/books-need</code> với{' '}
+                    <code className="rounded bg-slate-100 px-0.5">books_needs[0]</code> và{' '}
+                    <code className="rounded bg-slate-100 px-0.5">books_needs[1]</code>.
                   </span>
                   {needBooks && (
                     <input
