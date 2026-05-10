@@ -379,11 +379,15 @@ export default function LeaderTasksPage() {
             { key: 'region', label: 'Vùng' },
             { key: 'start_period', label: 'Start', render: (r) => formatDate(r.start_period) },
             { key: 'end_period', label: 'End', render: (r) => formatDate(r.end_period) },
-            { key: 'status', label: 'Status', render: (r) => <StatusBadge status={r.status} /> },
             {
               key: 'assigned_staff',
-              label: 'Assigned',
-              render: (r) => (r.assigned_staff ? <CopyableTruncated value={r.assigned_staff} /> : '-'),
+              label: 'ID nhân sự được giao',
+              render: (r) =>
+                r.assigned_staff ? (
+                  <CopyableTruncated value={r.assigned_staff} truncateDisplay={false} className="max-w-[min(100%,24rem)]" />
+                ) : (
+                  <span className="text-slate-400">Chưa gán</span>
+                ),
             },
             { key: 'created_at', label: 'Ngày tạo', render: (r) => formatDate(r.created_at) },
             {

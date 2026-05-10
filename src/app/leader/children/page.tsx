@@ -620,9 +620,6 @@ export default function LeaderChildrenPage() {
         <div className="space-y-4">
           <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
             <div className="flex flex-wrap items-center gap-3">
-              <span className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs font-medium text-amber-900">
-                Chỉ yêu cầu đang chờ
-              </span>
               <span className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs text-slate-700">
                 Vùng (trưởng):{' '}
                 <strong className="text-slate-900">{leaderRegion ?? '—'}</strong>
@@ -660,11 +657,6 @@ export default function LeaderChildrenPage() {
               { key: 'region', label: 'Vùng' },
               { key: 'status', label: 'Trạng thái', render: (u) => <StatusBadge status={u.status} /> },
               {
-                key: 'review_status',
-                label: 'Trạng thái duyệt',
-                render: (u) => (u.review_status ? <StatusBadge status={u.review_status} /> : <span className="text-slate-400">—</span>),
-              },
-              {
                 key: 'ai_evaluation',
                 label: 'Đánh giá AI',
                 render: (u) => (
@@ -674,13 +666,6 @@ export default function LeaderChildrenPage() {
                 ),
               },
               { key: 'created_at', label: 'Ngày tạo', render: (u) => formatDate(u.created_at) },
-              {
-                key: 'closed_at',
-                label: 'Thời gian đóng',
-                render: (u) => (
-                  <span className="whitespace-nowrap text-xs text-slate-700">{formatDateTimeSeconds(u.closed_at)}</span>
-                ),
-              },
               {
                 key: 'actions',
                 label: 'Thao tác',
@@ -751,11 +736,6 @@ export default function LeaderChildrenPage() {
               },
               { key: 'gender', label: 'Giới tính', render: (u) => <span className="capitalize">{u.gender}</span> },
               { key: 'region', label: 'Vùng' },
-              {
-                key: 'review_status',
-                label: 'Trạng thái duyệt',
-                render: (u) => (u.review_status ? <StatusBadge status={u.review_status} /> : <span className="text-slate-400">—</span>),
-              },
               { key: 'status', label: 'Trạng thái', render: (u) => <StatusBadge status={u.status} /> },
               {
                 key: 'ai_evaluation',
@@ -767,13 +747,6 @@ export default function LeaderChildrenPage() {
                 ),
               },
               { key: 'created_at', label: 'Ngày tạo', render: (u) => formatDate(u.created_at) },
-              {
-                key: 'closed_at',
-                label: 'Thời gian đóng',
-                render: (u) => (
-                  <span className="whitespace-nowrap text-xs text-slate-700">{formatDateTimeSeconds(u.closed_at)}</span>
-                ),
-              },
               {
                 key: 'actions',
                 label: 'Bỏ phiếu',

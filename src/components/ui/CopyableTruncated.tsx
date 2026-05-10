@@ -12,6 +12,8 @@ type CopyableTruncatedProps = {
   chars?: number;
   className?: string;
   mono?: boolean;
+  /** When false, show full `value` in the cell (still copy full string). Default true. */
+  truncateDisplay?: boolean;
 };
 
 export default function CopyableTruncated({
@@ -19,13 +21,14 @@ export default function CopyableTruncated({
   chars = 6,
   className = '',
   mono = true,
+  truncateDisplay = true,
 }: CopyableTruncatedProps) {
   const raw = value?.trim() ?? '';
   const [copied, setCopied] = useState(false);
 
   if (!raw) return <span className="text-slate-400">—</span>;
 
-  const display = truncateAddress(raw, chars);
+  const display = truncateDisplay ? truncateAddress(raw, chars) : raw;
 
   async function handleCopy(e: React.MouseEvent) {
     e.preventDefault();
@@ -44,7 +47,7 @@ export default function CopyableTruncated({
     <span
       className={`inline-flex max-w-full items-center gap-1 ${mono ? 'font-mono text-xs' : 'text-sm'} ${className}`.trim()}
     >
-      <span className="min-w-0 truncate" title={raw}>
+      <span className={`min-w-0 ${truncateDisplay ? 'truncate' : 'break-all'}`} title={raw}>
         {display}
       </span>
       <button
