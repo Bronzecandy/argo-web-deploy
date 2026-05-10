@@ -15,7 +15,6 @@ import { taskProofService } from '@/src/services/task-proof.service';
 import { blobService } from '@/src/services/blob.service';
 import WalrusFallbackImg from '@/src/components/ui/WalrusFallbackImg';
 import { useExecuteTransaction } from '@/src/hooks/useExecuteTransaction';
-import FileUploadInput from '@/src/components/ui/FileUploadInput';
 import type { TaskProof } from '@/src/types/api.types';
 
 const PAGE_SIZE = 20;
@@ -77,10 +76,6 @@ export default function LeaderTaskProofsPage() {
   const [rows, setRows] = useState<TaskProof[]>([]);
   const [totalPages, setTotalPages] = useState(1);
   const [loading, setLoading] = useState(true);
-  const [taskId, setTaskId] = useState('');
-  const [imageBlobId, setImageBlobId] = useState('');
-  const [submitting, setSubmitting] = useState(false);
-  const [listVersion, setListVersion] = useState(0);
 
   const [proofDetailOpen, setProofDetailOpen] = useState(false);
   const [proofDetailId, setProofDetailId] = useState<string | null>(null);
@@ -106,7 +101,7 @@ export default function LeaderTaskProofsPage() {
     } finally {
       setLoading(false);
     }
-  }, [page, status, listVersion]);
+  }, [page, status]);
 
   useEffect(() => {
     void load();
@@ -128,28 +123,6 @@ export default function LeaderTaskProofsPage() {
 
   const { execute } = useExecuteTransaction();
   const refresh = () => void load();
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!taskId.trim() || !imageBlobId.trim()) {
-      toast.error('Vui lòng nhập ID nhiệm vụ và ID blob ảnh');
-      return;
-    }
-    setSubmitting(true);
-    try {
-      await taskProofService.submit(taskId.trim(), imageBlobId.trim());
-      toast.success('Đã gửi bằng chứng');
-      setTaskId('');
-      setImageBlobId('');
-      setPage(0);
-      setListVersion((v) => v + 1);
-    } catch (err) {
-      console.error(err);
-      toast.error('Không gửi được bằng chứng');
-    } finally {
-      setSubmitting(false);
-    }
-  };
 
   const handleApprove = async (id: string) => {
     const ok = await execute(
@@ -176,42 +149,10 @@ export default function LeaderTaskProofsPage() {
         title="Bằng chứng nhiệm vụ"
         description={
           user?.address
-            ? `Gửi và duyệt ảnh bằng chứng nhiệm vụ · ${truncateAddress(user.address)}`
-            : 'Gửi và duyệt ảnh bằng chứng nhiệm vụ'
+            ? `Duyệt ảnh bằng chứng nhiệm vụ · ${truncateAddress(user.address)}`
+            : 'Duyệt ảnh bằng chứng nhiệm vụ'
         }
       />
-
-      <section className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
-        <h2 className="mb-4 text-lg font-semibold text-slate-900">Gửi bằng chứng mới</h2>
-        <form onSubmit={handleSubmit} className="max-w-xl space-y-4">
-          <div>
-            <label htmlFor="task_id" className="mb-1 block text-xs font-medium text-slate-500">
-              ID nhiệm vụ
-            </label>
-            <input
-              id="task_id"
-              type="text"
-              value={taskId}
-              onChange={(e) => setTaskId(e.target.value)}
-              className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-blue-800 focus:outline-none focus:ring-1 focus:ring-blue-800"
-            />
-          </div>
-          <FileUploadInput
-            label="Ảnh bằng chứng"
-            value={imageBlobId}
-            onChange={setImageBlobId}
-            accept="image/*"
-            placeholder="Tải ảnh bằng chứng hoặc dán ID blob"
-          />
-          <button
-            type="submit"
-            disabled={submitting}
-            className="rounded-lg bg-blue-800 px-4 py-2 text-sm font-medium text-white transition hover:bg-blue-900 disabled:opacity-50"
-          >
-            {submitting ? 'Đang gửi…' : 'Gửi bằng chứng'}
-          </button>
-        </form>
-      </section>
 
       <section className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
         <h2 className="mb-4 text-lg font-semibold text-slate-900">Danh sách bằng chứng</h2>
