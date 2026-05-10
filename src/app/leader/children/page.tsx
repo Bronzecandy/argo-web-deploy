@@ -37,9 +37,9 @@ const MIN_NEED_VND = 9999;
 
 const GENDER_OPTIONS = [
   { value: '', label: 'Tất cả giới tính' },
-  { value: 'male', label: 'Male' },
-  { value: 'female', label: 'Female' },
-  { value: 'other', label: 'Other' },
+  { value: 'male', label: 'Nam' },
+  { value: 'female', label: 'Nữ' },
+  { value: 'other', label: 'Khác' },
 ];
 
 function getErrorMessage(e: unknown, fallback: string) {
@@ -49,10 +49,10 @@ function getErrorMessage(e: unknown, fallback: string) {
       return `${axErr.response.status ?? ''} ${axErr.response.data.message}`.trim();
     }
     if (axErr.code === 'ECONNABORTED') {
-      return 'Request timed out – server may be starting up, please try again';
+      return 'Hết thời gian chờ phản hồi — máy chủ có thể đang khởi động, vui lòng thử lại';
     }
     if (axErr.code === 'ERR_NETWORK') {
-      return 'Network error – the server may be blocking CORS or is unreachable';
+      return 'Lỗi mạng — máy chủ có thể chặn CORS hoặc không truy cập được';
     }
     if (axErr.message) return axErr.message;
   }
@@ -387,7 +387,7 @@ export default function LeaderChildrenPage() {
       });
       if (!okApply) {
         toast.error(
-          'Cập nhật nhu cầu chưa hoàn tất. Vào tab Children list → «Cấu hình nhu cầu» để thử lại (mỗi mức phải > 10.000 ₫).',
+          'Cập nhật nhu cầu chưa hoàn tất. Vào tab «Danh sách trẻ» → «Cấu hình nhu cầu» để thử lại (mỗi mức phải > 10.000 ₫).',
         );
         return;
       }
@@ -508,19 +508,19 @@ export default function LeaderChildrenPage() {
   }
 
   const listColumns = [
-    { key: 'first_name', label: 'First name' },
-    { key: 'last_name', label: 'Last name' },
-    { key: 'gender', label: 'Gender' },
+    { key: 'first_name', label: 'Tên' },
+    { key: 'last_name', label: 'Họ' },
+    { key: 'gender', label: 'Giới tính' },
     { key: 'region', label: 'Vùng' },
     {
       key: 'date_of_birth',
       label: 'Ngày sinh',
       render: (row: Child) => formatDate(row.date_of_birth),
     },
-    { key: 'identity_code', label: 'Identity code', render: (row: Child) => <CopyableTruncated value={row.identity_code} /> },
+    { key: 'identity_code', label: 'Mã định danh', render: (row: Child) => <CopyableTruncated value={row.identity_code} /> },
     {
       key: 'actions',
-      label: 'Actions',
+      label: 'Thao tác',
       className: 'whitespace-nowrap',
       render: (row: Child) => (
         <div className="flex flex-wrap items-center gap-1" onClick={(e) => e.stopPropagation()}>
@@ -528,7 +528,7 @@ export default function LeaderChildrenPage() {
             type="button"
             onClick={() => openNeedsConfigFromList(row)}
             className="inline-flex items-center gap-0.5 rounded-lg border border-blue-200 bg-blue-50 px-2 py-1 text-xs font-medium text-blue-900 hover:bg-blue-100"
-            title="Cấu hình meal / sách / bảo hiểm (chỉ cập nhật nhu cầu, không duyệt upload)"
+            title="Cấu hình bữa ăn / sách / bảo hiểm (chỉ cập nhật nhu cầu, không duyệt tải lên)"
           >
             <Settings2 className="h-3.5 w-3.5" />
             Cấu hình nhu cầu
@@ -542,14 +542,14 @@ export default function LeaderChildrenPage() {
             }}
             className="rounded-lg border border-slate-200 bg-white px-2 py-1 text-xs font-medium text-slate-800 hover:bg-slate-50"
           >
-            Details
+            Chi tiết
           </button>
         </div>
       ),
     },
   ];
 
-  const refuseModalTitle = refuseModal?.mode === 'review' ? 'Refuse review' : 'Vote no';
+  const refuseModalTitle = refuseModal?.mode === 'review' ? 'Từ chối duyệt' : 'Bỏ phiếu không đồng ý';
   const busyRefuseId = refuseModal?.mode === 'review' ? busyId : voteBusyId;
 
   const approveInputClass =
@@ -589,7 +589,7 @@ export default function LeaderChildrenPage() {
           }`}
         >
           <ClipboardCheck className="hidden h-4 w-4 shrink-0 sm:inline" />
-          <span className="truncate">Upload requests</span>
+          <span className="truncate">Yêu cầu tải lên</span>
         </button>
         <button
           type="button"
@@ -601,7 +601,7 @@ export default function LeaderChildrenPage() {
           }`}
         >
           <ListChecks className="hidden h-4 w-4 shrink-0 sm:inline" />
-          <span className="truncate">Child profiles</span>
+          <span className="truncate">Hồ sơ trẻ (bỏ phiếu)</span>
         </button>
         <button
           type="button"
@@ -612,7 +612,7 @@ export default function LeaderChildrenPage() {
               : 'text-slate-600 hover:text-slate-900'
           }`}
         >
-          Children list
+          Danh sách trẻ
         </button>
       </div>
 
@@ -621,7 +621,7 @@ export default function LeaderChildrenPage() {
           <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
             <div className="flex flex-wrap items-center gap-3">
               <span className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs font-medium text-amber-900">
-                Pending requests only
+                Chỉ yêu cầu đang chờ
               </span>
               <span className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs text-slate-700">
                 Vùng (trưởng):{' '}
@@ -649,19 +649,19 @@ export default function LeaderChildrenPage() {
             columns={[
               {
                 key: 'name',
-                label: 'Name',
+                label: 'Tên',
                 render: (u) => (
                   <span>
                     {u.first_name} {u.last_name}
                   </span>
                 ),
               },
-              { key: 'gender', label: 'Gender', render: (u) => <span className="capitalize">{u.gender}</span> },
+              { key: 'gender', label: 'Giới tính', render: (u) => <span className="capitalize">{u.gender}</span> },
               { key: 'region', label: 'Vùng' },
-              { key: 'status', label: 'Status', render: (u) => <StatusBadge status={u.status} /> },
+              { key: 'status', label: 'Trạng thái', render: (u) => <StatusBadge status={u.status} /> },
               {
                 key: 'review_status',
-                label: 'Review',
+                label: 'Trạng thái duyệt',
                 render: (u) => (u.review_status ? <StatusBadge status={u.review_status} /> : <span className="text-slate-400">—</span>),
               },
               {
@@ -683,7 +683,7 @@ export default function LeaderChildrenPage() {
               },
               {
                 key: 'actions',
-                label: 'Review',
+                label: 'Thao tác',
                 className: 'min-w-[120px]',
                 render: (u) => (
                   <div className="flex flex-wrap gap-1" onClick={(e) => e.stopPropagation()}>
@@ -695,7 +695,7 @@ export default function LeaderChildrenPage() {
                       }}
                       className="inline-flex items-center gap-0.5 rounded border border-slate-200 bg-white px-1.5 py-0.5 text-[11px] font-medium text-slate-800 hover:bg-slate-50"
                     >
-                      Details
+                      Chi tiết
                     </button>
                     <button
                       type="button"
@@ -704,7 +704,7 @@ export default function LeaderChildrenPage() {
                       className="inline-flex items-center gap-0.5 rounded border border-blue-200 bg-blue-50 px-1.5 py-0.5 text-[11px] font-medium text-blue-900 hover:bg-blue-100 disabled:opacity-50"
                     >
                       <ClipboardCheck className="h-3 w-3" />
-                      Approve
+                      Duyệt
                     </button>
                     <button
                       type="button"
@@ -712,7 +712,7 @@ export default function LeaderChildrenPage() {
                       onClick={() => runReview(u, false)}
                       className="inline-flex items-center gap-0.5 rounded border border-amber-200 bg-amber-50 px-1.5 py-0.5 text-[11px] font-medium text-amber-900 hover:bg-amber-100 disabled:opacity-50"
                     >
-                      Refuse
+                      Từ chối
                     </button>
                   </div>
                 ),
@@ -725,8 +725,8 @@ export default function LeaderChildrenPage() {
             onPageChange={(p) => setUploadPage(p)}
             emptyMessage={
               canLoad
-                ? 'No upload requests match your filters.'
-                : 'Không có vùng trưởng — không tải được yêu cầu upload.'
+                ? 'Không có yêu cầu tải lên nào khớp bộ lọc.'
+                : 'Không có vùng trưởng — không tải được yêu cầu tải lên.'
             }
           />
         </div>
@@ -735,28 +735,28 @@ export default function LeaderChildrenPage() {
       {tab === 'profiles' && (
         <div className="space-y-4">
           <p className="rounded-lg border border-slate-200 bg-slate-50 px-4 py-3 text-xs text-slate-600">
-            Upload requests that leaders have already approved for <code className="rounded bg-white px-1">review_status</code> appear
-            here for your on-chain vote.
+            Các yêu cầu tải lên mà trưởng vùng đã duyệt (trường <code className="rounded bg-white px-1">review_status</code>) hiển thị
+            ở đây để bạn bỏ phiếu on-chain.
           </p>
           <DataTable<UploadChildRequestEntity>
             columns={[
               {
                 key: 'name',
-                label: 'Name',
+                label: 'Tên',
                 render: (u) => (
                   <span>
                     {u.first_name} {u.last_name}
                   </span>
                 ),
               },
-              { key: 'gender', label: 'Gender', render: (u) => <span className="capitalize">{u.gender}</span> },
+              { key: 'gender', label: 'Giới tính', render: (u) => <span className="capitalize">{u.gender}</span> },
               { key: 'region', label: 'Vùng' },
               {
                 key: 'review_status',
-                label: 'Review',
+                label: 'Trạng thái duyệt',
                 render: (u) => (u.review_status ? <StatusBadge status={u.review_status} /> : <span className="text-slate-400">—</span>),
               },
-              { key: 'status', label: 'Status', render: (u) => <StatusBadge status={u.status} /> },
+              { key: 'status', label: 'Trạng thái', render: (u) => <StatusBadge status={u.status} /> },
               {
                 key: 'ai_evaluation',
                 label: 'Đánh giá AI',
@@ -776,7 +776,7 @@ export default function LeaderChildrenPage() {
               },
               {
                 key: 'actions',
-                label: 'Vote',
+                label: 'Bỏ phiếu',
                 className: 'whitespace-nowrap',
                 render: (u) => (
                   <div className="flex flex-wrap gap-1" onClick={(e) => e.stopPropagation()}>
@@ -788,7 +788,7 @@ export default function LeaderChildrenPage() {
                       }}
                       className="inline-flex items-center gap-0.5 rounded-md border border-slate-200 bg-white px-2 py-1 text-xs font-medium text-slate-800 hover:bg-slate-50"
                     >
-                      Details
+                      Chi tiết
                     </button>
                     <button
                       type="button"
@@ -819,7 +819,7 @@ export default function LeaderChildrenPage() {
             onPageChange={(p) => setProfilePage(p)}
             emptyMessage={
               canLoad
-                ? 'No leader-approved child upload requests to vote on.'
+                ? 'Chưa có yêu cầu tải hồ sơ đã được trưởng vùng duyệt để bỏ phiếu.'
                 : 'Không có vùng trưởng — không tải được hồ sơ để bỏ phiếu.'
             }
           />
@@ -845,12 +845,12 @@ export default function LeaderChildrenPage() {
           <div className="max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-xl border border-slate-200 bg-white p-5 shadow-xl">
             <div className="mb-4 flex items-start justify-between gap-2">
               <div>
-                <h3 className="text-lg font-semibold text-slate-900">Approve upload &amp; configure needs</h3>
+                <h3 className="text-lg font-semibold text-slate-900">Duyệt tải lên &amp; cấu hình nhu cầu</h3>
                 <p className="mt-1 text-sm text-slate-600">
                   {approveModal.first_name} {approveModal.last_name} · {approveModal.region}
                 </p>
                 <p className="mt-0.5 font-mono text-[11px] text-slate-500">
-                  identity_code: {approveModal.identity_code || '—'}
+                  Mã định danh: {approveModal.identity_code || '—'}
                 </p>
               </div>
               <button
@@ -867,7 +867,7 @@ export default function LeaderChildrenPage() {
               Chọn nhu cầu và nhập <strong>số tiền (VND)</strong>; <strong>mỗi nhu cầu đã chọn phải &gt; {MIN_NEED_VND.toLocaleString('vi-VN')} ₫</strong>. Khi xác nhận:
               hệ thống ghi nhận duyệt (nếu cần), rồi cập nhật nhu cầu trẻ. <strong>Sách:</strong> một ô tiền áp dụng cho <strong>cả hai</strong> học kỳ (
               <code className="rounded bg-white px-1">books_needs[0]</code> và <code className="rounded bg-white px-1">books_needs[1]</code>)
-              sau khi duyệt. <code className="rounded bg-white px-1">child_id</code> được tra theo <code className="rounded bg-white px-1">identity_code</code> trên hồ sơ trẻ.
+              sau khi duyệt. Mã <code className="rounded bg-white px-1">child_id</code> được tra theo <code className="rounded bg-white px-1">identity_code</code> trên hồ sơ trẻ.
             </p>
 
             <div className="space-y-4 text-sm">
@@ -880,8 +880,8 @@ export default function LeaderChildrenPage() {
                   disabled={approveSubmitting || executing}
                 />
                 <span className="flex-1">
-                  <span className="font-medium text-slate-900">Meal need</span>
-                  <span className="mt-0.5 block text-xs text-slate-500">Amount basis: per month (VND/month)</span>
+                  <span className="font-medium text-slate-900">Nhu cầu bữa ăn</span>
+                  <span className="mt-0.5 block text-xs text-slate-500">Cơ sở tính: theo tháng (VND/tháng)</span>
                   {needMeal && (
                     <GroupedNumericInput
                       min={MIN_NEED_VND + 1}
@@ -904,9 +904,9 @@ export default function LeaderChildrenPage() {
                   disabled={approveSubmitting || executing}
                 />
                 <span className="flex-1">
-                  <span className="font-medium text-slate-900">Books need</span>
+                  <span className="font-medium text-slate-900">Nhu cầu sách</span>
                   <span className="mt-0.5 block text-xs text-slate-500">
-                    Một mức tiền (VND/kì). Sau khi review, hệ thống áp dụng cùng mức cho cả hai mã need sách (
+                    Một mức tiền (VND/kỳ). Sau khi duyệt, hệ thống áp dụng cùng mức cho cả hai mã nhu cầu sách (
                     <code className="rounded bg-slate-100 px-0.5">books_needs[0]</code>,{' '}
                     <code className="rounded bg-slate-100 px-0.5">books_needs[1]</code>).
                   </span>
@@ -932,8 +932,8 @@ export default function LeaderChildrenPage() {
                   disabled={approveSubmitting || executing}
                 />
                 <span className="flex-1">
-                  <span className="font-medium text-slate-900">Health insurance need</span>
-                  <span className="mt-0.5 block text-xs text-slate-500">Amount basis: per year (VND/year)</span>
+                  <span className="font-medium text-slate-900">Nhu cầu bảo hiểm y tế</span>
+                  <span className="mt-0.5 block text-xs text-slate-500">Cơ sở tính: theo năm (VND/năm)</span>
                   {needHealth && (
                     <GroupedNumericInput
                       min={MIN_NEED_VND + 1}
@@ -959,7 +959,7 @@ export default function LeaderChildrenPage() {
                 disabled={approveSubmitting || executing}
                 className="rounded-lg border border-slate-200 px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-50"
               >
-                Cancel
+                Hủy
               </button>
               <button
                 type="button"
@@ -968,7 +968,7 @@ export default function LeaderChildrenPage() {
                 className="inline-flex items-center gap-1 rounded-lg bg-blue-800 px-3 py-2 text-sm font-medium text-white hover:bg-blue-900 disabled:opacity-50"
               >
                 <Check className="h-4 w-4" />
-                {approveSubmitting || executing ? 'Processing…' : 'Confirm'}
+                {approveSubmitting || executing ? 'Đang xử lý…' : 'Xác nhận'}
               </button>
             </div>
           </div>
@@ -985,7 +985,7 @@ export default function LeaderChildrenPage() {
                   {needsConfigChild.first_name} {needsConfigChild.last_name} · {needsConfigChild.region}
                 </p>
                 <p className="mt-0.5 font-mono text-[11px] text-slate-500">
-                  child_id: {needsConfigChild.id} · identity: {needsConfigChild.identity_code || '—'}
+                  Mã trẻ: {needsConfigChild.id} · mã định danh: {needsConfigChild.identity_code || '—'}
                 </p>
               </div>
               <button
@@ -1014,7 +1014,7 @@ export default function LeaderChildrenPage() {
                   disabled={configNeedsSubmitting || executing}
                 />
                 <span className="flex-1">
-                  <span className="font-medium text-slate-900">Meal need</span>
+                  <span className="font-medium text-slate-900">Nhu cầu bữa ăn</span>
                   <span className="mt-0.5 block text-xs text-slate-500">VND / tháng</span>
                   {cfgNeedMeal && (
                     <GroupedNumericInput
@@ -1038,9 +1038,9 @@ export default function LeaderChildrenPage() {
                   disabled={configNeedsSubmitting || executing}
                 />
                 <span className="flex-1">
-                  <span className="font-medium text-slate-900">Books need</span>
+                  <span className="font-medium text-slate-900">Nhu cầu sách</span>
                   <span className="mt-0.5 block text-xs text-slate-500">
-                    Một mức (VND/kì) cho cả <code className="rounded bg-slate-100 px-0.5">books_needs[0]</code> và{' '}
+                    Một mức (VND/kỳ) cho cả <code className="rounded bg-slate-100 px-0.5">books_needs[0]</code> và{' '}
                     <code className="rounded bg-slate-100 px-0.5">books_needs[1]</code>.
                   </span>
                   {cfgNeedBooks && (
@@ -1065,7 +1065,7 @@ export default function LeaderChildrenPage() {
                   disabled={configNeedsSubmitting || executing}
                 />
                 <span className="flex-1">
-                  <span className="font-medium text-slate-900">Health insurance need</span>
+                  <span className="font-medium text-slate-900">Nhu cầu bảo hiểm y tế</span>
                   <span className="mt-0.5 block text-xs text-slate-500">VND / năm</span>
                   {cfgNeedHealth && (
                     <GroupedNumericInput
@@ -1131,7 +1131,7 @@ export default function LeaderChildrenPage() {
                 onClick={() => setRefuseModal(null)}
                 className="rounded-lg border border-slate-200 px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
               >
-                Cancel
+                Hủy
               </button>
               <button
                 type="button"
@@ -1142,7 +1142,7 @@ export default function LeaderChildrenPage() {
                 className="inline-flex items-center gap-1 rounded-lg bg-red-600 px-3 py-2 text-sm font-medium text-white hover:bg-red-700 disabled:opacity-50"
               >
                 <Check className="h-4 w-4" />
-                Submit
+                Gửi
               </button>
             </div>
           </div>
@@ -1168,16 +1168,16 @@ export default function LeaderChildrenPage() {
           return (
             <div className="space-y-1">
               {detailField('ID', <CopyableTruncated value={c.id} chars={8} />)}
-              {detailField('Name', `${c.first_name} ${c.last_name}`)}
-              {detailField('Gender', <span className="capitalize">{c.gender}</span>)}
+              {detailField('Tên', `${c.first_name} ${c.last_name}`)}
+              {detailField('Giới tính', <span className="capitalize">{c.gender}</span>)}
               {detailField('Vùng', c.region)}
               {detailField('Ngày sinh', formatDate(c.date_of_birth))}
               {detailField('Mã định danh', <CopyableTruncated value={c.identity_code} />)}
               {detailField('Địa chỉ nhà', c.home_address || '—')}
-              {detailField('Meal need', c.meal_need ? <CopyableTruncated value={c.meal_need} /> : '—')}
-              {detailField('Health insurance need', c.health_insurance_need ? <CopyableTruncated value={c.health_insurance_need} /> : '—')}
+              {detailField('Nhu cầu bữa ăn', c.meal_need ? <CopyableTruncated value={c.meal_need} /> : '—')}
+              {detailField('Nhu cầu bảo hiểm y tế', c.health_insurance_need ? <CopyableTruncated value={c.health_insurance_need} /> : '—')}
               {detailField(
-                'Books needs',
+                'Nhu cầu sách',
                 c.books_needs?.length ? (
                   <div className="flex flex-wrap gap-2">
                     {c.books_needs.map((bid) => (
@@ -1186,12 +1186,12 @@ export default function LeaderChildrenPage() {
                   </div>
                 ) : '—',
               )}
-              {detailField('Uploaded by', c.uploaded_by ? <CopyableTruncated value={c.uploaded_by} /> : '—')}
-              {detailField('Uploaded', formatDate(c.uploaded_at))}
-              {detailField('Updated', formatDate(c.updated_at))}
+              {detailField('Người tải lên', c.uploaded_by ? <CopyableTruncated value={c.uploaded_by} /> : '—')}
+              {detailField('Ngày tải lên', formatDate(c.uploaded_at))}
+              {detailField('Cập nhật', formatDate(c.updated_at))}
               {gallery.length > 0 && (
                 <div className="border-t border-slate-100 pt-3">
-                  <div className="mb-2 text-xs font-medium text-slate-600">Gallery (API)</div>
+                  <div className="mb-2 text-xs font-medium text-slate-600">Thư viện ảnh (API)</div>
                   <div className="flex flex-wrap gap-4">
                     {gallery.map((blobId) => (
                       <EntityBlobThumb key={blobId} blobId={blobId} source="api" className="h-20 w-20 rounded-md border border-slate-200 object-cover" />
@@ -1201,7 +1201,7 @@ export default function LeaderChildrenPage() {
               )}
               {blobs.length > 0 && (
                 <div className="border-t border-slate-100 pt-3">
-                  <div className="mb-2 text-xs font-medium text-slate-600">Images</div>
+                  <div className="mb-2 text-xs font-medium text-slate-600">Hình ảnh</div>
                   <div className="flex flex-wrap gap-4">
                     {blobs.map(({ key, blobId }) => (
                       <div key={key} className="text-center">
@@ -1233,25 +1233,25 @@ export default function LeaderChildrenPage() {
             return (
               <div className="space-y-1">
                 {detailField('ID', <CopyableTruncated value={u.id} chars={8} />)}
-                {detailField('Profile ID', <CopyableTruncated value={u.profile_id} chars={8} />)}
-                {detailField('Name', `${u.first_name} ${u.last_name}`)}
-                {detailField('Gender', <span className="capitalize">{u.gender}</span>)}
+                {detailField('Mã hồ sơ', <CopyableTruncated value={u.profile_id} chars={8} />)}
+                {detailField('Tên', `${u.first_name} ${u.last_name}`)}
+                {detailField('Giới tính', <span className="capitalize">{u.gender}</span>)}
                 {detailField('Vùng', u.region)}
                 {detailField('Mã định danh', <CopyableTruncated value={u.identity_code} />)}
                 {detailField('Ngày sinh', formatDate(u.date_of_birth))}
                 {detailField('Địa chỉ nhà', u.home_address ?? '—')}
-                {detailField('Status', <StatusBadge status={u.status} />)}
-                {detailField('Review status', u.review_status ? <StatusBadge status={u.review_status} /> : <span className="text-slate-400">—</span>)}
-                {detailField('Reviewed by', u.reviewed_by ? <CopyableTruncated value={u.reviewed_by} /> : '—')}
+                {detailField('Trạng thái', <StatusBadge status={u.status} />)}
+                {detailField('Trạng thái duyệt', u.review_status ? <StatusBadge status={u.review_status} /> : <span className="text-slate-400">—</span>)}
+                {detailField('Người duyệt', u.reviewed_by ? <CopyableTruncated value={u.reviewed_by} /> : '—')}
                 {detailField('Đánh giá AI', u.ai_evaluation ?? '—')}
                 {detailField('Người tạo', <CopyableTruncated value={u.created_by} />)}
                 {detailField('Ngày tạo', formatDate(u.created_at))}
-                {detailField('Updated', formatDate(u.updated_at))}
+                {detailField('Cập nhật', formatDate(u.updated_at))}
                 {detailField('Thời gian đóng', formatDateTimeSeconds(u.closed_at))}
-                {detailField('Confirm upload', u.is_confirm_upload ? 'Yes' : 'No')}
+                {detailField('Xác nhận tải lên', u.is_confirm_upload ? 'Có' : 'Không')}
                 {u.first_guardian_profile && (
                   <div className="border-t border-slate-100 py-2">
-                    <div className="text-xs font-medium text-slate-500">First guardian</div>
+                    <div className="text-xs font-medium text-slate-500">Người giám hộ thứ nhất</div>
                     <div className="mt-1 text-sm text-slate-800">
                       {u.first_guardian_profile.full_name} · {u.first_guardian_profile.relation} · {u.first_guardian_profile.phone_number}
                     </div>
@@ -1259,7 +1259,7 @@ export default function LeaderChildrenPage() {
                 )}
                 {u.second_guardian_profile && (
                   <div className="border-t border-slate-100 py-2">
-                    <div className="text-xs font-medium text-slate-500">Second guardian</div>
+                    <div className="text-xs font-medium text-slate-500">Người giám hộ thứ hai</div>
                     <div className="mt-1 text-sm text-slate-800">
                       {u.second_guardian_profile.full_name} · {u.second_guardian_profile.relation} · {u.second_guardian_profile.phone_number}
                     </div>
@@ -1267,7 +1267,7 @@ export default function LeaderChildrenPage() {
                 )}
                 {blobs.length > 0 && (
                   <div className="border-t border-slate-100 pt-3">
-                    <div className="mb-2 text-xs font-medium text-slate-600">Images</div>
+                    <div className="mb-2 text-xs font-medium text-slate-600">Hình ảnh</div>
                     <div className="flex flex-wrap gap-4">
                       {blobs.map(({ key, blobId }) => (
                         <div key={key} className="text-center">
