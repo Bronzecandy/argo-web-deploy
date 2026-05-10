@@ -202,15 +202,6 @@ export default function LeaderTaskProofsPage() {
                 return label ? <StatusBadge status={label} /> : <span className="text-slate-400">—</span>;
               },
             },
-            {
-              key: 'ai_evaluation',
-              label: 'Đánh giá AI',
-              render: (r) => (
-                <span className="max-w-[200px] truncate text-slate-600" title={r.ai_evaluation}>
-                  {r.ai_evaluation ?? '—'}
-                </span>
-              ),
-            },
             { key: 'reviewed_by', label: 'Người duyệt', render: (r) => (r.reviewed_by ? <CopyableTruncated value={r.reviewed_by} /> : '-') },
             { key: 'created_at', label: 'Ngày tạo', render: (r) => formatDate(r.created_at) },
             {
@@ -297,7 +288,6 @@ export default function LeaderTaskProofsPage() {
               {detailField('Hồ sơ người thực hiện', p.actor_profile_id ? <CopyableTruncated value={p.actor_profile_id} /> : '—')}
               {detailField('Trạng thái', label ? <StatusBadge status={label} /> : <span className="text-slate-400">—</span>)}
               {detailField('Mô tả', p.description ?? '—')}
-              {detailField('Ghi chú AI', p.ai_evaluation ?? '—')}
               {detailField('Ngày gửi thô', p.raw_submit_date ? formatDate(p.raw_submit_date) : '—')}
               {detailField('Người duyệt', p.reviewed_by ? <CopyableTruncated value={p.reviewed_by} /> : '—')}
               {detailField('Ngày tạo', formatDate(p.created_at))}

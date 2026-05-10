@@ -128,15 +128,6 @@ export default function VolunteerTaskProofsPage() {
               },
             },
             { key: 'status', label: 'Trạng thái', render: (r) => <StatusBadge status={r.review_status ?? r.status ?? '—'} /> },
-            {
-              key: 'ai_evaluation',
-              label: 'Đánh giá AI',
-              render: (r) => (
-                <span className="max-w-[200px] truncate text-slate-600" title={r.ai_evaluation}>
-                  {r.ai_evaluation ?? '—'}
-                </span>
-              ),
-            },
             { key: 'reviewed_by', label: 'Người duyệt', render: (r) => (r.reviewed_by ? <CopyableTruncated value={r.reviewed_by} /> : '-') },
             { key: 'created_at', label: 'Ngày tạo', render: (r) => formatDate(r.created_at) },
           ]}

@@ -137,11 +137,6 @@ export default function LeaderCampaignsPage() {
             },
             { key: 'target', label: 'Mục tiêu', render: (r) => formatVND(r.target) },
             { key: 'region', label: 'Vùng' },
-            {
-              key: 'ai_evaluation',
-              label: 'Đánh giá AI',
-              render: (r) => <span className="line-clamp-2 max-w-[200px] text-xs">{r.ai_evaluation || '-'}</span>,
-            },
             { key: 'review_status', label: 'Duyệt', render: (r) => <StatusBadge status={r.review_status} /> },
             { key: 'created_at', label: 'Ngày tạo', render: (r) => formatDate(r.created_at) },
             {
@@ -193,9 +188,6 @@ export default function LeaderCampaignsPage() {
             </p>
             <p>
               <span className="text-slate-500">Mục tiêu:</span> {formatVND(detailRow.target)}
-            </p>
-            <p>
-              <span className="text-slate-500">AI:</span> {detailRow.ai_evaluation || '—'}
             </p>
             {detailRow.proof_blob_id && (
               <BlobImage blobId={detailRow.proof_blob_id} className="max-h-56 rounded-lg border object-contain" />

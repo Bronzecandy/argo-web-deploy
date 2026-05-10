@@ -613,11 +613,6 @@ function TreasuryPageContent() {
               { key: 'target', label: 'Mục tiêu', render: (r) => formatVND(r.target) },
               { key: 'region', label: 'Vùng' },
               {
-                key: 'ai_evaluation',
-                label: 'Đánh giá AI',
-                render: (r) => <span className="max-w-[200px] truncate text-xs">{r.ai_evaluation || '-'}</span>,
-              },
-              {
                 key: 'review_status',
                 label: 'Duyệt',
                 render: (r) => <StatusBadge status={r.review_status} />,
@@ -762,7 +757,6 @@ function TreasuryPageContent() {
             {detailField('Vùng', specialDetailData.region)}
             {detailField('Mô tả', specialDetailData.description || '—')}
             {detailField('Mục tiêu', formatVND(specialDetailData.target))}
-            {detailField('Đánh giá AI', specialDetailData.ai_evaluation || '—')}
             {detailField('Duyệt', specialDetailData.review_status)}
             {specialDetailData.proof_blob_id &&
               detailField(
