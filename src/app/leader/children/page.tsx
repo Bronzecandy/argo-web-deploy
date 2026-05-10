@@ -656,15 +656,6 @@ export default function LeaderChildrenPage() {
               { key: 'gender', label: 'Giới tính', render: (u) => <span className="capitalize">{u.gender}</span> },
               { key: 'region', label: 'Vùng' },
               { key: 'status', label: 'Trạng thái', render: (u) => <StatusBadge status={u.status} /> },
-              {
-                key: 'ai_evaluation',
-                label: 'Đánh giá AI',
-                render: (u) => (
-                  <span className="max-w-[200px] truncate text-slate-600" title={u.ai_evaluation}>
-                    {u.ai_evaluation ?? '—'}
-                  </span>
-                ),
-              },
               { key: 'created_at', label: 'Ngày tạo', render: (u) => formatDate(u.created_at) },
               {
                 key: 'actions',
@@ -737,15 +728,6 @@ export default function LeaderChildrenPage() {
               { key: 'gender', label: 'Giới tính', render: (u) => <span className="capitalize">{u.gender}</span> },
               { key: 'region', label: 'Vùng' },
               { key: 'status', label: 'Trạng thái', render: (u) => <StatusBadge status={u.status} /> },
-              {
-                key: 'ai_evaluation',
-                label: 'Đánh giá AI',
-                render: (u) => (
-                  <span className="max-w-[200px] truncate text-slate-600" title={u.ai_evaluation}>
-                    {u.ai_evaluation ?? '—'}
-                  </span>
-                ),
-              },
               { key: 'created_at', label: 'Ngày tạo', render: (u) => formatDate(u.created_at) },
               {
                 key: 'actions',
@@ -1216,7 +1198,6 @@ export default function LeaderChildrenPage() {
                 {detailField('Trạng thái', <StatusBadge status={u.status} />)}
                 {detailField('Trạng thái duyệt', u.review_status ? <StatusBadge status={u.review_status} /> : <span className="text-slate-400">—</span>)}
                 {detailField('Người duyệt', u.reviewed_by ? <CopyableTruncated value={u.reviewed_by} /> : '—')}
-                {detailField('Đánh giá AI', u.ai_evaluation ?? '—')}
                 {detailField('Người tạo', <CopyableTruncated value={u.created_by} />)}
                 {detailField('Ngày tạo', formatDate(u.created_at))}
                 {detailField('Cập nhật', formatDate(u.updated_at))}
