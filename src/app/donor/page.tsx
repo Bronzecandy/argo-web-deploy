@@ -82,7 +82,7 @@ export default function DonorDashboardPage() {
   const txColumns = [
     {
       key: 'action_type',
-      label: 'Type',
+      label: 'Loại',
       render: (item: TransactionRecord) => (
         <span className="font-medium capitalize">{item.action_type?.replace(/_/g, ' ') || '-'}</span>
       ),
@@ -94,14 +94,14 @@ export default function DonorDashboardPage() {
     },
     {
       key: 'amount',
-      label: 'Amount',
+      label: 'Số tiền',
       render: (item: TransactionRecord) => (
         <span className="font-semibold text-blue-900">{formatVND(item.amount)}</span>
       ),
     },
     {
       key: 'created_at',
-      label: 'Date',
+      label: 'Thời gian',
       render: (item: TransactionRecord) => formatDateTime(item.created_at),
     },
   ];
@@ -114,17 +114,17 @@ export default function DonorDashboardPage() {
     },
     {
       key: 'withdraw_amount',
-      label: 'Amount',
+      label: 'Số tiền',
       render: (item: WithdrawProposal) => formatVND(item.withdraw_amount),
     },
     {
       key: 'creator',
-      label: 'Creator',
+      label: 'Người tạo',
       render: (item: WithdrawProposal) => <CopyableTruncated value={item.creator} />,
     },
     {
       key: 'status',
-      label: 'Executed',
+      label: 'Thực hiện',
       render: (item: WithdrawProposal) => (
         <StatusBadge status={item.is_executed ? 'executed' : 'pending'} />
       ),
@@ -142,28 +142,28 @@ export default function DonorDashboardPage() {
   return (
     <div>
       <PageHeader
-        title={`Welcome${profile?.first_name ? `, ${profile.first_name}` : ''}`}
-        description="Your donor dashboard overview"
+        title={`Chào mừng${profile?.first_name ? `, ${profile.first_name}` : ''}`}
+        description="Tổng quan bảng điều khiển nhà hảo tâm"
       />
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <StatsCard
-          label="Total Donated"
+          label="Tổng đã quyên góp"
           value={formatVND(profile?.total_donation || 0)}
           icon={Wallet}
         />
         <StatsCard
-          label="Transactions"
+          label="Giao dịch"
           value={profile?.record_amount || 0}
           icon={HandCoins}
         />
         <StatsCard
-          label="Children Registered"
+          label="Trẻ đã đăng ký"
           value={childrenCount}
           icon={Baby}
         />
         <StatsCard
-          label="Active Proposals"
+          label="Đề xuất đang hoạt động"
           value={activeProposalsCount}
           icon={Vote}
         />
@@ -174,7 +174,7 @@ export default function DonorDashboardPage() {
         <div className="mt-6 rounded-xl border border-slate-200 bg-white p-5">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-slate-500">Wallet Address</p>
+              <p className="text-sm font-medium text-slate-500">Địa chỉ ví</p>
               <p className="mt-1 font-mono text-sm text-slate-900">{user.address}</p>
             </div>
             <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-blue-50">
@@ -187,18 +187,18 @@ export default function DonorDashboardPage() {
       {/* Recent Transactions */}
       <div className="mt-6">
         <div className="mb-3 flex items-center justify-between">
-          <h2 className="text-lg font-semibold text-slate-900">Recent Transactions</h2>
+          <h2 className="text-lg font-semibold text-slate-900">Giao dịch gần đây</h2>
           <Link
             href="/donor/transactions"
             className="flex items-center gap-1 text-sm font-medium text-blue-800 hover:text-blue-900"
           >
-            View all <ArrowRight className="h-4 w-4" />
+            Xem tất cả <ArrowRight className="h-4 w-4" />
           </Link>
         </div>
         <DataTable
           columns={txColumns}
           data={recentTxs}
-          emptyMessage="No transactions yet"
+          emptyMessage="Chưa có giao dịch"
           page={txPage}
           totalPages={txTotalPages}
           onPageChange={setTxPage}
@@ -208,18 +208,18 @@ export default function DonorDashboardPage() {
       {/* Active Đề xuất rút tiền */}
       <div className="mt-6">
         <div className="mb-3 flex items-center justify-between">
-          <h2 className="text-lg font-semibold text-slate-900">Active Đề xuất rút tiền</h2>
+          <h2 className="text-lg font-semibold text-slate-900">Đề xuất rút tiền đang hoạt động</h2>
           <Link
             href="/donor/withdrawals"
             className="flex items-center gap-1 text-sm font-medium text-blue-800 hover:text-blue-900"
           >
-            Vote now <ArrowRight className="h-4 w-4" />
+            Bỏ phiếu ngay <ArrowRight className="h-4 w-4" />
           </Link>
         </div>
         <DataTable
           columns={proposalColumns}
           data={activeProposals}
-          emptyMessage="No active proposals"
+          emptyMessage="Không có đề xuất đang hoạt động"
           page={proposalPage}
           totalPages={proposalTotalPages}
           onPageChange={setProposalPage}

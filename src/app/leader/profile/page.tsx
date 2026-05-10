@@ -88,7 +88,7 @@ export default function LeaderProfilePage() {
         setProfile(res.data);
         toast.success('Đã tạo hồ sơ');
       } else {
-        toast.error('Profile ID not available');
+        toast.error('Không có mã hồ sơ (profile ID)');
         return;
       }
       setEditMode(false);
@@ -103,7 +103,7 @@ export default function LeaderProfilePage() {
   if (loading) {
     return (
       <div>
-        <PageHeader title="Profile" description="Your leader profile" />
+        <PageHeader title="Hồ sơ" description="Hồ sơ trưởng vùng" />
         <div className="flex items-center justify-center rounded-xl border border-slate-200 bg-white p-16">
           <div className="h-8 w-8 animate-spin rounded-full border-4 border-blue-800 border-t-transparent" />
         </div>
@@ -114,22 +114,22 @@ export default function LeaderProfilePage() {
   return (
     <div className="space-y-8">
       <PageHeader
-        title="Profile"
+        title="Hồ sơ"
         description={
-          user?.address ? `Manage your personal profile · ${truncateAddress(user.address)}` : 'Manage your personal profile'
+          user?.address ? `Quản lý hồ sơ cá nhân · ${truncateAddress(user.address)}` : 'Quản lý hồ sơ cá nhân'
         }
       />
 
       {profile && !editMode ? (
         <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
           <div className="mb-6 flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
-            <h2 className="text-lg font-semibold text-slate-900">Personal details</h2>
+            <h2 className="text-lg font-semibold text-slate-900">Thông tin cá nhân</h2>
             <button
               type="button"
               onClick={() => setEditMode(true)}
               className="rounded-lg border border-blue-200 px-4 py-2 text-sm font-medium text-blue-900 hover:bg-blue-50"
             >
-              Edit
+              Chỉnh sửa
             </button>
           </div>
           <dl className="grid gap-4 sm:grid-cols-2">
@@ -138,23 +138,23 @@ export default function LeaderProfilePage() {
               <dd className="mt-1 font-mono text-sm text-slate-900">{profile.id}</dd>
             </div>
             <div>
-              <dt className="text-xs font-medium uppercase tracking-wide text-slate-500">First name</dt>
+              <dt className="text-xs font-medium uppercase tracking-wide text-slate-500">Tên</dt>
               <dd className="mt-1 text-sm text-slate-900">{profile.first_name}</dd>
             </div>
             <div>
-              <dt className="text-xs font-medium uppercase tracking-wide text-slate-500">Last name</dt>
+              <dt className="text-xs font-medium uppercase tracking-wide text-slate-500">Họ</dt>
               <dd className="mt-1 text-sm text-slate-900">{profile.last_name}</dd>
             </div>
             <div>
-              <dt className="text-xs font-medium uppercase tracking-wide text-slate-500">Gender</dt>
+              <dt className="text-xs font-medium uppercase tracking-wide text-slate-500">Giới tính</dt>
               <dd className="mt-1 text-sm text-slate-900 capitalize">{profile.gender}</dd>
             </div>
             <div>
-              <dt className="text-xs font-medium uppercase tracking-wide text-slate-500">Date of birth</dt>
+              <dt className="text-xs font-medium uppercase tracking-wide text-slate-500">Ngày sinh</dt>
               <dd className="mt-1 text-sm text-slate-900">{formatDate(profile.date_of_birth)}</dd>
             </div>
             <div>
-              <dt className="text-xs font-medium uppercase tracking-wide text-slate-500">Phone</dt>
+              <dt className="text-xs font-medium uppercase tracking-wide text-slate-500">Điện thoại</dt>
               <dd className="mt-1 text-sm text-slate-900">{profile.phone_number}</dd>
             </div>
             <div>
@@ -162,7 +162,7 @@ export default function LeaderProfilePage() {
               <dd className="mt-1 text-sm text-slate-900">{profile.email}</dd>
             </div>
             <div>
-              <dt className="text-xs font-medium uppercase tracking-wide text-slate-500">Identity code</dt>
+              <dt className="text-xs font-medium uppercase tracking-wide text-slate-500">Số CMND/CCCD</dt>
               <dd className="mt-1 text-sm text-slate-900">{profile.identity_code}</dd>
             </div>
           </dl>
@@ -170,7 +170,7 @@ export default function LeaderProfilePage() {
       ) : (
         <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
           <div className="mb-6 flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
-            <h2 className="text-lg font-semibold text-slate-900">{profile ? 'Edit profile' : 'Create profile'}</h2>
+            <h2 className="text-lg font-semibold text-slate-900">{profile ? 'Sửa hồ sơ' : 'Tạo hồ sơ'}</h2>
             {profile && (
               <button
                 type="button"
@@ -180,14 +180,14 @@ export default function LeaderProfilePage() {
                 }}
                 className="rounded-lg border border-slate-200 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
               >
-                Cancel
+                Hủy
               </button>
             )}
           </div>
           <form onSubmit={handleSave} className="max-w-xl space-y-4">
             <div className="grid gap-4 sm:grid-cols-2">
               <div>
-                <label className="mb-1 block text-xs font-medium text-slate-500">First name</label>
+                <label className="mb-1 block text-xs font-medium text-slate-500">Tên</label>
                 <input
                   required
                   value={form.first_name}
@@ -196,7 +196,7 @@ export default function LeaderProfilePage() {
                 />
               </div>
               <div>
-                <label className="mb-1 block text-xs font-medium text-slate-500">Last name</label>
+                <label className="mb-1 block text-xs font-medium text-slate-500">Họ</label>
                 <input
                   required
                   value={form.last_name}
@@ -206,7 +206,7 @@ export default function LeaderProfilePage() {
               </div>
             </div>
             <div>
-              <label className="mb-1 block text-xs font-medium text-slate-500">Gender</label>
+              <label className="mb-1 block text-xs font-medium text-slate-500">Giới tính</label>
               <input
                 required
                 value={form.gender}
@@ -215,7 +215,7 @@ export default function LeaderProfilePage() {
               />
             </div>
             <div>
-              <label className="mb-1 block text-xs font-medium text-slate-500">Date of birth</label>
+              <label className="mb-1 block text-xs font-medium text-slate-500">Ngày sinh</label>
               <input
                 required
                 type="date"
@@ -225,7 +225,7 @@ export default function LeaderProfilePage() {
               />
             </div>
             <div>
-              <label className="mb-1 block text-xs font-medium text-slate-500">Phone number</label>
+              <label className="mb-1 block text-xs font-medium text-slate-500">Số điện thoại</label>
               <input
                 required
                 value={form.phone_number}
@@ -244,7 +244,7 @@ export default function LeaderProfilePage() {
               />
             </div>
             <div>
-              <label className="mb-1 block text-xs font-medium text-slate-500">Identity code</label>
+              <label className="mb-1 block text-xs font-medium text-slate-500">Số CMND/CCCD</label>
               <input
                 required
                 value={form.identity_code}
@@ -257,7 +257,7 @@ export default function LeaderProfilePage() {
               disabled={saving}
               className="rounded-lg bg-blue-800 px-4 py-2 text-sm font-medium text-white transition hover:bg-blue-900 disabled:opacity-50"
             >
-              {saving ? 'Đang lưu…' : profile ? 'Save changes' : 'Upload profile'}
+              {saving ? 'Đang lưu…' : profile ? 'Lưu thay đổi' : 'Tải lên hồ sơ'}
             </button>
           </form>
         </div>

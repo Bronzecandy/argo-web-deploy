@@ -139,7 +139,7 @@ export default function DonorChildDetailPage() {
       }
       setSponsorType(null);
     } catch {
-      toast.error('Failed to sponsor meal need');
+      toast.error('Không tài trợ bữa ăn được');
     } finally {
       setSubmitting(false);
     }
@@ -156,7 +156,7 @@ export default function DonorChildDetailPage() {
       }
       setSponsorType(null);
     } catch {
-      toast.error('Failed to sponsor books need');
+      toast.error('Không tài trợ sách được');
     } finally {
       setSubmitting(false);
     }
@@ -173,7 +173,7 @@ export default function DonorChildDetailPage() {
       }
       setSponsorType(null);
     } catch {
-      toast.error('Failed to sponsor health insurance need');
+      toast.error('Không tài trợ bảo hiểm được');
     } finally {
       setSubmitting(false);
     }
@@ -193,7 +193,7 @@ export default function DonorChildDetailPage() {
       }
       setSponsorType(null);
     } catch {
-      toast.error('Failed to sponsor special need');
+      toast.error('Không tài trợ nhu cầu đặc biệt được');
     } finally {
       setSubmitting(false);
     }
@@ -209,7 +209,7 @@ export default function DonorChildDetailPage() {
 
   if (!child) {
     return (
-      <div className="text-center text-slate-400 py-12">Child not found</div>
+      <div className="text-center text-slate-400 py-12">Không tìm thấy trẻ</div>
     );
   }
 
@@ -219,7 +219,7 @@ export default function DonorChildDetailPage() {
         onClick={() => router.back()}
         className="mb-4 flex items-center gap-1 text-sm text-slate-500 hover:text-slate-700"
       >
-        <ArrowLeft className="h-4 w-4" /> Back
+        <ArrowLeft className="h-4 w-4" /> Quay lại
       </button>
 
       <div className="grid gap-6 lg:grid-cols-3">
@@ -243,18 +243,18 @@ export default function DonorChildDetailPage() {
               </div>
 
               {child.home_address && (
-                <p className="mt-3 text-xs text-slate-400">Home: {child.home_address}</p>
+                <p className="mt-3 text-xs text-slate-400">Nhà ở: {child.home_address}</p>
               )}
 
               {child.image_blob_ids?.length > 0 && (
                 <div className="mt-4">
-                  <p className="text-xs font-medium text-slate-500 mb-2">Photos</p>
+                  <p className="text-xs font-medium text-slate-500 mb-2">Ảnh</p>
                   <div className="flex flex-wrap gap-2">
                     {child.image_blob_ids.map((blobId, i) => (
                       <ExpandableImage
                         key={i}
                         src={BLOB_URL(blobId)}
-                        alt={`Photo ${i + 1}`}
+                        alt={`Ảnh ${i + 1}`}
                         className="h-16 w-16 rounded-lg object-cover border border-slate-200"
                       />
                     ))}
@@ -267,26 +267,26 @@ export default function DonorChildDetailPage() {
 
         {/* Right column: needs + actions */}
         <div className="space-y-4 lg:col-span-2">
-          <PageHeader title="Needs & Sponsorship" description="Support this child by sponsoring their specific needs" />
+          <PageHeader title="Nhu cầu & tài trợ" description="Hỗ trợ trẻ bằng cách tài trợ các nhu cầu cụ thể" />
 
           {/* Meal Need */}
           {mealNeed && (
             <div className="rounded-xl border border-amber-200 bg-amber-50/50 p-5">
               <div className="flex items-center gap-2 mb-3">
                 <Utensils className="h-5 w-5 text-amber-600" />
-                <h3 className="font-semibold text-amber-900">Meal Need</h3>
+                <h3 className="font-semibold text-amber-900">Nhu cầu bữa ăn</h3>
               </div>
               <div className="grid grid-cols-2 gap-3 text-sm">
-                <div><span className="text-slate-500">Monthly cost:</span> <span className="font-medium">{formatVND(mealNeed.value)}</span></div>
-                <div><span className="text-slate-500">Remaining months:</span> <span className="font-medium">{mealNeed.remaining_months}</span></div>
-                <div><span className="text-slate-500">Pool balance:</span> <span className="font-medium">{formatVND(mealNeed.balance)}</span></div>
+                <div><span className="text-slate-500">Chi phí hàng tháng:</span> <span className="font-medium">{formatVND(mealNeed.value)}</span></div>
+                <div><span className="text-slate-500">Số tháng còn lại:</span> <span className="font-medium">{mealNeed.remaining_months}</span></div>
+                <div><span className="text-slate-500">Số dư quỹ:</span> <span className="font-medium">{formatVND(mealNeed.balance)}</span></div>
                 <div><span className="text-slate-500">Tổng đã quyên góp:</span> <span className="font-medium">{formatVND(mealNeed.total_donation)}</span></div>
               </div>
               <button
                 onClick={() => { setSponsorType('meal'); setSponsorNeedId(mealNeed.id); }}
                 className="mt-3 flex items-center gap-2 rounded-lg bg-amber-600 px-4 py-2 text-sm font-medium text-white hover:bg-amber-700"
               >
-                <HandCoins className="h-4 w-4" /> Sponsor Meals
+                <HandCoins className="h-4 w-4" /> Tài trợ bữa ăn
               </button>
             </div>
           )}
@@ -296,18 +296,18 @@ export default function DonorChildDetailPage() {
             <div key={bn.id} className="rounded-xl border border-purple-200 bg-purple-50/50 p-5">
               <div className="flex items-center gap-2 mb-3">
                 <BookOpen className="h-5 w-5 text-purple-600" />
-                <h3 className="font-semibold text-purple-900">Books Need</h3>
+                <h3 className="font-semibold text-purple-900">Nhu cầu sách</h3>
               </div>
               <div className="grid grid-cols-2 gap-3 text-sm">
-                <div><span className="text-slate-500">Cost:</span> <span className="font-medium">{formatVND(bn.value)}</span></div>
-                <div><span className="text-slate-500">Pool balance:</span> <span className="font-medium">{formatVND(bn.balance)}</span></div>
+                <div><span className="text-slate-500">Chi phí:</span> <span className="font-medium">{formatVND(bn.value)}</span></div>
+                <div><span className="text-slate-500">Số dư quỹ:</span> <span className="font-medium">{formatVND(bn.balance)}</span></div>
                 <div><span className="text-slate-500">Tổng đã quyên góp:</span> <span className="font-medium">{formatVND(bn.total_donation)}</span></div>
               </div>
               <button
                 onClick={() => { setSponsorType('books'); setSponsorNeedId(bn.id); }}
                 className="mt-3 flex items-center gap-2 rounded-lg bg-purple-600 px-4 py-2 text-sm font-medium text-white hover:bg-purple-700"
               >
-                <HandCoins className="h-4 w-4" /> Sponsor Books
+                <HandCoins className="h-4 w-4" /> Tài trợ sách
               </button>
             </div>
           ))}
@@ -317,18 +317,18 @@ export default function DonorChildDetailPage() {
             <div className="rounded-xl border border-blue-200 bg-blue-50/50 p-5">
               <div className="flex items-center gap-2 mb-3">
                 <HeartPulse className="h-5 w-5 text-blue-600" />
-                <h3 className="font-semibold text-blue-900">Health Insurance Need</h3>
+                <h3 className="font-semibold text-blue-900">Nhu cầu bảo hiểm y tế</h3>
               </div>
               <div className="grid grid-cols-2 gap-3 text-sm">
-                <div><span className="text-slate-500">Cost:</span> <span className="font-medium">{formatVND(healthNeed.value)}</span></div>
-                <div><span className="text-slate-500">Pool balance:</span> <span className="font-medium">{formatVND(healthNeed.balance)}</span></div>
+                <div><span className="text-slate-500">Chi phí:</span> <span className="font-medium">{formatVND(healthNeed.value)}</span></div>
+                <div><span className="text-slate-500">Số dư quỹ:</span> <span className="font-medium">{formatVND(healthNeed.balance)}</span></div>
                 <div><span className="text-slate-500">Tổng đã quyên góp:</span> <span className="font-medium">{formatVND(healthNeed.total_donation)}</span></div>
               </div>
               <button
                 onClick={() => { setSponsorType('health'); setSponsorNeedId(healthNeed.id); }}
                 className="mt-3 flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
               >
-                <HandCoins className="h-4 w-4" /> Sponsor Health Insurance
+                <HandCoins className="h-4 w-4" /> Tài trợ bảo hiểm
               </button>
             </div>
           )}
@@ -338,7 +338,7 @@ export default function DonorChildDetailPage() {
             <div className="rounded-xl border border-rose-200 bg-rose-50/50 p-5">
               <div className="flex items-center gap-2 mb-3">
                 <Sparkles className="h-5 w-5 text-rose-600" />
-                <h3 className="font-semibold text-rose-900">Special Need Campaigns</h3>
+                <h3 className="font-semibold text-rose-900">Chiến dịch nhu cầu đặc biệt</h3>
               </div>
               <div className="space-y-2">
                 {child.special_need_campaigns.map((cId) => (
@@ -348,7 +348,7 @@ export default function DonorChildDetailPage() {
                       onClick={() => { setSponsorType('special'); setSpecialCampaignId(cId); }}
                       className="rounded-lg bg-rose-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-rose-700"
                     >
-                      Support
+                      Hỗ trợ
                     </button>
                   </div>
                 ))}
@@ -361,7 +361,7 @@ export default function DonorChildDetailPage() {
             <div className="rounded-xl border border-slate-200 bg-white p-5">
               <div className="flex items-center gap-2 mb-3">
                 <GiftIcon className="h-5 w-5 text-blue-800" />
-                <h3 className="font-semibold text-slate-900">Gifts Received</h3>
+                <h3 className="font-semibold text-slate-900">Quà đã nhận</h3>
               </div>
               {giftsLoading ? (
                 <div className="flex justify-center py-8">
@@ -375,7 +375,7 @@ export default function DonorChildDetailPage() {
                         {g.gift_image_blob_id && (
                           <ExpandableImage
                             src={BLOB_URL(g.gift_image_blob_id)}
-                            alt="Gift"
+                            alt="Quà"
                             className="h-10 w-10 rounded-lg object-cover"
                           />
                         )}
@@ -399,10 +399,10 @@ export default function DonorChildDetailPage() {
                         disabled={giftsLoading || giftPage <= 0}
                         className="rounded-lg border border-slate-200 px-3 py-1.5 text-sm font-medium text-slate-600 hover:bg-slate-50 disabled:opacity-40"
                       >
-                        Previous
+                        Trước
                       </button>
                       <span className="text-sm text-slate-500">
-                        Page {giftPage + 1} of {giftTotalPages}
+                        Trang {giftPage + 1} / {giftTotalPages}
                       </span>
                       <button
                         type="button"
@@ -410,7 +410,7 @@ export default function DonorChildDetailPage() {
                         disabled={giftsLoading || giftPage >= giftTotalPages - 1}
                         className="rounded-lg border border-slate-200 px-3 py-1.5 text-sm font-medium text-slate-600 hover:bg-slate-50 disabled:opacity-40"
                       >
-                        Next
+                        Sau
                       </button>
                     </div>
                   )}
@@ -421,7 +421,7 @@ export default function DonorChildDetailPage() {
 
           {!mealNeed && booksNeeds.length === 0 && !healthNeed && !child.special_need_campaigns?.length && (
             <div className="rounded-xl border border-slate-200 bg-white p-12 text-center text-sm text-slate-400">
-              No active needs for this child
+              Trẻ này chưa có nhu cầu đang mở
             </div>
           )}
 
@@ -431,14 +431,14 @@ export default function DonorChildDetailPage() {
               href={`/donor/gifts?childId=${child.id}`}
               className="flex items-center gap-2 rounded-lg border border-pink-200 bg-pink-50 px-4 py-2.5 text-sm font-medium text-pink-700 hover:bg-pink-100 transition"
             >
-              <Send className="h-4 w-4" /> Send a Gift to This Child
+              <Send className="h-4 w-4" /> Gửi quà cho trẻ này
             </Link>
             {mealNeed?.pool_id && (
               <Link
                 href={`/donor/donate?poolId=${mealNeed.pool_id}`}
                 className="flex items-center gap-2 rounded-lg border border-blue-200 bg-blue-50 px-4 py-2.5 text-sm font-medium text-blue-900 hover:bg-blue-100 transition"
               >
-                <HandCoins className="h-4 w-4" /> Donate to Meal Pool
+                <HandCoins className="h-4 w-4" /> Quyên góp quỹ bữa ăn
               </Link>
             )}
             {healthNeed?.pool_id && (
@@ -446,7 +446,7 @@ export default function DonorChildDetailPage() {
                 href={`/donor/donate?poolId=${healthNeed.pool_id}`}
                 className="flex items-center gap-2 rounded-lg border border-blue-200 bg-blue-50 px-4 py-2.5 text-sm font-medium text-blue-700 hover:bg-blue-100 transition"
               >
-                <HandCoins className="h-4 w-4" /> Donate to Health Pool
+                <HandCoins className="h-4 w-4" /> Quyên góp quỹ sức khỏe
               </Link>
             )}
             {booksNeeds[0]?.pool_id && (
@@ -454,7 +454,7 @@ export default function DonorChildDetailPage() {
                 href={`/donor/donate?poolId=${booksNeeds[0].pool_id}`}
                 className="flex items-center gap-2 rounded-lg border border-purple-200 bg-purple-50 px-4 py-2.5 text-sm font-medium text-purple-700 hover:bg-purple-100 transition"
               >
-                <HandCoins className="h-4 w-4" /> Donate to Books Pool
+                <HandCoins className="h-4 w-4" /> Quyên góp quỹ sách
               </Link>
             )}
           </div>
@@ -466,16 +466,16 @@ export default function DonorChildDetailPage() {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
           <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-xl">
             <h3 className="text-lg font-bold text-slate-900">
-              {sponsorType === 'meal' && 'Sponsor Meals'}
-              {sponsorType === 'books' && 'Sponsor Books'}
-              {sponsorType === 'health' && 'Sponsor Health Insurance'}
-              {sponsorType === 'special' && 'Support Special Need Campaign'}
+              {sponsorType === 'meal' && 'Tài trợ bữa ăn'}
+              {sponsorType === 'books' && 'Tài trợ sách'}
+              {sponsorType === 'health' && 'Tài trợ bảo hiểm y tế'}
+              {sponsorType === 'special' && 'Hỗ trợ chiến dịch nhu cầu đặc biệt'}
             </h3>
 
             <div className="mt-4 space-y-4">
               {sponsorType === 'meal' && (
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">Number of months</label>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">Số tháng</label>
                   <GroupedNumericInput
                     min={1}
                     max={12}
@@ -485,7 +485,7 @@ export default function DonorChildDetailPage() {
                   />
                   {mealNeed && (
                     <p className="mt-1 text-xs text-slate-400">
-                      Estimated: {formatVND(mealNeed.value * mealMonths)}
+                      Ước tính: {formatVND(mealNeed.value * mealMonths)}
                     </p>
                   )}
                 </div>
@@ -494,7 +494,7 @@ export default function DonorChildDetailPage() {
               {sponsorType === 'special' && (
                 <>
                   <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-1">Amount (VND)</label>
+                    <label className="block text-sm font-medium text-slate-700 mb-1">Số tiền (VND)</label>
                     <GroupedNumericInput
                       value={specialAmountDigits}
                       onChange={setSpecialAmountDigits}
@@ -502,7 +502,7 @@ export default function DonorChildDetailPage() {
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-1">Message (optional)</label>
+                    <label className="block text-sm font-medium text-slate-700 mb-1">Lời nhắn (tùy chọn)</label>
                     <textarea
                       value={specialDescription}
                       onChange={(e) => setSpecialDescription(e.target.value)}
@@ -519,7 +519,7 @@ export default function DonorChildDetailPage() {
                 onClick={() => setSponsorType(null)}
                 className="rounded-lg border border-slate-200 px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-50"
               >
-                Cancel
+                Hủy
               </button>
               <button
                 onClick={() => {
@@ -531,7 +531,7 @@ export default function DonorChildDetailPage() {
                 disabled={submitting}
                 className="rounded-lg bg-blue-800 px-4 py-2 text-sm font-medium text-white hover:bg-blue-900 disabled:opacity-50"
               >
-                {submitting ? 'Processing...' : 'Confirm & Pay'}
+                {submitting ? 'Đang xử lý…' : 'Xác nhận & thanh toán'}
               </button>
             </div>
           </div>

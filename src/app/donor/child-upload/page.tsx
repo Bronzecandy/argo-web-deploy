@@ -51,7 +51,7 @@ export default function DonorChildUploadPage() {
       !avatarBlobId.trim() ||
       !homeBlobId.trim()
     ) {
-      toast.error('Fill required child and home fields, and upload avatar + home photo');
+      toast.error('Vui lòng điền đủ thông tin trẻ và nhà ở, tải ảnh đại diện + ảnh nhà ở');
       return;
     }
     const g1 = firstGuardian;
@@ -61,7 +61,7 @@ export default function DonorChildUploadPage() {
       !g1.guardian_relation.trim() ||
       !g1.identity_card_blob_id.trim()
     ) {
-      toast.error('Complete primary guardian details and ID image');
+      toast.error('Vui lòng nhập đủ thông tin người giám hộ chính và ảnh giấy tờ');
       return;
     }
     if (includeSecondGuardian) {
@@ -72,7 +72,7 @@ export default function DonorChildUploadPage() {
         !g2.guardian_relation.trim() ||
         !g2.identity_card_blob_id.trim()
       ) {
-        toast.error('Complete second guardian or turn off “Second guardian”');
+        toast.error('Hoàn thành thông tin người giám hộ thứ hai hoặc bỏ chọn «Người giám hộ thứ hai»');
         return;
       }
     }
@@ -131,16 +131,16 @@ export default function DonorChildUploadPage() {
   return (
     <div className="mx-auto max-w-2xl space-y-6">
       <PageHeader
-        title="Request child upload"
-        description="Propose a new child profile for review (parity with mobile child upload request). Voting and confirmation follow API rules."
+        title="Yêu cầu tải hồ sơ trẻ"
+        description="Đề xuất hồ sơ trẻ mới để được xem xét (tương đương mobile). Bỏ phiếu và xác nhận theo quy tắc API."
       />
 
       <form onSubmit={handleSubmit} className="space-y-6 rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
         <fieldset className="space-y-3">
-          <legend className="text-sm font-semibold text-slate-900">Child</legend>
+          <legend className="text-sm font-semibold text-slate-900">Trẻ</legend>
           <div className="grid gap-3 sm:grid-cols-2">
             <div>
-              <label className="mb-1 block text-xs font-medium text-slate-500">First name</label>
+              <label className="mb-1 block text-xs font-medium text-slate-500">Tên</label>
               <input
                 value={firstName}
                 onChange={(e) => setFirstName(e.target.value)}
@@ -149,7 +149,7 @@ export default function DonorChildUploadPage() {
               />
             </div>
             <div>
-              <label className="mb-1 block text-xs font-medium text-slate-500">Last name</label>
+              <label className="mb-1 block text-xs font-medium text-slate-500">Họ</label>
               <input
                 value={lastName}
                 onChange={(e) => setLastName(e.target.value)}
@@ -160,19 +160,19 @@ export default function DonorChildUploadPage() {
           </div>
           <div className="grid gap-3 sm:grid-cols-2">
             <div>
-              <label className="mb-1 block text-xs font-medium text-slate-500">Gender</label>
+              <label className="mb-1 block text-xs font-medium text-slate-500">Giới tính</label>
               <select
                 value={gender}
                 onChange={(e) => setGender(e.target.value)}
                 className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm"
               >
-                <option value="male">Male</option>
-                <option value="female">Female</option>
-                <option value="other">Other</option>
+                <option value="male">Nam</option>
+                <option value="female">Nữ</option>
+                <option value="other">Khác</option>
               </select>
             </div>
             <div>
-              <label className="mb-1 block text-xs font-medium text-slate-500">Date of birth</label>
+              <label className="mb-1 block text-xs font-medium text-slate-500">Ngày sinh</label>
               <input
                 type="date"
                 value={dateOfBirth}
@@ -181,12 +181,12 @@ export default function DonorChildUploadPage() {
                 required
               />
               <p className="mt-1 text-[11px] text-slate-500">
-                Submitted as <span className="font-medium">DD/MM/YYYY</span> for the API (same as mobile).
+                Gửi lên API dạng <span className="font-medium">DD/MM/YYYY</span> (giống mobile).
               </p>
             </div>
           </div>
           <div>
-            <label className="mb-1 block text-xs font-medium text-slate-500">Identity code</label>
+            <label className="mb-1 block text-xs font-medium text-slate-500">Số CMND/CCCD</label>
             <input
               value={identityCode}
               onChange={(e) => setIdentityCode(e.target.value)}
@@ -195,14 +195,14 @@ export default function DonorChildUploadPage() {
             />
           </div>
           <div>
-            <label className="mb-1 block text-xs font-medium text-slate-500">Region</label>
+            <label className="mb-1 block text-xs font-medium text-slate-500">Vùng</label>
             <select
               value={region}
               onChange={(e) => setRegion(e.target.value)}
               className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm"
               required
             >
-              <option value="">Select region</option>
+              <option value="">Chọn vùng</option>
               {regions.map((r) => (
                 <option key={r} value={r}>
                   {r}
@@ -211,7 +211,7 @@ export default function DonorChildUploadPage() {
             </select>
           </div>
           <div>
-            <label className="mb-1 block text-xs font-medium text-slate-500">Home address</label>
+            <label className="mb-1 block text-xs font-medium text-slate-500">Địa chỉ nhà</label>
             <input
               value={homeAddress}
               onChange={(e) => setHomeAddress(e.target.value)}
@@ -219,9 +219,9 @@ export default function DonorChildUploadPage() {
               required
             />
           </div>
-          <FileUploadInput label="Child avatar" value={avatarBlobId} onChange={setAvatarBlobId} accept="image/*" />
+          <FileUploadInput label="Ảnh đại diện trẻ" value={avatarBlobId} onChange={setAvatarBlobId} accept="image/*" />
           <FileUploadInput
-            label="Home / residence photo"
+            label="Ảnh nhà ở / nơi cư trú"
             value={homeBlobId}
             onChange={setHomeBlobId}
             accept="image/*"
@@ -229,10 +229,10 @@ export default function DonorChildUploadPage() {
         </fieldset>
 
         <fieldset className="space-y-3 border-t border-slate-100 pt-4">
-          <legend className="text-sm font-semibold text-slate-900">Primary guardian</legend>
+          <legend className="text-sm font-semibold text-slate-900">Người giám hộ chính</legend>
           <div className="grid gap-3 sm:grid-cols-2">
             <div>
-              <label className="mb-1 block text-xs text-slate-500">Full name</label>
+              <label className="mb-1 block text-xs text-slate-500">Họ và tên</label>
               <input
                 value={firstGuardian.guardian_full_name}
                 onChange={(e) => setFirstGuardian({ ...firstGuardian, guardian_full_name: e.target.value })}
@@ -241,7 +241,7 @@ export default function DonorChildUploadPage() {
               />
             </div>
             <div>
-              <label className="mb-1 block text-xs text-slate-500">Phone</label>
+              <label className="mb-1 block text-xs text-slate-500">Điện thoại</label>
               <input
                 value={firstGuardian.guardian_phone_number}
                 onChange={(e) => setFirstGuardian({ ...firstGuardian, guardian_phone_number: e.target.value })}
@@ -251,7 +251,7 @@ export default function DonorChildUploadPage() {
             </div>
           </div>
           <div>
-            <label className="mb-1 block text-xs text-slate-500">Relation to child</label>
+            <label className="mb-1 block text-xs text-slate-500">Quan hệ với trẻ</label>
             <input
               value={firstGuardian.guardian_relation}
               onChange={(e) => setFirstGuardian({ ...firstGuardian, guardian_relation: e.target.value })}
@@ -260,7 +260,7 @@ export default function DonorChildUploadPage() {
             />
           </div>
           <FileUploadInput
-            label="Guardian ID document"
+            label="Giấy tờ tùy thân người giám hộ"
             value={firstGuardian.identity_card_blob_id}
             onChange={(id) => setFirstGuardian({ ...firstGuardian, identity_card_blob_id: id })}
             accept="image/*"
@@ -275,13 +275,13 @@ export default function DonorChildUploadPage() {
               onChange={(e) => setIncludeSecondGuardian(e.target.checked)}
               className="rounded border-slate-300"
             />
-            Second guardian
+            Người giám hộ thứ hai
           </label>
           {includeSecondGuardian && (
             <fieldset className="mt-3 space-y-3">
               <div className="grid gap-3 sm:grid-cols-2">
                 <div>
-                  <label className="mb-1 block text-xs text-slate-500">Full name</label>
+                  <label className="mb-1 block text-xs text-slate-500">Họ và tên</label>
                   <input
                     value={secondGuardian.guardian_full_name}
                     onChange={(e) => setSecondGuardian({ ...secondGuardian, guardian_full_name: e.target.value })}
@@ -289,7 +289,7 @@ export default function DonorChildUploadPage() {
                   />
                 </div>
                 <div>
-                  <label className="mb-1 block text-xs text-slate-500">Phone</label>
+                  <label className="mb-1 block text-xs text-slate-500">Điện thoại</label>
                   <input
                     value={secondGuardian.guardian_phone_number}
                     onChange={(e) => setSecondGuardian({ ...secondGuardian, guardian_phone_number: e.target.value })}
@@ -298,7 +298,7 @@ export default function DonorChildUploadPage() {
                 </div>
               </div>
               <div>
-                <label className="mb-1 block text-xs text-slate-500">Relation</label>
+                <label className="mb-1 block text-xs text-slate-500">Quan hệ</label>
                 <input
                   value={secondGuardian.guardian_relation}
                   onChange={(e) => setSecondGuardian({ ...secondGuardian, guardian_relation: e.target.value })}
@@ -306,7 +306,7 @@ export default function DonorChildUploadPage() {
                 />
               </div>
               <FileUploadInput
-                label="Guardian ID document"
+                label="Giấy tờ tùy thân người giám hộ"
                 value={secondGuardian.identity_card_blob_id}
                 onChange={(id) => setSecondGuardian({ ...secondGuardian, identity_card_blob_id: id })}
                 accept="image/*"
@@ -320,7 +320,7 @@ export default function DonorChildUploadPage() {
           disabled={submitting}
           className="w-full rounded-lg bg-blue-800 py-2.5 text-sm font-medium text-white hover:bg-blue-900 disabled:opacity-50"
         >
-          {submitting ? 'Submitting…' : 'Submit request'}
+          {submitting ? 'Đang gửi…' : 'Gửi yêu cầu'}
         </button>
       </form>
     </div>

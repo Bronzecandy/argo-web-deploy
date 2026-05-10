@@ -12,6 +12,20 @@ import StatsCard from '@/src/components/ui/StatsCard';
 import { ClipboardList, ClipboardCheck, Bell, User } from 'lucide-react';
 import type { Task, TaskProof, Notification } from '@/src/types/api.types';
 
+function volunteerTaskStatusVi(status?: string) {
+  const k = (status ?? '').toLowerCase();
+  const map: Record<string, string> = {
+    pending: 'Chờ xử lý',
+    open: 'Đang mở',
+    completed: 'Hoàn thành',
+    cancelled: 'Đã hủy',
+    canceled: 'Đã hủy',
+    closed: 'Đã đóng',
+    in_progress: 'Đang thực hiện',
+  };
+  return map[k] ?? status ?? '';
+}
+
 export default function VolunteerDashboardPage() {
   const { user } = useAppSelector((state) => state.auth);
   const [loading, setLoading] = useState(true);
@@ -69,22 +83,22 @@ export default function VolunteerDashboardPage() {
     <div className="space-y-6">
       <PageHeader
         title={profileName ? `Chào ${profileName}` : 'Bảng điều khiển tình nguyện viên'}
-        description={user?.address ? `Wallet: ${truncateAddress(user.address)}` : ''}
+        description={user?.address ? `Ví: ${truncateAddress(user.address)}` : ''}
       />
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <StatsCard label="Available Tasks" value={totalTasks} icon={ClipboardList} />
-        <StatsCard label="My Proofs" value={totalProofs} icon={ClipboardCheck} />
-        <StatsCard label="Notifications" value={notifications.length} icon={Bell} />
-        <StatsCard label="Role" value="Volunteer" icon={User} />
+        <StatsCard label="Nhiệm vụ khả dụng" value={totalTasks} icon={ClipboardList} />
+        <StatsCard label="Bằng chứng của tôi" value={totalProofs} icon={ClipboardCheck} />
+        <StatsCard label="Thông báo" value={notifications.length} icon={Bell} />
+        <StatsCard label="Vai trò" value="Tình nguyện viên" icon={User} />
       </div>
 
       <div className="grid gap-6 lg:grid-cols-2">
         {/* Recent Tasks */}
         <section className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
-          <h2 className="mb-4 font-semibold text-slate-900">Recent Tasks</h2>
+          <h2 className="mb-4 font-semibold text-slate-900">Nhiệm vụ gần đây</h2>
           {tasks.length === 0 ? (
-            <p className="text-sm text-slate-400">No tasks available</p>
+            <p className="text-sm text-slate-400">Chưa có nhiệm vụ</p>
           ) : (
             <div className="space-y-2">
               {tasks.map((t) => (
@@ -98,7 +112,7 @@ export default function VolunteerDashboardPage() {
                       ? 'bg-amber-50 text-amber-700'
                       : 'bg-slate-100 text-slate-600'
                   }`}>
-                    {t.status}
+                    {volunteerTaskStatusVi(t.status)}
                   </span>
                 </div>
               ))}
@@ -108,9 +122,9 @@ export default function VolunteerDashboardPage() {
 
         {/* Recent Notifications */}
         <section className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
-          <h2 className="mb-4 font-semibold text-slate-900">Recent Notifications</h2>
+          <h2 className="mb-4 font-semibold text-slate-900">Thông báo gần đây</h2>
           {notifications.length === 0 ? (
-            <p className="text-sm text-slate-400">No notifications</p>
+            <p className="text-sm text-slate-400">Chưa có thông báo</p>
           ) : (
             <div className="space-y-2">
               {notifications.map((n) => (

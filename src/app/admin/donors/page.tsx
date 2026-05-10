@@ -65,7 +65,7 @@ export default function AdminDonorsPage() {
   const columns = [
     {
       key: 'name',
-      label: 'Name',
+      label: 'Họ tên',
       render: (d: Donor) => (
         <span className="font-medium">{d.first_name} {d.last_name}</span>
       ),
@@ -77,31 +77,31 @@ export default function AdminDonorsPage() {
     },
     {
       key: 'phone_number',
-      label: 'Phone',
+      label: 'Điện thoại',
       render: (d: Donor) => d.phone_number || '-',
     },
     {
       key: 'gender',
-      label: 'Gender',
+      label: 'Giới tính',
       render: (d: Donor) => <span className="capitalize">{d.gender || '-'}</span>,
     },
     {
       key: 'total_donation',
-      label: 'Total Donated',
+      label: 'Tổng đã quyên góp',
       render: (d: Donor) => (
         <span className="font-semibold text-blue-900">{formatVND(d.total_donation)}</span>
       ),
     },
     {
       key: 'actions',
-      label: 'Detail',
+      label: 'Chi tiết',
       render: (d: Donor) => (
         <button
           type="button"
           onClick={(e) => { e.stopPropagation(); void handleViewDetail(d.id); }}
           className="rounded-lg border border-blue-200 px-2 py-1 text-xs font-medium text-blue-900 hover:bg-blue-50"
         >
-          View
+          Xem
         </button>
       ),
     },
@@ -110,12 +110,12 @@ export default function AdminDonorsPage() {
   return (
     <div>
       <PageHeader
-        title="Donors"
-        description="View all registered donors and their contribution history"
+        title="Nhà hảo tâm"
+        description="Xem tất cả nhà hảo tâm đã đăng ký và lịch sử đóng góp"
         actions={
           <span className="inline-flex items-center gap-1.5 rounded-lg border border-blue-200 bg-blue-50 px-3 py-1.5 text-xs font-medium text-blue-900">
             <HandCoins className="h-3.5 w-3.5" />
-            {formatInteger(totalAmount)} total
+            {formatInteger(totalAmount)} tổng
           </span>
         }
       />
@@ -125,7 +125,7 @@ export default function AdminDonorsPage() {
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
           <input
             type="text"
-            placeholder="Search donors..."
+            placeholder="Tìm nhà hảo tâm…"
             value={keyword}
             onChange={(e) => { setKeyword(e.target.value); setPage(0); }}
             className="rounded-lg border border-slate-200 py-2 pl-9 pr-3 text-sm focus:border-blue-700 focus:outline-none focus:ring-1 focus:ring-blue-700"
@@ -140,7 +140,7 @@ export default function AdminDonorsPage() {
         page={page}
         totalPages={totalPages}
         onPageChange={setPage}
-        emptyMessage="No donors found"
+        emptyMessage="Không tìm thấy nhà hảo tâm"
       />
 
       {/* Detail Modal */}
@@ -148,7 +148,7 @@ export default function AdminDonorsPage() {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
           <div className="w-full max-w-2xl rounded-2xl bg-white p-6 shadow-xl max-h-[85vh] overflow-y-auto">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-bold text-slate-900">Donor Detail</h3>
+              <h3 className="text-lg font-bold text-slate-900">Chi tiết nhà hảo tâm</h3>
               <button onClick={() => setSelectedDonor(null)}>
                 <X className="h-5 w-5 text-slate-400" />
               </button>
@@ -257,7 +257,7 @@ export default function AdminDonorsPage() {
                               ) : null}
                               {tx.actor_address?.trim() ? (
                                 <p className="mt-1.5 flex flex-wrap items-center gap-1.5 text-slate-500">
-                                  <span className="shrink-0">Actor:</span>
+                                  <span className="shrink-0">Người thực hiện:</span>
                                   <CopyableTruncated value={tx.actor_address} chars={6} />
                                 </p>
                               ) : null}

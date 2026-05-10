@@ -100,7 +100,7 @@ export default function LeaderRegionsPage() {
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!region.trim() || !content.trim()) {
-      toast.error('Please enter both region and content');
+      toast.error('Vui lòng nhập cả vùng và nội dung');
       return;
     }
     const payload: CreateSupportedRegionSuggestionRequest = {
@@ -131,11 +131,11 @@ export default function LeaderRegionsPage() {
   return (
     <div className="space-y-6">
       <PageHeader
-        title="Supported region suggestions"
+        title="Đề xuất vùng được hỗ trợ"
         description={
           user?.address
-            ? `Submit and track suggestions · ${truncateAddress(user.address)}`
-            : 'Sign in to submit and list your suggestions'
+            ? `Gửi và theo dõi đề xuất · ${truncateAddress(user.address)}`
+            : 'Đăng nhập để gửi và xem danh sách đề xuất'
         }
         actions={
           <button
@@ -144,31 +144,31 @@ export default function LeaderRegionsPage() {
             className="inline-flex items-center gap-2 rounded-lg bg-blue-800 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-blue-900"
           >
             <Plus className="h-4 w-4" />
-            New suggestion
+            Đề xuất mới
           </button>
         }
       />
 
       <section className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
-        <h2 className="mb-4 text-lg font-semibold text-slate-900">My suggestions</h2>
+        <h2 className="mb-4 text-lg font-semibold text-slate-900">Đề xuất của tôi</h2>
         {!user?.address && (
-          <p className="mb-4 text-sm text-amber-700">Connect your wallet to load your list.</p>
+          <p className="mb-4 text-sm text-amber-700">Kết nối ví để tải danh sách.</p>
         )}
         <DataTable<SupportedRegionSuggestion>
           columns={[
-            { key: 'region', label: 'region' },
+            { key: 'region', label: 'Vùng' },
             {
               key: 'content',
-              label: 'content',
+              label: 'Nội dung',
               render: (r) => <span className="line-clamp-2 max-w-xs">{r.content}</span>,
             },
-            { key: 'status', label: 'status', render: (r) => <StatusBadge status={r.status || 'pending'} /> },
+            { key: 'status', label: 'Trạng thái', render: (r) => <StatusBadge status={r.status || 'pending'} /> },
             {
               key: 'created_by',
-              label: 'created_by',
+              label: 'Người tạo',
               render: (r) => <CopyableTruncated value={r.created_by} />,
             },
-            { key: 'created_at', label: 'created_at', render: (r) => formatDate(r.created_at) },
+            { key: 'created_at', label: 'Ngày tạo', render: (r) => formatDate(r.created_at) },
             {
               key: 'detail',
               label: 'Chi tiết',
@@ -184,7 +184,7 @@ export default function LeaderRegionsPage() {
                   }}
                   className="rounded-lg border border-slate-200 px-2 py-1 text-xs font-medium text-slate-700 hover:bg-slate-50"
                 >
-                  Details
+                  Chi tiết
                 </button>
               ),
             },
@@ -194,7 +194,7 @@ export default function LeaderRegionsPage() {
           page={page}
           totalPages={totalPages}
           onPageChange={setPage}
-          emptyMessage="No suggestions yet"
+          emptyMessage="Chưa có đề xuất"
         />
       </section>
 
@@ -202,22 +202,22 @@ export default function LeaderRegionsPage() {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 p-4">
           <div className="max-h-[90vh] w-full max-w-xl overflow-y-auto rounded-xl border border-slate-200 bg-white p-6 shadow-xl">
             <div className="mb-4 flex items-center justify-between">
-              <h2 className="text-lg font-semibold text-slate-900">Create supported region suggestion</h2>
+              <h2 className="text-lg font-semibold text-slate-900">Tạo đề xuất vùng được hỗ trợ</h2>
               <button
                 type="button"
                 onClick={() => setProposeOpen(false)}
                 className="rounded-lg px-3 py-1.5 text-sm text-slate-600 hover:bg-slate-100"
               >
-                Close
+                Đóng
               </button>
             </div>
             <p className="mb-4 text-sm text-slate-500">
-              Provide a <strong>region</strong> and <strong>content</strong> explaining why this area should be supported.
+              Nhập <strong>vùng</strong> và <strong>nội dung</strong> giải thích vì sao khu vực này cần được hỗ trợ.
             </p>
             <form onSubmit={handleCreate} className="space-y-4">
               <div>
                 <label htmlFor="region" className="mb-1 block text-xs font-medium text-slate-500">
-                  region
+                  Vùng
                 </label>
                 <input
                   id="region"
@@ -226,7 +226,7 @@ export default function LeaderRegionsPage() {
                   value={region}
                   onChange={(e) => setRegion(e.target.value)}
                   className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-blue-800 focus:outline-none focus:ring-1 focus:ring-blue-800"
-                  placeholder="Pick from list or type a new region name"
+                  placeholder="Chọn từ danh sách hoặc nhập tên vùng mới"
                 />
                 <datalist id="region-options">
                   {regions.map((r) => (
@@ -236,7 +236,7 @@ export default function LeaderRegionsPage() {
               </div>
               <div>
                 <label htmlFor="content" className="mb-1 block text-xs font-medium text-slate-500">
-                  content
+                  Nội dung
                 </label>
                 <textarea
                   id="content"
@@ -244,7 +244,7 @@ export default function LeaderRegionsPage() {
                   onChange={(e) => setContent(e.target.value)}
                   rows={5}
                   className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-blue-800 focus:outline-none focus:ring-1 focus:ring-blue-800"
-                  placeholder="Why this region or community should be supported…"
+                  placeholder="Lý do vùng hoặc cộng đồng này cần được hỗ trợ…"
                 />
               </div>
               <button
@@ -252,7 +252,7 @@ export default function LeaderRegionsPage() {
                 disabled={submitting}
                 className="rounded-lg bg-blue-800 px-4 py-2 text-sm font-medium text-white transition hover:bg-blue-900 disabled:opacity-50"
               >
-                {submitting ? 'Submitting…' : 'Submit'}
+                {submitting ? 'Đang gửi…' : 'Gửi'}
               </button>
             </form>
           </div>
@@ -260,7 +260,7 @@ export default function LeaderRegionsPage() {
       )}
 
       <DetailModal
-        title="Supported region suggestion"
+        title="Đề xuất vùng được hỗ trợ"
         open={detailOpen}
         onClose={() => {
           setDetailOpen(false);
@@ -276,18 +276,18 @@ export default function LeaderRegionsPage() {
           const blobs = collectBlobIdEntries(r);
           return (
             <div className="space-y-1">
-              {detailField('ID', <CopyableTruncated value={r.id} chars={6} />)}
-              {detailField('Profile ID', <CopyableTruncated value={r.profile_id} chars={6} />)}
+              {detailField('Mã', <CopyableTruncated value={r.id} chars={6} />)}
+              {detailField('Mã hồ sơ', <CopyableTruncated value={r.profile_id} chars={6} />)}
               {detailField('Vùng', r.region)}
-              {detailField('Content', r.content)}
-              {detailField('Status', <StatusBadge status={r.status || 'pending'} />)}
+              {detailField('Nội dung', r.content)}
+              {detailField('Trạng thái', <StatusBadge status={r.status || 'pending'} />)}
               {detailField('Người tạo', <CopyableTruncated value={r.created_by} />)}
-              {detailField('Reviewed by', r.reviewed_by ? <CopyableTruncated value={r.reviewed_by} /> : '—')}
+              {detailField('Người duyệt', r.reviewed_by ? <CopyableTruncated value={r.reviewed_by} /> : '—')}
               {detailField('Ngày tạo', formatDate(r.created_at))}
-              {detailField('Updated', formatDate(r.updated_at))}
+              {detailField('Cập nhật', formatDate(r.updated_at))}
               {blobs.length > 0 && (
                 <div className="border-t border-slate-100 pt-3">
-                  <div className="mb-2 text-xs font-medium text-slate-600">Images</div>
+                  <div className="mb-2 text-xs font-medium text-slate-600">Hình ảnh</div>
                   <div className="flex flex-wrap gap-4">
                     {blobs.map(({ key, blobId }) => (
                       <div key={key} className="text-center">

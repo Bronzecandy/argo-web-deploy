@@ -54,7 +54,7 @@ export default function DonorProfilePage() {
 
   const handleSave = async () => {
     if (!user?.profileId) {
-      toast.error('Profile ID not available');
+      toast.error('Không có mã hồ sơ');
       return;
     }
     setSaving(true);
@@ -82,15 +82,15 @@ export default function DonorProfilePage() {
   return (
     <div>
       <PageHeader
-        title="My Profile"
-        description="View and manage your donor profile"
+        title="Hồ sơ của tôi"
+        description="Xem và quản lý hồ sơ nhà hảo tâm"
         actions={
           !editing ? (
             <button
               onClick={() => setEditing(true)}
               className="rounded-lg bg-blue-800 px-4 py-2 text-sm font-medium text-white hover:bg-blue-900"
             >
-              Edit Profile
+              Chỉnh sửa hồ sơ
             </button>
           ) : undefined
         }
@@ -103,15 +103,15 @@ export default function DonorProfilePage() {
             <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-blue-50">
               <Wallet className="h-5 w-5 text-blue-800" />
             </div>
-            <h3 className="font-semibold text-slate-900">Wallet</h3>
+            <h3 className="font-semibold text-slate-900">Ví</h3>
           </div>
           <div className="space-y-3 text-sm">
             <div>
-              <p className="text-slate-500">Address</p>
+              <p className="text-slate-500">Địa chỉ</p>
               <p className="font-mono text-xs text-slate-700 break-all">{user?.address || '-'}</p>
             </div>
             <div>
-              <p className="text-slate-500">Total Donated</p>
+              <p className="text-slate-500">Tổng đã quyên góp</p>
               <p className="text-xl font-bold text-blue-900">{formatVND(profile?.total_donation || 0)}</p>
             </div>
             <div>
@@ -127,14 +127,14 @@ export default function DonorProfilePage() {
             <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-slate-100">
               <User className="h-5 w-5 text-slate-600" />
             </div>
-            <h3 className="font-semibold text-slate-900">Personal Information</h3>
+            <h3 className="font-semibold text-slate-900">Thông tin cá nhân</h3>
           </div>
 
           {editing ? (
             <div className="space-y-4">
               <div className="grid gap-4 sm:grid-cols-2">
                 <div>
-                  <label className="mb-1 block text-sm font-medium text-slate-700">First name</label>
+                  <label className="mb-1 block text-sm font-medium text-slate-700">Tên</label>
                   <input
                     type="text"
                     value={form.first_name}
@@ -143,7 +143,7 @@ export default function DonorProfilePage() {
                   />
                 </div>
                 <div>
-                  <label className="mb-1 block text-sm font-medium text-slate-700">Last name</label>
+                  <label className="mb-1 block text-sm font-medium text-slate-700">Họ</label>
                   <input
                     type="text"
                     value={form.last_name}
@@ -152,20 +152,20 @@ export default function DonorProfilePage() {
                   />
                 </div>
                 <div>
-                  <label className="mb-1 block text-sm font-medium text-slate-700">Gender</label>
+                  <label className="mb-1 block text-sm font-medium text-slate-700">Giới tính</label>
                   <select
                     value={form.gender}
                     onChange={(e) => setForm({ ...form, gender: e.target.value })}
                     className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-blue-700 focus:outline-none focus:ring-1 focus:ring-blue-700"
                   >
-                    <option value="">Select</option>
-                    <option value="Male">Male</option>
-                    <option value="Female">Female</option>
-                    <option value="Other">Other</option>
+                    <option value="">Chọn</option>
+                    <option value="Male">Nam</option>
+                    <option value="Female">Nữ</option>
+                    <option value="Other">Khác</option>
                   </select>
                 </div>
                 <div>
-                  <label className="mb-1 block text-sm font-medium text-slate-700">Date of birth</label>
+                  <label className="mb-1 block text-sm font-medium text-slate-700">Ngày sinh</label>
                   <input
                     type="date"
                     value={form.date_of_birth}
@@ -174,7 +174,7 @@ export default function DonorProfilePage() {
                   />
                 </div>
                 <div>
-                  <label className="mb-1 block text-sm font-medium text-slate-700">Phone number</label>
+                  <label className="mb-1 block text-sm font-medium text-slate-700">Số điện thoại</label>
                   <input
                     type="tel"
                     value={form.phone_number}
@@ -192,7 +192,7 @@ export default function DonorProfilePage() {
                   />
                 </div>
                 <div className="sm:col-span-2">
-                  <label className="mb-1 block text-sm font-medium text-slate-700">Identity code</label>
+                  <label className="mb-1 block text-sm font-medium text-slate-700">Số định danh</label>
                   <input
                     type="text"
                     value={form.identity_code}
@@ -207,7 +207,7 @@ export default function DonorProfilePage() {
                   onClick={() => setEditing(false)}
                   className="rounded-lg border border-slate-200 px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-50"
                 >
-                  Cancel
+                  Hủy
                 </button>
                 <button
                   onClick={() => void handleSave()}
@@ -215,18 +215,18 @@ export default function DonorProfilePage() {
                   className="flex items-center gap-2 rounded-lg bg-blue-800 px-4 py-2 text-sm font-medium text-white hover:bg-blue-900 disabled:opacity-50"
                 >
                   <Save className="h-4 w-4" />
-                  {saving ? 'Đang lưu...' : 'Save Changes'}
+                  {saving ? 'Đang lưu...' : 'Lưu thay đổi'}
                 </button>
               </div>
             </div>
           ) : (
             <div className="grid gap-4 sm:grid-cols-2 text-sm">
               <div>
-                <p className="text-slate-500">Name</p>
+                <p className="text-slate-500">Họ tên</p>
                 <p className="font-medium text-slate-900">{profile?.first_name} {profile?.last_name || '-'}</p>
               </div>
               <div>
-                <p className="text-slate-500">Wallet</p>
+                <p className="text-slate-500">Ví</p>
                 <p className="font-mono text-xs text-slate-700">{profile?.wallet_address || user?.address || '-'}</p>
               </div>
             </div>
@@ -237,7 +237,7 @@ export default function DonorProfilePage() {
       {/* Recent Transactions from profile */}
       {profile?.transaction_records && profile.transaction_records.length > 0 && (
         <div className="mt-6 rounded-xl border border-slate-200 bg-white p-6">
-          <h3 className="mb-4 font-semibold text-slate-900">Recent Activity</h3>
+          <h3 className="mb-4 font-semibold text-slate-900">Hoạt động gần đây</h3>
           <div className="space-y-2">
             {profile.transaction_records.slice(0, 5).map((tx) => (
               <div key={tx.id} className="flex items-center justify-between rounded-lg bg-slate-50 p-3 text-sm">

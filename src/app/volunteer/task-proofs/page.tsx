@@ -47,7 +47,7 @@ export default function VolunteerTaskProofsPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!taskId.trim() || !imageBlobId.trim()) {
-      toast.error('Task ID and proof image are required');
+      toast.error('Vui lòng nhập ID nhiệm vụ và ảnh bằng chứng');
       return;
     }
     setSubmitting(true);
@@ -68,16 +68,16 @@ export default function VolunteerTaskProofsPage() {
   return (
     <div className="space-y-8">
       <PageHeader
-        title="Task Proofs"
-        description="Submit proof of task completion and track submissions"
+        title="Bằng chứng nhiệm vụ"
+        description="Gửi bằng chứng hoàn thành nhiệm vụ và theo dõi các lần gửi"
       />
 
       <section className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
-        <h2 className="mb-4 text-lg font-semibold text-slate-900">Submit new proof</h2>
+        <h2 className="mb-4 text-lg font-semibold text-slate-900">Gửi bằng chứng mới</h2>
         <form onSubmit={handleSubmit} className="max-w-xl space-y-4">
           <div>
             <label htmlFor="vol-task-id" className="mb-1 block text-xs font-medium text-slate-500">
-              Task ID
+              ID nhiệm vụ
             </label>
             <input
               id="vol-task-id"
@@ -85,38 +85,38 @@ export default function VolunteerTaskProofsPage() {
               value={taskId}
               onChange={(e) => setTaskId(e.target.value)}
               className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-blue-800 focus:outline-none focus:ring-1 focus:ring-blue-800"
-              placeholder="Enter the task ID you completed"
+              placeholder="Nhập ID nhiệm vụ bạn đã hoàn thành"
             />
           </div>
           <FileUploadInput
-            label="Proof image"
+            label="Ảnh bằng chứng"
             value={imageBlobId}
             onChange={setImageBlobId}
             accept="image/*"
-            placeholder="Upload proof image or paste blob ID"
+            placeholder="Tải ảnh bằng chứng hoặc dán ID blob"
           />
           <button
             type="submit"
             disabled={submitting}
             className="rounded-lg bg-blue-800 px-4 py-2 text-sm font-medium text-white transition hover:bg-blue-900 disabled:opacity-50"
           >
-            {submitting ? 'Submitting...' : 'Submit proof'}
+            {submitting ? 'Đang gửi...' : 'Gửi bằng chứng'}
           </button>
         </form>
       </section>
 
       <section className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
-        <h2 className="mb-4 text-lg font-semibold text-slate-900">My Proofs</h2>
+        <h2 className="mb-4 text-lg font-semibold text-slate-900">Bằng chứng của tôi</h2>
         <DataTable<TaskProof>
           columns={[
             {
               key: 'task_id',
-              label: 'Task',
+              label: 'Nhiệm vụ',
               render: (r) => (r.task_id ? <CopyableTruncated value={r.task_id} chars={4} /> : '-'),
             },
             {
               key: 'image_blob_id',
-              label: 'Image',
+              label: 'Ảnh',
               render: (r) => {
                 const url = blobService.getUrl(r.image_blob_id);
                 if (!url) return '-';
@@ -127,8 +127,17 @@ export default function VolunteerTaskProofsPage() {
                 );
               },
             },
-            { key: 'status', label: 'Status', render: (r) => <StatusBadge status={r.review_status ?? r.status ?? '—'} /> },
-            { key: 'reviewed_by', label: 'Reviewed by', render: (r) => (r.reviewed_by ? <CopyableTruncated value={r.reviewed_by} /> : '-') },
+            { key: 'status', label: 'Trạng thái', render: (r) => <StatusBadge status={r.review_status ?? r.status ?? '—'} /> },
+            {
+              key: 'ai_evaluation',
+              label: 'Đánh giá AI',
+              render: (r) => (
+                <span className="max-w-[200px] truncate text-slate-600" title={r.ai_evaluation}>
+                  {r.ai_evaluation ?? '—'}
+                </span>
+              ),
+            },
+            { key: 'reviewed_by', label: 'Người duyệt', render: (r) => (r.reviewed_by ? <CopyableTruncated value={r.reviewed_by} /> : '-') },
             { key: 'created_at', label: 'Ngày tạo', render: (r) => formatDate(r.created_at) },
           ]}
           data={rows}
@@ -136,7 +145,7 @@ export default function VolunteerTaskProofsPage() {
           page={page}
           totalPages={totalPages}
           onPageChange={setPage}
-          emptyMessage="No proofs submitted yet"
+          emptyMessage="Chưa có bằng chứng nào được gửi"
         />
       </section>
     </div>

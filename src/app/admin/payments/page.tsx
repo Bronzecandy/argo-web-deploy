@@ -109,19 +109,19 @@ export default function AdminPaymentsPage() {
   return (
     <div className="space-y-6">
       <PageHeader
-        title="Payments"
-        description="Review payment records. Approving may execute an on-chain transaction; refusing closes the payment without one."
+        title="Thanh toán"
+        description="Duyệt bản ghi thanh toán. Duyệt có thể thực thi giao dịch on-chain; từ chối sẽ đóng thanh toán mà không thực hiện giao dịch."
         actions={
           <span className="inline-flex items-center gap-1.5 rounded-lg border border-blue-200 bg-blue-50 px-3 py-1.5 text-xs font-medium text-blue-900">
             <CreditCard className="h-3.5 w-3.5" />
-            Admin
+            Quản trị
           </span>
         }
       />
 
       <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-end">
         <div>
-          <label className="mb-1 block text-xs font-medium text-slate-500">Status</label>
+          <label className="mb-1 block text-xs font-medium text-slate-500">Trạng thái</label>
           <select
             value={statusFilter}
             onChange={(e) => {
@@ -130,20 +130,20 @@ export default function AdminPaymentsPage() {
             }}
             className="rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none ring-blue-800/20 focus:ring-2"
           >
-            <option value="">All</option>
-            <option value="Pending">Pending</option>
-            <option value="Success">Success</option>
-            <option value="Cancel">Cancel</option>
+            <option value="">Tất cả</option>
+            <option value="Pending">Chờ xử lý</option>
+            <option value="Success">Thành công</option>
+            <option value="Cancel">Hủy</option>
           </select>
         </div>
         <div className="min-w-[200px] flex-1 sm:max-w-md">
-          <label className="mb-1 block text-xs font-medium text-slate-500">Keyword</label>
+          <label className="mb-1 block text-xs font-medium text-slate-500">Từ khóa</label>
           <input
             type="search"
             value={keywordDraft}
             onChange={(e) => setKeywordDraft(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && (setKeyword(keywordDraft), setPage(0))}
-            placeholder="Search…"
+            placeholder="Tìm kiếm…"
             className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none ring-blue-800/20 focus:ring-2"
           />
         </div>
@@ -155,28 +155,28 @@ export default function AdminPaymentsPage() {
           }}
           className="rounded-lg bg-blue-800 px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-blue-900"
         >
-          Search
+          Tìm
         </button>
       </div>
 
       <DataTable<Payment>
         columns={[
-          { key: 'actor', label: 'Actor', render: (p) => <CopyableTruncated value={p.actor} chars={6} /> },
+          { key: 'actor', label: 'Người thực hiện', render: (p) => <CopyableTruncated value={p.actor} chars={6} /> },
           {
             key: 'amount',
-            label: 'Amount',
+            label: 'Số tiền',
             render: (p) => (
               <span className="font-semibold text-slate-900">
                 {typeof p.amount === 'number' ? formatVND(p.amount) : '—'}
               </span>
             ),
           },
-          { key: 'currency', label: 'Currency', render: (p) => p.currency || '—' },
-          { key: 'method', label: 'Method', render: (p) => p.method || '—' },
-          { key: 'status', label: 'Status', render: (p) => <StatusBadge status={p.status || '—'} /> },
+          { key: 'currency', label: 'Tiền tệ', render: (p) => p.currency || '—' },
+          { key: 'method', label: 'Phương thức', render: (p) => p.method || '—' },
+          { key: 'status', label: 'Trạng thái', render: (p) => <StatusBadge status={p.status || '—'} /> },
           {
             key: 'review_status',
-            label: 'Review',
+            label: 'Duyệt',
             render: (p) =>
               p.review_status ? <StatusBadge status={p.review_status} /> : <span className="text-slate-400">—</span>,
           },
@@ -194,13 +194,13 @@ export default function AdminPaymentsPage() {
                 }}
                 className="rounded-lg border border-slate-200 px-2 py-1 text-xs font-medium text-slate-700 hover:bg-slate-50"
               >
-                Details
+                Chi tiết
               </button>
             ),
           },
           {
             key: 'actions',
-            label: 'Actions',
+            label: 'Thao tác',
             className: 'whitespace-nowrap',
             render: (p) => {
               const done = isPaymentFinalized(p);
@@ -213,7 +213,7 @@ export default function AdminPaymentsPage() {
                     className="inline-flex items-center gap-1 rounded-md border border-blue-200 bg-blue-50 px-2 py-1 text-xs font-medium text-blue-900 hover:bg-blue-100 disabled:cursor-not-allowed disabled:opacity-40"
                   >
                     <Check className="h-3.5 w-3.5" />
-                    Approve
+                    Duyệt
                   </button>
                   <button
                     type="button"
@@ -222,7 +222,7 @@ export default function AdminPaymentsPage() {
                     className="inline-flex items-center gap-1 rounded-md border border-red-200 bg-red-50 px-2 py-1 text-xs font-medium text-red-800 hover:bg-red-100 disabled:cursor-not-allowed disabled:opacity-40"
                   >
                     <X className="h-3.5 w-3.5" />
-                    Refuse
+                    Từ chối
                   </button>
                 </div>
               );
@@ -234,11 +234,11 @@ export default function AdminPaymentsPage() {
         page={page}
         totalPages={totalPages}
         onPageChange={setPage}
-        emptyMessage="No payments match your filters."
+        emptyMessage="Không có thanh toán nào khớp bộ lọc."
       />
 
       <DetailModal
-        title="Payment detail"
+        title="Chi tiết thanh toán"
         open={detailId !== null}
         onClose={() => setDetailId(null)}
         loading={detailLoading}
@@ -248,21 +248,21 @@ export default function AdminPaymentsPage() {
           <div className="space-y-2 text-sm">
             <p className="font-mono text-xs break-all">{detailPayment.id}</p>
             <p>
-              <span className="text-slate-500">Actor:</span> <CopyableTruncated value={detailPayment.actor} chars={6} />
+              <span className="text-slate-500">Người thực hiện:</span> <CopyableTruncated value={detailPayment.actor} chars={6} />
             </p>
             <p>
-              <span className="text-slate-500">Amount:</span>{' '}
+              <span className="text-slate-500">Số tiền:</span>{' '}
               {typeof detailPayment.amount === 'number' ? formatVND(detailPayment.amount) : '—'}
             </p>
             <p>
-              <span className="text-slate-500">Status:</span> <StatusBadge status={detailPayment.status || '—'} />
+              <span className="text-slate-500">Trạng thái:</span> <StatusBadge status={detailPayment.status || '—'} />
             </p>
             <p>
-              <span className="text-slate-500">Method:</span> {detailPayment.method || '—'}
+              <span className="text-slate-500">Phương thức:</span> {detailPayment.method || '—'}
             </p>
             {detailPayment.proof_blob_id && (
               <div>
-                <p className="mb-1 text-xs text-slate-500">Proof</p>
+                <p className="mb-1 text-xs text-slate-500">Chứng từ</p>
                 <BlobImage blobId={detailPayment.proof_blob_id} source="api" className="max-h-48 rounded-lg border" />
               </div>
             )}
@@ -273,9 +273,9 @@ export default function AdminPaymentsPage() {
       {refuseConfirm && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 p-4">
           <div className="w-full max-w-md rounded-xl border border-slate-200 bg-white p-5 shadow-xl">
-            <h3 className="mb-2 text-lg font-semibold text-slate-900">Refuse payment?</h3>
+            <h3 className="mb-2 text-lg font-semibold text-slate-900">Từ chối thanh toán?</h3>
             <p className="mb-4 text-sm text-slate-600">
-              This will refuse the payment record. Amount:{' '}
+              Thao tác này sẽ từ chối bản ghi thanh toán. Số tiền:{' '}
               {typeof refuseConfirm.amount === 'number' ? formatVND(refuseConfirm.amount) : '—'}.
             </p>
             <div className="flex justify-end gap-2">
@@ -284,7 +284,7 @@ export default function AdminPaymentsPage() {
                 onClick={() => setRefuseConfirm(null)}
                 className="rounded-lg border border-slate-200 px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
               >
-                Cancel
+                Hủy
               </button>
               <button
                 type="button"
@@ -292,7 +292,7 @@ export default function AdminPaymentsPage() {
                 onClick={() => void handleRefuse(refuseConfirm.id)}
                 className="rounded-lg bg-red-600 px-3 py-2 text-sm font-medium text-white hover:bg-red-700 disabled:opacity-50"
               >
-                Confirm refuse
+                Xác nhận từ chối
               </button>
             </div>
           </div>

@@ -18,10 +18,10 @@ const PAGE_SIZE = 20;
 
 const STATUS_OPTIONS = [
   { value: '', label: 'Tất cả trạng thái' },
-  { value: 'pending', label: 'Pending' },
+  { value: 'pending', label: 'Đang chờ' },
   { value: 'pending_review', label: 'Chờ duyệt' },
-  { value: 'approved', label: 'Approved' },
-  { value: 'refused', label: 'Refused' },
+  { value: 'approved', label: 'Đã duyệt' },
+  { value: 'refused', label: 'Đã từ chối' },
 ];
 
 type CentersTab = 'centers' | 'requests';
@@ -31,20 +31,20 @@ const SUPPORT_CENTER_COLUMNS = [
   { key: 'region', label: 'Vùng' },
   {
     key: 'center_address',
-    label: 'Address',
+    label: 'Địa chỉ',
     render: (c: SupportCenter) => (
       <CopyableTruncated value={c.center_address || ''} chars={14} mono={false} className="max-w-[240px] text-slate-700" />
     ),
   },
-  { key: 'center_phone_number', label: 'Phone' },
+  { key: 'center_phone_number', label: 'Điện thoại' },
   {
     key: 'uploaded_at',
-    label: 'Uploaded',
+    label: 'Ngày tải lên',
     render: (c: SupportCenter) => formatDate(c.uploaded_at),
   },
   {
     key: 'updated_at',
-    label: 'Updated',
+    label: 'Cập nhật lần cuối',
     render: (c: SupportCenter) => formatDate(c.updated_at),
   },
 ];
@@ -54,7 +54,7 @@ const CENTER_REQUEST_COLUMNS = [
   { key: 'region', label: 'Vùng' },
   {
     key: 'address',
-    label: 'Address',
+    label: 'Địa chỉ',
     render: (c: CenterRequest) => (
       <CopyableTruncated value={c.address || ''} chars={14} mono={false} className="max-w-[220px] text-slate-700" />
     ),
@@ -65,7 +65,7 @@ const CENTER_REQUEST_COLUMNS = [
     label: 'Người tạo',
     render: (c: CenterRequest) => <CopyableTruncated value={c.created_by} chars={8} />,
   },
-  { key: 'status', label: 'Status', render: (c: CenterRequest) => <StatusBadge status={c.status} /> },
+  { key: 'status', label: 'Trạng thái', render: (c: CenterRequest) => <StatusBadge status={c.status} /> },
   { key: 'created_at', label: 'Ngày tạo', render: (c: CenterRequest) => formatDate(c.created_at) },
   {
     key: 'closed_at',
@@ -260,7 +260,7 @@ export default function AdminCentersPage() {
         }}
         className="rounded-lg border border-slate-200 px-2 py-1 text-xs font-medium text-slate-700 hover:bg-slate-50"
       >
-        Details
+        Chi tiết
       </button>
     ),
   };
@@ -278,7 +278,7 @@ export default function AdminCentersPage() {
         }}
         className="rounded-lg border border-slate-200 px-2 py-1 text-xs font-medium text-slate-700 hover:bg-slate-50"
       >
-        Details
+        Chi tiết
       </button>
     ),
   };
@@ -288,7 +288,7 @@ export default function AdminCentersPage() {
     requestDetailsCol,
     {
       key: 'actions',
-      label: 'Actions',
+      label: 'Thao tác',
       className: 'whitespace-nowrap',
       render: (c: CenterRequest) => (
         <div className="flex flex-wrap gap-1" onClick={(e) => e.stopPropagation()}>
@@ -297,7 +297,7 @@ export default function AdminCentersPage() {
             disabled={voteBusyId === c.id}
             onClick={() => handleVote(c.id, true)}
             className="inline-flex items-center gap-1 rounded-md border border-blue-200 bg-blue-50 px-2 py-1 text-xs font-medium text-blue-900 hover:bg-blue-100 disabled:opacity-50"
-            title="Approve vote"
+            title="Phiếu đồng ý"
           >
             <ThumbsUp className="h-3.5 w-3.5" />
           </button>
@@ -306,7 +306,7 @@ export default function AdminCentersPage() {
             disabled={voteBusyId === c.id}
             onClick={() => handleVote(c.id, false)}
             className="inline-flex items-center gap-1 rounded-md border border-red-200 bg-red-50 px-2 py-1 text-xs font-medium text-red-800 hover:bg-red-100 disabled:opacity-50"
-            title="Refuse vote"
+            title="Phiếu từ chối"
           >
             <ThumbsDown className="h-3.5 w-3.5" />
           </button>
@@ -318,7 +318,7 @@ export default function AdminCentersPage() {
               className="inline-flex items-center gap-1 rounded-md border border-slate-200 bg-white px-2 py-1 text-xs font-medium text-slate-800 hover:bg-slate-50 disabled:opacity-50"
             >
               <ShieldCheck className="h-3.5 w-3.5" />
-              Confirm
+              Xác nhận
             </button>
           )}
         </div>
@@ -340,7 +340,7 @@ export default function AdminCentersPage() {
         actions={
           <span className="inline-flex items-center gap-1.5 rounded-lg border border-blue-200 bg-blue-50 px-3 py-1.5 text-xs font-medium text-blue-900">
             <Building2 className="h-3.5 w-3.5" />
-            {formatInteger(headerTotal)} total
+            {formatInteger(headerTotal)} tổng
           </span>
         }
       />
@@ -356,7 +356,7 @@ export default function AdminCentersPage() {
           }`}
         >
           <Building2 className="h-4 w-4 shrink-0" />
-          Centers
+          Trung tâm đã đăng ký
         </button>
         <button
           type="button"
@@ -381,7 +381,7 @@ export default function AdminCentersPage() {
             page={page}
             totalPages={totalPages}
             onPageChange={(p) => setPage(p)}
-            emptyMessage="No support centers found."
+            emptyMessage="Không tìm thấy trung tâm hỗ trợ."
           />
         </>
       ) : (
@@ -390,7 +390,7 @@ export default function AdminCentersPage() {
             <div className="flex flex-wrap items-center gap-2">
               <MapPin className="h-4 w-4 text-slate-400" />
               <label htmlFor="req-status" className="text-sm text-slate-600">
-                Status
+                Trạng thái
               </label>
               <select
                 id="req-status"
@@ -410,7 +410,7 @@ export default function AdminCentersPage() {
             </div>
             <div className="flex min-w-[200px] flex-1 flex-col gap-1 sm:max-w-md">
               <label htmlFor="req-keyword" className="text-sm text-slate-600">
-                Keyword
+                Từ khóa
               </label>
               <input
                 id="req-keyword"
@@ -418,7 +418,7 @@ export default function AdminCentersPage() {
                 value={reqKeywordDraft}
                 onChange={(e) => setReqKeywordDraft(e.target.value)}
                 onKeyDown={(e) => e.key === 'Enter' && (setReqKeyword(reqKeywordDraft), setReqPage(0))}
-                placeholder="Search…"
+                placeholder="Tìm kiếm…"
                 className="rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none ring-blue-800/20 focus:ring-2"
               />
             </div>
@@ -430,7 +430,7 @@ export default function AdminCentersPage() {
               }}
               className="rounded-lg bg-blue-800 px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-blue-900"
             >
-              Search
+              Tìm
             </button>
           </div>
 
@@ -441,7 +441,7 @@ export default function AdminCentersPage() {
             page={reqPage}
             totalPages={reqTotalPages}
             onPageChange={(p) => setReqPage(p)}
-            emptyMessage="No center requests match your filters."
+            emptyMessage="Không có yêu cầu trung tâm phù hợp bộ lọc."
           />
         </>
       )}
@@ -458,29 +458,29 @@ export default function AdminCentersPage() {
             {isSupportCenter(detailFetched) ? (
               <>
                 <p>
-                  <span className="text-slate-500">Region:</span> {detailFetched.region}
+                  <span className="text-slate-500">Vùng:</span> {detailFetched.region}
                 </p>
                 <p>
-                  <span className="text-slate-500">Address:</span> {detailFetched.center_address}
+                  <span className="text-slate-500">Địa chỉ:</span> {detailFetched.center_address}
                 </p>
                 <p>
-                  <span className="text-slate-500">Phone:</span> {detailFetched.center_phone_number}
+                  <span className="text-slate-500">Điện thoại:</span> {detailFetched.center_phone_number}
                 </p>
                 <p>
-                  <span className="text-slate-500">Uploaded:</span> {formatDate(detailFetched.uploaded_at)}
+                  <span className="text-slate-500">Ngày tải lên:</span> {formatDate(detailFetched.uploaded_at)}
                 </p>
                 <p>
-                  <span className="text-slate-500">Updated:</span> {formatDate(detailFetched.updated_at)}
+                  <span className="text-slate-500">Cập nhật:</span> {formatDate(detailFetched.updated_at)}
                 </p>
                 <p className="font-mono text-xs break-all">
-                  <span className="text-slate-500">ID:</span> {detailFetched.id}
+                  <span className="text-slate-500">Mã:</span> {detailFetched.id}
                 </p>
               </>
             ) : (
               <>
                 {detailFetched.image_blob_id && (
                   <div>
-                    <p className="mb-1 text-xs font-medium text-slate-500">Image</p>
+                    <p className="mb-1 text-xs font-medium text-slate-500">Hình ảnh</p>
                     <BlobImage
                       blobId={detailFetched.image_blob_id}
                       source="api"
@@ -489,23 +489,23 @@ export default function AdminCentersPage() {
                   </div>
                 )}
                 <p>
-                  <span className="text-slate-500">Region:</span> {detailFetched.region}
+                  <span className="text-slate-500">Vùng:</span> {detailFetched.region}
                 </p>
                 <p>
-                  <span className="text-slate-500">Address:</span> {detailFetched.address}
+                  <span className="text-slate-500">Địa chỉ:</span> {detailFetched.address}
                 </p>
                 <p>
-                  <span className="text-slate-500">Phone:</span> {detailFetched.phone_number}
+                  <span className="text-slate-500">Điện thoại:</span> {detailFetched.phone_number}
                 </p>
                 <p>
-                  <span className="text-slate-500">Status:</span> <StatusBadge status={detailFetched.status} />
+                  <span className="text-slate-500">Trạng thái:</span> <StatusBadge status={detailFetched.status} />
                 </p>
                 <p>
                   <span className="text-slate-500">Thời gian đóng:</span>{' '}
                   {formatDateTimeSeconds(detailFetched.closed_at)}
                 </p>
                 <p className="font-mono text-xs break-all">
-                  <span className="text-slate-500">ID:</span> {detailFetched.id}
+                  <span className="text-slate-500">Mã:</span> {detailFetched.id}
                 </p>
               </>
             )}
@@ -517,23 +517,23 @@ export default function AdminCentersPage() {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 p-4">
           <div className="w-full max-w-md rounded-xl border border-slate-200 bg-white p-5 shadow-xl">
             <div className="mb-3 flex items-center justify-between">
-              <h3 className="text-lg font-semibold text-slate-900">Refuse center request</h3>
+              <h3 className="text-lg font-semibold text-slate-900">Từ chối yêu cầu trung tâm</h3>
               <button
                 type="button"
                 onClick={() => setRefuseModal(null)}
                 className="rounded-lg p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-700"
-                aria-label="Close"
+                aria-label="Đóng"
               >
                 <X className="h-5 w-5" />
               </button>
             </div>
-            <p className="mb-2 text-sm text-slate-600">Optional reason for refusal.</p>
+            <p className="mb-2 text-sm text-slate-600">Lý do từ chối (không bắt buộc).</p>
             <textarea
               value={refuseReason}
               onChange={(e) => setRefuseReason(e.target.value)}
               rows={3}
               className="mb-4 w-full rounded-lg border border-slate-200 p-2 text-sm outline-none ring-blue-800/20 focus:ring-2"
-              placeholder="Reason…"
+              placeholder="Lý do…"
             />
             <div className="flex justify-end gap-2">
               <button
@@ -541,7 +541,7 @@ export default function AdminCentersPage() {
                 onClick={() => setRefuseModal(null)}
                 className="rounded-lg border border-slate-200 px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
               >
-                Cancel
+                Hủy
               </button>
               <button
                 type="button"
@@ -550,7 +550,7 @@ export default function AdminCentersPage() {
                 className="inline-flex items-center gap-1 rounded-lg bg-red-600 px-3 py-2 text-sm font-medium text-white hover:bg-red-700 disabled:opacity-50"
               >
                 <Check className="h-4 w-4" />
-                Submit refusal
+                Gửi từ chối
               </button>
             </div>
           </div>

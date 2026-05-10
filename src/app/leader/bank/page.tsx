@@ -84,7 +84,7 @@ export default function LeaderBankPage() {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!form.bank_code.trim() || !form.bank_org.trim() || !form.owner_name.trim()) {
-      toast.error('Bank code, organization, and owner name are required');
+      toast.error('Cần mã ngân hàng, tên tổ chức và tên chủ tài khoản');
       return;
     }
     const payload: CreateBankProfileRequest = {
@@ -126,8 +126,8 @@ export default function LeaderBankPage() {
   return (
     <div>
       <PageHeader
-        title="Bank account"
-        description="Manage payout bank details and PayOS integration"
+        title="Tài khoản ngân hàng"
+        description="Quản lý thông tin thanh toán và tích hợp PayOS"
         actions={
           bank && !editing ? (
             <button
@@ -136,7 +136,7 @@ export default function LeaderBankPage() {
               className="inline-flex items-center gap-2 rounded-lg bg-blue-800 px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-blue-900"
             >
               <Pencil className="h-4 w-4" />
-              Edit
+              Sửa
             </button>
           ) : null
         }
@@ -146,29 +146,29 @@ export default function LeaderBankPage() {
         <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
           <dl className="grid gap-4 sm:grid-cols-2">
             <div>
-              <dt className="text-xs font-medium uppercase tracking-wide text-slate-500">Bank organization</dt>
+              <dt className="text-xs font-medium uppercase tracking-wide text-slate-500">Tổ chức ngân hàng</dt>
               <dd className="mt-1 text-sm font-medium text-slate-900">{bank.bank_org}</dd>
             </div>
             <div>
-              <dt className="text-xs font-medium uppercase tracking-wide text-slate-500">Bank code</dt>
+              <dt className="text-xs font-medium uppercase tracking-wide text-slate-500">Mã ngân hàng</dt>
               <dd className="mt-1 text-sm font-medium text-slate-900">{bank.bank_code}</dd>
             </div>
             <div className="sm:col-span-2">
-              <dt className="text-xs font-medium uppercase tracking-wide text-slate-500">Account owner</dt>
+              <dt className="text-xs font-medium uppercase tracking-wide text-slate-500">Chủ tài khoản</dt>
               <dd className="mt-1 text-sm font-medium text-slate-900">{bank.owner_name}</dd>
             </div>
             <div>
-              <dt className="text-xs font-medium uppercase tracking-wide text-slate-500">PayOS client ID</dt>
+              <dt className="text-xs font-medium uppercase tracking-wide text-slate-500">Mã client PayOS</dt>
               <dd className="mt-1 font-mono text-sm text-slate-700">{bank.payos_client_id || '—'}</dd>
             </div>
             <div>
-              <dt className="text-xs font-medium uppercase tracking-wide text-slate-500">PayOS API key</dt>
+              <dt className="text-xs font-medium uppercase tracking-wide text-slate-500">Khóa API PayOS</dt>
               <dd className="mt-1 font-mono text-sm text-slate-700">
                 {bank.payos_api_key ? '••••••••' : '—'}
               </dd>
             </div>
             <div className="sm:col-span-2">
-              <dt className="text-xs font-medium uppercase tracking-wide text-slate-500">PayOS checksum key</dt>
+              <dt className="text-xs font-medium uppercase tracking-wide text-slate-500">Khóa checksum PayOS</dt>
               <dd className="mt-1 font-mono text-sm text-slate-700">
                 {bank.payos_check_sum_key ? '••••••••' : '—'}
               </dd>
@@ -181,7 +181,7 @@ export default function LeaderBankPage() {
           className="space-y-5 rounded-xl border border-slate-200 bg-white p-6 shadow-sm"
         >
           <div className="flex items-center justify-between">
-            <h2 className="text-lg font-semibold text-slate-900">{bank ? 'Edit bank profile' : 'Create bank profile'}</h2>
+            <h2 className="text-lg font-semibold text-slate-900">{bank ? 'Sửa hồ sơ ngân hàng' : 'Tạo hồ sơ ngân hàng'}</h2>
             {bank && editing ? (
               <button
                 type="button"
@@ -199,14 +199,14 @@ export default function LeaderBankPage() {
                 className="inline-flex items-center gap-1 text-sm text-slate-600 hover:text-slate-900"
               >
                 <X className="h-4 w-4" />
-                Cancel
+                Hủy
               </button>
             ) : null}
           </div>
 
           <div className="grid gap-4 sm:grid-cols-2">
             <div>
-              <label className="mb-1.5 block text-sm font-medium text-slate-700">Bank code</label>
+              <label className="mb-1.5 block text-sm font-medium text-slate-700">Mã ngân hàng</label>
               <input
                 className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none ring-blue-800/20 transition focus:border-blue-800 focus:ring-2"
                 value={form.bank_code}
@@ -215,7 +215,7 @@ export default function LeaderBankPage() {
               />
             </div>
             <div>
-              <label className="mb-1.5 block text-sm font-medium text-slate-700">Bank organization</label>
+              <label className="mb-1.5 block text-sm font-medium text-slate-700">Tổ chức / chi nhánh</label>
               <input
                 className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none ring-blue-800/20 transition focus:border-blue-800 focus:ring-2"
                 value={form.bank_org}
@@ -224,7 +224,7 @@ export default function LeaderBankPage() {
               />
             </div>
             <div className="sm:col-span-2">
-              <label className="mb-1.5 block text-sm font-medium text-slate-700">Owner name</label>
+              <label className="mb-1.5 block text-sm font-medium text-slate-700">Tên chủ tài khoản</label>
               <input
                 className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none ring-blue-800/20 transition focus:border-blue-800 focus:ring-2"
                 value={form.owner_name}
@@ -233,7 +233,7 @@ export default function LeaderBankPage() {
               />
             </div>
             <div>
-              <label className="mb-1.5 block text-sm font-medium text-slate-700">PayOS client ID (optional)</label>
+              <label className="mb-1.5 block text-sm font-medium text-slate-700">PayOS client ID (tùy chọn)</label>
               <input
                 className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none ring-blue-800/20 transition focus:border-blue-800 focus:ring-2"
                 value={form.payos_client_id}
@@ -241,7 +241,7 @@ export default function LeaderBankPage() {
               />
             </div>
             <div>
-              <label className="mb-1.5 block text-sm font-medium text-slate-700">PayOS API key (optional)</label>
+              <label className="mb-1.5 block text-sm font-medium text-slate-700">PayOS API key (tùy chọn)</label>
               <input
                 type="password"
                 autoComplete="off"
@@ -251,7 +251,7 @@ export default function LeaderBankPage() {
               />
             </div>
             <div className="sm:col-span-2">
-              <label className="mb-1.5 block text-sm font-medium text-slate-700">PayOS checksum key (optional)</label>
+              <label className="mb-1.5 block text-sm font-medium text-slate-700">PayOS checksum key (tùy chọn)</label>
               <input
                 type="password"
                 autoComplete="off"
@@ -267,7 +267,7 @@ export default function LeaderBankPage() {
             disabled={saving}
             className="rounded-lg bg-blue-800 px-5 py-2.5 text-sm font-medium text-white shadow-sm transition hover:bg-blue-900 disabled:opacity-60"
           >
-            {saving ? 'Đang lưu…' : bank ? 'Save changes' : 'Create profile'}
+            {saving ? 'Đang lưu…' : bank ? 'Lưu thay đổi' : 'Tạo hồ sơ'}
           </button>
         </form>
       )}

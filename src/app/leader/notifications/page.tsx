@@ -59,7 +59,7 @@ export default function LeaderNotificationsPage() {
   return (
     <div>
       <PageHeader
-        title="Notifications"
+        title="Thông báo"
         description={
           user?.address
             ? `Updates for your leader account · ${truncateAddress(user.address)}`
@@ -75,7 +75,7 @@ export default function LeaderNotificationsPage() {
         ) : !user?.address ? (
           <p className="text-center text-sm text-amber-700">Connect your wallet to load notifications.</p>
         ) : items.length === 0 ? (
-          <p className="text-center text-sm text-slate-500">No notifications yet.</p>
+          <p className="text-center text-sm text-slate-500">Chưa có thông báo.</p>
         ) : (
           <ul className="relative space-y-0">
             <div className="absolute bottom-0 left-[11px] top-2 w-px bg-blue-200" aria-hidden />
@@ -134,7 +134,7 @@ export default function LeaderNotificationsPage() {
       </div>
 
       <DetailModal
-        title="Notification"
+        title="Thông báo"
         open={detailOpen}
         onClose={() => {
           setDetailOpen(false);

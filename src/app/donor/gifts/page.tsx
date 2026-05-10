@@ -11,6 +11,28 @@ import { toast } from 'sonner';
 import { parseDigitsToNumber } from '@/src/lib/formatters';
 import { Gift, Send, Upload, Package } from 'lucide-react';
 
+const GIFT_CATEGORY_LABELS: Record<string, string> = {
+  clothing: 'Quần áo',
+  food: 'Thực phẩm',
+  school_supplies: 'Dụng cụ học tập',
+  toys: 'Đồ chơi',
+  books: 'Sách',
+  other: 'Khác',
+};
+
+function giftStatusVi(status?: string) {
+  const s = (status ?? '').toLowerCase();
+  const map: Record<string, string> = {
+    delivered: 'Đã giao',
+    cancelled: 'Đã hủy',
+    canceled: 'Đã hủy',
+    pending: 'Chờ xử lý',
+    processing: 'Đang xử lý',
+    shipped: 'Đang vận chuyển',
+  };
+  return map[s] ?? status ?? '';
+}
+
 export default function DonorGiftsPage() {
   const { execute } = useExecuteTransaction();
   const searchParams = useSearchParams();
@@ -42,11 +64,11 @@ export default function DonorGiftsPage() {
 
   const handleSendGift = async () => {
     if (!recipient.trim()) {
-      toast.error('Please enter the child ID (recipient)');
+      toast.error('Vui lòng nhập mã trẻ (người nhận)');
       return;
     }
     if (!category.trim()) {
-      toast.error('Please select a category');
+      toast.error('Vui lòng chọn danh mục');
       return;
     }
 
@@ -68,7 +90,7 @@ export default function DonorGiftsPage() {
           carrier: carrier.trim(),
           tracking_code: trackingCode.trim(),
         }),
-        { successMessage: 'Gift sent & recorded on-chain' },
+        { successMessage: 'Đã gửi quà và ghi nhận on-chain' },
       );
       if (!ok) { setSending(false); return; }
       setRecipient('');
@@ -90,7 +112,7 @@ export default function DonorGiftsPage() {
 
   const handleTrackGifts = async (pageOverride?: number) => {
     if (!trackChildId.trim()) {
-      toast.error('Please enter a child ID');
+      toast.error('Vui lòng nhập mã trẻ');
       return;
     }
     const p = pageOverride ?? giftPage;
@@ -104,7 +126,7 @@ export default function DonorGiftsPage() {
       setTrackedGifts(res.data.data || []);
       setGiftTotalPages(Math.max(1, res.data.total_pages ?? 1));
       if (pageOverride === undefined && p === 0 && !res.data.data?.length) {
-        toast.info('No gifts found for this child');
+        toast.info('Chưa có quà nào cho trẻ này');
       }
     } catch {
       toast.error('Không tải được danh sách quà');
@@ -116,8 +138,8 @@ export default function DonorGiftsPage() {
   return (
     <div>
       <PageHeader
-        title="Gifts"
-        description="Send gifts to children and track delivery status"
+        title="Quà tặng"
+        description="Gửi quà cho trẻ và theo dõi trạng thái giao hàng"
       />
 
       {/* Tabs */}
@@ -128,7 +150,7 @@ export default function DonorGiftsPage() {
             tab === 'send' ? 'bg-white text-blue-900 shadow-sm' : 'text-slate-600 hover:text-slate-900'
           }`}
         >
-          <Send className="h-4 w-4" /> Send Gift
+          <Send className="h-4 w-4" /> Gửi quà
         </button>
         <button
           onClick={() => setTab('track')}
@@ -136,7 +158,7 @@ export default function DonorGiftsPage() {
             tab === 'track' ? 'bg-white text-blue-900 shadow-sm' : 'text-slate-600 hover:text-slate-900'
           }`}
         >
-          <Package className="h-4 w-4" /> Track Gifts
+          <Package className="h-4 w-4" /> Theo dõi quà
         </button>
       </div>
 
@@ -148,64 +170,64 @@ export default function DonorGiftsPage() {
                 <Gift className="h-6 w-6 text-pink-600" />
               </div>
               <div>
-                <h2 className="text-lg font-bold text-slate-900">Send a Gift</h2>
-                <p className="text-sm text-slate-500">Brighten a child&apos;s day</p>
+                <h2 className="text-lg font-bold text-slate-900">Gửi quà</h2>
+                <p className="text-sm text-slate-500">Mang niềm vui đến cho trẻ</p>
               </div>
             </div>
 
             <div className="space-y-4">
               <div>
-                <label className="mb-1 block text-sm font-medium text-slate-700">Child ID (recipient)</label>
+                <label className="mb-1 block text-sm font-medium text-slate-700">Mã trẻ (người nhận)</label>
                 <input
                   type="text"
                   value={recipient}
                   onChange={(e) => setRecipient(e.target.value)}
-                  placeholder="Enter child ID"
+                  placeholder="Nhập mã trẻ"
                   className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-blue-700 focus:outline-none focus:ring-1 focus:ring-blue-700"
                 />
               </div>
 
               <div>
-                <label className="mb-1 block text-sm font-medium text-slate-700">Category</label>
+                <label className="mb-1 block text-sm font-medium text-slate-700">Danh mục</label>
                 <select
                   value={category}
                   onChange={(e) => setCategory(e.target.value)}
                   className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-blue-700 focus:outline-none focus:ring-1 focus:ring-blue-700"
                 >
-                  <option value="">Select category</option>
-                  <option value="clothing">Clothing</option>
-                  <option value="food">Food</option>
-                  <option value="school_supplies">School Supplies</option>
-                  <option value="toys">Toys</option>
-                  <option value="books">Books</option>
-                  <option value="other">Other</option>
+                  <option value="">Chọn danh mục</option>
+                  <option value="clothing">Quần áo</option>
+                  <option value="food">Thực phẩm</option>
+                  <option value="school_supplies">Dụng cụ học tập</option>
+                  <option value="toys">Đồ chơi</option>
+                  <option value="books">Sách</option>
+                  <option value="other">Khác</option>
                 </select>
               </div>
 
               <div>
-                <label className="mb-1 block text-sm font-medium text-slate-700">Description</label>
+                <label className="mb-1 block text-sm font-medium text-slate-700">Mô tả</label>
                 <input
                   type="text"
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
-                  placeholder="What are you sending?"
+                  placeholder="Bạn đang gửi gì?"
                   className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-blue-700 focus:outline-none focus:ring-1 focus:ring-blue-700"
                 />
               </div>
 
               <div>
-                <label className="mb-1 block text-sm font-medium text-slate-700">Personal message</label>
+                <label className="mb-1 block text-sm font-medium text-slate-700">Lời nhắn</label>
                 <textarea
                   value={message}
                   onChange={(e) => setMessage(e.target.value)}
-                  placeholder="Add a message for the child..."
+                  placeholder="Nhắn gửi đến trẻ…"
                   rows={2}
                   className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-blue-700 focus:outline-none focus:ring-1 focus:ring-blue-700"
                 />
               </div>
 
               <div>
-                <label className="mb-1 block text-sm font-medium text-slate-700">Gift value (VND)</label>
+                <label className="mb-1 block text-sm font-medium text-slate-700">Giá trị quà (VND)</label>
                 <GroupedNumericInput
                   min={0}
                   value={giftValueDigits}
@@ -216,32 +238,32 @@ export default function DonorGiftsPage() {
 
               <div className="grid gap-4 sm:grid-cols-2">
                 <div>
-                  <label className="mb-1 block text-sm font-medium text-slate-700">Carrier</label>
+                  <label className="mb-1 block text-sm font-medium text-slate-700">Đơn vị vận chuyển</label>
                   <input
                     type="text"
                     value={carrier}
                     onChange={(e) => setCarrier(e.target.value)}
-                    placeholder="e.g. VNPost, GHN"
+                    placeholder="VD: VNPost, GHN"
                     className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-blue-700 focus:outline-none focus:ring-1 focus:ring-blue-700"
                   />
                 </div>
                 <div>
-                  <label className="mb-1 block text-sm font-medium text-slate-700">Tracking code</label>
+                  <label className="mb-1 block text-sm font-medium text-slate-700">Mã vận đơn</label>
                   <input
                     type="text"
                     value={trackingCode}
                     onChange={(e) => setTrackingCode(e.target.value)}
-                    placeholder="Shipment tracking"
+                    placeholder="Mã theo dõi vận chuyển"
                     className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-blue-700 focus:outline-none focus:ring-1 focus:ring-blue-700"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="mb-1 block text-sm font-medium text-slate-700">Gift photo</label>
+                <label className="mb-1 block text-sm font-medium text-slate-700">Ảnh quà</label>
                 <label className="flex cursor-pointer items-center justify-center gap-2 rounded-lg border-2 border-dashed border-slate-200 p-4 text-sm text-slate-400 hover:border-blue-300 hover:text-blue-800 transition">
                   <Upload className="h-4 w-4" />
-                  {imageFile ? imageFile.name : 'Click to upload image'}
+                  {imageFile ? imageFile.name : 'Bấm để tải ảnh'}
                   <input
                     type="file"
                     accept="image/*"
@@ -256,7 +278,7 @@ export default function DonorGiftsPage() {
                 disabled={sending}
                 className="flex w-full items-center justify-center gap-2 rounded-lg bg-pink-600 px-4 py-3 text-sm font-semibold text-white hover:bg-pink-700 disabled:opacity-50 transition"
               >
-                {sending ? 'Sending...' : <><Send className="h-4 w-4" /> Send Gift</>}
+                {sending ? 'Đang gửi...' : <><Send className="h-4 w-4" /> Gửi quà</>}
               </button>
             </div>
           </div>
@@ -268,7 +290,7 @@ export default function DonorGiftsPage() {
               type="text"
               value={trackChildId}
               onChange={(e) => setTrackChildId(e.target.value)}
-              placeholder="Enter child ID to see their gifts"
+              placeholder="Nhập mã trẻ để xem quà"
               className="flex-1 max-w-md rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-blue-700 focus:outline-none focus:ring-1 focus:ring-blue-700"
             />
             <button
@@ -279,7 +301,7 @@ export default function DonorGiftsPage() {
               disabled={tracking}
               className="rounded-lg bg-blue-800 px-4 py-2 text-sm font-medium text-white hover:bg-blue-900 disabled:opacity-50"
             >
-              {tracking ? 'Đang tải...' : 'Search'}
+              {tracking ? 'Đang tải...' : 'Tìm'}
             </button>
           </div>
 
@@ -290,7 +312,7 @@ export default function DonorGiftsPage() {
                   <div className="flex items-start justify-between">
                     <div>
                       <span className="inline-flex items-center rounded-full bg-pink-50 px-2.5 py-0.5 text-xs font-medium text-pink-700 border border-pink-200 capitalize">
-                        {g.category}
+                        {GIFT_CATEGORY_LABELS[g.category] ?? g.category}
                       </span>
                       <p className="mt-1 font-medium text-slate-900">{g.description}</p>
                       {g.message && <p className="mt-0.5 text-sm text-slate-500 italic">&ldquo;{g.message}&rdquo;</p>}
@@ -300,12 +322,12 @@ export default function DonorGiftsPage() {
                       g.status === 'cancelled' ? 'bg-red-50 text-red-700 border border-red-200' :
                       'bg-amber-50 text-amber-700 border border-amber-200'
                     }`}>
-                      {g.status}
+                      {giftStatusVi(g.status)}
                     </span>
                   </div>
                   <div className="mt-2 flex items-center gap-4 text-xs text-slate-400">
-                    {g.carrier && <span>Carrier: {g.carrier}</span>}
-                    {g.tracking_code && <span>Tracking: {g.tracking_code}</span>}
+                    {g.carrier && <span>Đơn vị: {g.carrier}</span>}
+                    {g.tracking_code && <span>Mã vận đơn: {g.tracking_code}</span>}
                   </div>
                 </div>
               ))}
@@ -321,10 +343,10 @@ export default function DonorGiftsPage() {
                     disabled={tracking || giftPage <= 0}
                     className="rounded-lg border border-slate-200 px-3 py-1.5 text-sm font-medium text-slate-600 hover:bg-slate-50 disabled:opacity-40"
                   >
-                    Previous
+                    Trước
                   </button>
                   <span className="text-sm text-slate-500">
-                    Page {giftPage + 1} of {giftTotalPages}
+                    Trang {giftPage + 1} / {giftTotalPages}
                   </span>
                   <button
                     type="button"
@@ -336,7 +358,7 @@ export default function DonorGiftsPage() {
                     disabled={tracking || giftPage >= giftTotalPages - 1}
                     className="rounded-lg border border-slate-200 px-3 py-1.5 text-sm font-medium text-slate-600 hover:bg-slate-50 disabled:opacity-40"
                   >
-                    Next
+                    Sau
                   </button>
                 </div>
               )}

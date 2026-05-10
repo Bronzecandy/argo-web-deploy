@@ -81,7 +81,7 @@ export default function PublicChildDetailPage() {
   if (!child) {
     return (
       <GuestPublicShell>
-        <p className="py-12 text-center text-slate-500">Child not found</p>
+        <p className="py-12 text-center text-slate-500">Không tìm thấy hồ sơ trẻ</p>
       </GuestPublicShell>
     );
   }
@@ -91,18 +91,18 @@ export default function PublicChildDetailPage() {
   return (
     <GuestPublicShell>
       <Link href="/explore?tab=children" className="mb-4 inline-block text-sm font-medium text-blue-800 hover:underline">
-        ← Back to Explore
+        ← Quay lại Khám phá
       </Link>
 
       <div className="mb-6 rounded-2xl border border-amber-100 bg-amber-50/60 p-4 sm:p-5">
         <p className="text-sm text-amber-950">
-          You&apos;re viewing a public profile. To sponsor needs, send gifts, or donate, sign in first.
+          Bạn đang xem hồ sơ công khai. Để tài trợ nhu cầu, gửi quà hoặc quyên góp, vui lòng đăng nhập trước.
         </p>
         <Link
           href={loginHref}
           className="mt-3 inline-flex items-center gap-2 rounded-xl bg-slate-900 px-4 py-2 text-sm font-semibold text-white hover:bg-slate-800"
         >
-          <HandCoins className="h-4 w-4" /> Sign in to support this child
+          <HandCoins className="h-4 w-4" /> Đăng nhập để hỗ trợ trẻ này
         </Link>
       </div>
 
@@ -128,27 +128,27 @@ export default function PublicChildDetailPage() {
                   <Calendar className="h-4 w-4 text-slate-400" /> {child.date_of_birth} · {child.gender}
                 </p>
               </div>
-              {child.home_address && <p className="mt-3 text-xs text-slate-400">Home: {child.home_address}</p>}
+              {child.home_address && <p className="mt-3 text-xs text-slate-400">Nhà: {child.home_address}</p>}
             </div>
           </div>
         </div>
 
         <div className="space-y-4 lg:col-span-2">
-          <PageHeader title="Needs overview" description="Verified needs for this child (read-only)" />
+          <PageHeader title="Tổng quan nhu cầu" description="Các nhu cầu đã xác minh của trẻ (chỉ xem)" />
 
           {mealNeed && (
             <div className="rounded-2xl border border-amber-200/80 bg-amber-50/40 p-5">
               <div className="mb-3 flex items-center gap-2">
                 <Utensils className="h-5 w-5 text-amber-600" />
-                <h3 className="font-semibold text-amber-900">Meal need</h3>
+                <h3 className="font-semibold text-amber-900">Nhu cầu bữa ăn</h3>
               </div>
               <div className="grid grid-cols-2 gap-3 text-sm">
                 <div>
-                  <span className="text-slate-500">Monthly cost:</span>{' '}
+                  <span className="text-slate-500">Chi phí hàng tháng:</span>{' '}
                   <span className="font-medium">{formatVND(mealNeed.value)}</span>
                 </div>
                 <div>
-                  <span className="text-slate-500">Remaining months:</span>{' '}
+                  <span className="text-slate-500">Số tháng còn lại:</span>{' '}
                   <span className="font-medium">{mealNeed.remaining_months}</span>
                 </div>
               </div>
@@ -159,10 +159,10 @@ export default function PublicChildDetailPage() {
             <div key={bn.id} className="rounded-2xl border border-purple-200/80 bg-purple-50/40 p-5">
               <div className="mb-3 flex items-center gap-2">
                 <BookOpen className="h-5 w-5 text-purple-600" />
-                <h3 className="font-semibold text-purple-900">Books need</h3>
+                <h3 className="font-semibold text-purple-900">Nhu cầu sách</h3>
               </div>
               <div className="text-sm">
-                <span className="text-slate-500">Cost:</span> <span className="font-medium">{formatVND(bn.value)}</span>
+                <span className="text-slate-500">Chi phí:</span> <span className="font-medium">{formatVND(bn.value)}</span>
               </div>
             </div>
           ))}
@@ -171,10 +171,10 @@ export default function PublicChildDetailPage() {
             <div className="rounded-2xl border border-blue-200/80 bg-blue-50/40 p-5">
               <div className="mb-3 flex items-center gap-2">
                 <HeartPulse className="h-5 w-5 text-blue-600" />
-                <h3 className="font-semibold text-blue-900">Health insurance need</h3>
+                <h3 className="font-semibold text-blue-900">Nhu cầu bảo hiểm y tế</h3>
               </div>
               <div className="text-sm">
-                <span className="text-slate-500">Cost:</span>{' '}
+                <span className="text-slate-500">Chi phí:</span>{' '}
                 <span className="font-medium">{formatVND(healthNeed.value)}</span>
               </div>
             </div>
@@ -184,7 +184,7 @@ export default function PublicChildDetailPage() {
             <div className="rounded-2xl border border-rose-200/80 bg-rose-50/40 p-5">
               <div className="mb-3 flex items-center gap-2">
                 <Sparkles className="h-5 w-5 text-rose-600" />
-                <h3 className="font-semibold text-rose-900">Special need campaigns</h3>
+                <h3 className="font-semibold text-rose-900">Chiến dịch nhu cầu đặc biệt</h3>
               </div>
               <ul className="space-y-1 font-mono text-xs text-slate-600">
                 {child.special_need_campaigns.map((cId) => (
@@ -196,7 +196,7 @@ export default function PublicChildDetailPage() {
 
           {!mealNeed && booksNeeds.length === 0 && !healthNeed && !child.special_need_campaigns?.length && (
             <div className="rounded-2xl border border-slate-200 bg-white p-12 text-center text-sm text-slate-400 shadow-sm">
-              No active needs listed for this child
+              Chưa có nhu cầu đang hoạt động nào được liệt kê cho trẻ này
             </div>
           )}
 
@@ -204,7 +204,7 @@ export default function PublicChildDetailPage() {
             href={loginHref}
             className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-blue-800 py-3 text-sm font-semibold text-white hover:bg-blue-900 sm:w-auto sm:px-8"
           >
-            <HandCoins className="h-4 w-4" /> Sign in to sponsor
+            <HandCoins className="h-4 w-4" /> Đăng nhập để tài trợ
           </Link>
         </div>
       </div>

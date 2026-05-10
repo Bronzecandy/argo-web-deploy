@@ -51,7 +51,7 @@ export default function DonorTransactionsPage() {
   const columns = [
     {
       key: 'action_type',
-      label: 'Type',
+      label: 'Loại',
       render: (item: TransactionRecord) => (
         <span className="inline-flex items-center rounded-full bg-slate-100 px-2.5 py-0.5 text-xs font-medium capitalize text-slate-700">
           {item.action_type?.replace(/_/g, ' ') || '-'}
@@ -65,21 +65,21 @@ export default function DonorTransactionsPage() {
     },
     {
       key: 'amount',
-      label: 'Amount',
+      label: 'Số tiền',
       render: (item: TransactionRecord) => (
         <span className="font-semibold text-blue-900">{formatVND(item.amount)}</span>
       ),
     },
     {
       key: 'message',
-      label: 'Message',
+      label: 'Ghi chú',
       render: (item: TransactionRecord) => (
         <span className="max-w-[180px] truncate block text-slate-500 text-xs">{item.message || '-'}</span>
       ),
     },
     {
       key: 'created_at',
-      label: 'Date',
+      label: 'Thời gian',
       render: (item: TransactionRecord) => (
         <span className="text-slate-500">{formatDateTime(item.created_at)}</span>
       ),
@@ -89,12 +89,12 @@ export default function DonorTransactionsPage() {
   return (
     <div>
       <PageHeader
-        title="Transaction History"
-        description="View all your donation and support transactions"
+        title="Lịch sử giao dịch"
+        description="Xem mọi giao dịch quyên góp và hỗ trợ của bạn"
         actions={
           <div className="flex items-center gap-2 text-sm text-slate-500">
             <History className="h-4 w-4" />
-            {transactions.length > 0 && `${transactions.length} records`}
+            {transactions.length > 0 && `${transactions.length} bản ghi`}
           </div>
         }
       />
@@ -105,7 +105,7 @@ export default function DonorTransactionsPage() {
           onChange={(e) => setActionType(e.target.value)}
           className="rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-blue-700 focus:outline-none focus:ring-1 focus:ring-blue-700"
         >
-          <option value="">All types</option>
+          <option value="">Tất cả loại</option>
           {ACTION_TYPES.filter(Boolean).map((t) => (
             <option key={t} value={t}>{t.replace(/_/g, ' ')}</option>
           ))}
@@ -116,8 +116,8 @@ export default function DonorTransactionsPage() {
           onChange={(e) => setSortOrder(e.target.value as 'desc' | 'asc')}
           className="rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-blue-700 focus:outline-none focus:ring-1 focus:ring-blue-700"
         >
-          <option value="desc">Newest first</option>
-          <option value="asc">Oldest first</option>
+          <option value="desc">Mới nhất trước</option>
+          <option value="asc">Cũ nhất trước</option>
         </select>
       </div>
 
@@ -128,7 +128,7 @@ export default function DonorTransactionsPage() {
         page={page}
         totalPages={totalPages}
         onPageChange={setPage}
-        emptyMessage="No transactions found"
+        emptyMessage="Không tìm thấy giao dịch"
       />
     </div>
   );

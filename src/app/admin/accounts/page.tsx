@@ -368,6 +368,15 @@ export default function AdminAccountsPage() {
               },
               { key: 'register_role', label: 'Vai trò', render: (r) => <span className="capitalize">{r.register_role}</span> },
               { key: 'region', label: 'Region' },
+              {
+                key: 'ai_evaluation',
+                label: 'Đánh giá AI',
+                render: (r) => (
+                  <span className="max-w-[200px] truncate text-slate-600" title={r.ai_evaluation}>
+                    {r.ai_evaluation ?? '—'}
+                  </span>
+                ),
+              },
               { key: 'status', label: 'Trạng thái', render: (r) => <StatusBadge status={r.status} /> },
               { key: 'created_at', label: 'Ngày tạo', render: (r) => formatDate(r.created_at) },
               {
@@ -634,6 +643,7 @@ export default function AdminAccountsPage() {
               {detailField('Tên', `${r.first_name} ${r.last_name}`)}
               {detailField('Vai trò', <span className="capitalize">{r.register_role}</span>)}
               {detailField('Vùng', r.region)}
+              {detailField('Đánh giá AI', r.ai_evaluation ?? '—')}
               {detailField('Trạng thái', <StatusBadge status={r.status} />)}
               {detailField('Mã định danh', r.identity_code)}
               {detailField('Email', r.email)}

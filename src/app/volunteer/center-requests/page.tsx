@@ -70,7 +70,7 @@ export default function VolunteerCenterRequestsPage() {
   const submitRefuse = async () => {
     if (!refuseModal) return;
     if (!refuseReason.trim()) {
-      toast.error('Reason is required');
+      toast.error('Vui lòng nhập lý do');
       return;
     }
     setVoteBusy(refuseModal.id);
@@ -97,7 +97,7 @@ export default function VolunteerCenterRequestsPage() {
   const handleConfirm = async (id: string) => {
     setConfirmBusy(id);
     const ok = await execute(() => centerService.confirmCenterRequest(id), {
-      successMessage: 'Center request confirmed on-chain',
+      successMessage: 'Đã xác nhận yêu cầu trung tâm on-chain',
     });
     if (ok) void load();
     setConfirmBusy(null);
@@ -113,7 +113,7 @@ export default function VolunteerCenterRequestsPage() {
     <div>
       <PageHeader
         title="Yêu cầu trung tâm"
-        description="Review and vote on proposed support centers from local leaders."
+        description="Xem xét và bỏ phiếu các trung tâm hỗ trợ do trưởng vùng đề xuất."
       />
 
       <DataTable<CenterRequest>
@@ -122,16 +122,16 @@ export default function VolunteerCenterRequestsPage() {
         page={page}
         totalPages={totalPages}
         onPageChange={setPage}
-        emptyMessage="No center requests"
+        emptyMessage="Không có yêu cầu trung tâm"
         columns={[
           { key: 'region', label: 'Vùng' },
           {
             key: 'address',
-            label: 'Address',
+            label: 'Địa chỉ',
             render: (r) => <CopyableTruncated value={r.address} chars={10} />,
           },
-          { key: 'phone_number', label: 'Phone' },
-          { key: 'status', label: 'Status', render: (r) => <StatusBadge status={r.status} /> },
+          { key: 'phone_number', label: 'Điện thoại' },
+          { key: 'status', label: 'Trạng thái', render: (r) => <StatusBadge status={r.status} /> },
           { key: 'created_at', label: 'Ngày tạo', render: (r) => formatDate(r.created_at) },
           {
             key: 'closed_at',
@@ -142,7 +142,7 @@ export default function VolunteerCenterRequestsPage() {
           },
           {
             key: 'actions',
-            label: 'Actions',
+            label: 'Thao tác',
             className: 'whitespace-nowrap',
             render: (r) => (
               <div className="flex flex-wrap gap-1" onClick={(e) => e.stopPropagation()}>
@@ -151,7 +151,7 @@ export default function VolunteerCenterRequestsPage() {
                   onClick={() => setDetail(r)}
                   className="rounded-md border border-slate-200 px-2 py-1 text-xs"
                 >
-                  Details
+                  Chi tiết
                 </button>
                 {canVote(r) && (
                   <>
@@ -183,7 +183,7 @@ export default function VolunteerCenterRequestsPage() {
                     onClick={() => void handleConfirm(r.id)}
                     className="inline-flex items-center gap-1 rounded-md border border-slate-200 bg-white px-2 py-1 text-xs disabled:opacity-50"
                   >
-                    <Check className="h-3 w-3" /> Confirm
+                    <Check className="h-3 w-3" /> Xác nhận
                   </button>
                 )}
               </div>
@@ -193,7 +193,7 @@ export default function VolunteerCenterRequestsPage() {
       />
 
       <DetailModal
-        title="Center request"
+        title="Yêu cầu trung tâm"
         open={!!detail}
         onClose={() => setDetail(null)}
         wide
@@ -201,14 +201,14 @@ export default function VolunteerCenterRequestsPage() {
         {detail && (
           <div className="space-y-2 text-sm">
             <p className="flex flex-wrap items-center gap-2">
-              <span className="text-slate-500">ID:</span> <CopyableTruncated value={detail.id} chars={6} />
+              <span className="text-slate-500">Mã:</span> <CopyableTruncated value={detail.id} chars={6} />
             </p>
-            <p><span className="text-slate-500">Region:</span> {detail.region}</p>
+            <p><span className="text-slate-500">Vùng:</span> {detail.region}</p>
             <p className="flex flex-wrap items-center gap-2">
-              <span className="text-slate-500 shrink-0">Address:</span> <CopyableTruncated value={detail.address} chars={12} className="min-w-0 flex-1" />
+              <span className="text-slate-500 shrink-0">Địa chỉ:</span> <CopyableTruncated value={detail.address} chars={12} className="min-w-0 flex-1" />
             </p>
-            <p><span className="text-slate-500">Phone:</span> {detail.phone_number}</p>
-            <p><span className="text-slate-500">Status:</span> <StatusBadge status={detail.status} /></p>
+            <p><span className="text-slate-500">Điện thoại:</span> {detail.phone_number}</p>
+            <p><span className="text-slate-500">Trạng thái:</span> <StatusBadge status={detail.status} /></p>
             <p>
               <span className="text-slate-500">Thời gian đóng:</span> {formatDateTimeSeconds(detail.closed_at)}
             </p>
@@ -223,7 +223,7 @@ export default function VolunteerCenterRequestsPage() {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 p-4">
           <div className="w-full max-w-md rounded-xl border bg-white p-5 shadow-xl">
             <div className="mb-3 flex items-center justify-between">
-              <h3 className="font-semibold text-slate-900">Refuse center request</h3>
+              <h3 className="font-semibold text-slate-900">Từ chối yêu cầu trung tâm</h3>
               <button type="button" onClick={() => setRefuseModal(null)} className="p-1 text-slate-400 hover:bg-slate-100">
                 <X className="h-5 w-5" />
               </button>
@@ -233,11 +233,11 @@ export default function VolunteerCenterRequestsPage() {
               rows={3}
               value={refuseReason}
               onChange={(e) => setRefuseReason(e.target.value)}
-              placeholder="Reason…"
+              placeholder="Lý do…"
             />
             <div className="flex justify-end gap-2">
               <button type="button" onClick={() => setRefuseModal(null)} className="rounded-lg border px-3 py-2 text-sm">
-                Cancel
+                Hủy
               </button>
               <button
                 type="button"
@@ -245,7 +245,7 @@ export default function VolunteerCenterRequestsPage() {
                 onClick={() => void submitRefuse()}
                 className="rounded-lg bg-red-600 px-3 py-2 text-sm text-white disabled:opacity-50"
               >
-                Submit
+                Gửi
               </button>
             </div>
           </div>

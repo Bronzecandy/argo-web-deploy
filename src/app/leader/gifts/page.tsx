@@ -87,7 +87,7 @@ export default function LeaderGiftsPage() {
   const applyChildId = () => {
     const id = childId.trim();
     if (!id) {
-      toast.error('Enter a child ID to load gifts');
+      toast.error('Nhập mã trẻ để tải quà');
       return;
     }
     setAppliedChildId(id);
@@ -99,7 +99,7 @@ export default function LeaderGiftsPage() {
   const handleConfirmReceive = async (giftId: string) => {
     const blob = deliveredInputs[giftId]?.trim();
     if (!blob) {
-      toast.error('Delivered image blob ID is required');
+      toast.error('Cần blob ID ảnh đã giao');
       return;
     }
     setConfirmingId(giftId);
@@ -122,7 +122,7 @@ export default function LeaderGiftsPage() {
   return (
     <div className="space-y-8">
       <PageHeader
-        title="Gifts"
+        title="Quà tặng"
         description={
           user?.address
             ? `Track gifts for a child in your region · ${truncateAddress(user.address)}`
@@ -146,7 +146,7 @@ export default function LeaderGiftsPage() {
               value={childId}
               onChange={(e) => setChildId(e.target.value)}
               className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-blue-800 focus:outline-none focus:ring-1 focus:ring-blue-800"
-              placeholder="Child on-chain or system ID"
+              placeholder="Mã trẻ on-chain hoặc hệ thống"
             />
           </div>
           <button
@@ -160,8 +160,8 @@ export default function LeaderGiftsPage() {
       </section>
 
       <section className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
-        <h2 className="mb-4 text-lg font-semibold text-slate-900">Gifts for child</h2>
-        {!appliedChildId && <p className="text-sm text-slate-500">Enter a child ID above to load the table.</p>}
+        <h2 className="mb-4 text-lg font-semibold text-slate-900">Quà của trẻ</h2>
+        {!appliedChildId && <p className="text-sm text-slate-500">Nhập mã trẻ phía trên để tải bảng.</p>}
         {appliedChildId ? (
           <DataTable<Gift>
             columns={[
@@ -223,7 +223,7 @@ export default function LeaderGiftsPage() {
                         value={deliveredInputs[r.id] ?? ''}
                         onChange={(val) => setDeliveredInputs((prev) => ({ ...prev, [r.id]: val }))}
                         accept="image/*"
-                        placeholder="Upload or paste blob ID"
+                        placeholder="Tải hoặc dán blob ID"
                       />
                       <button
                         type="button"
@@ -244,13 +244,13 @@ export default function LeaderGiftsPage() {
             page={page}
             totalPages={totalPages}
             onPageChange={setPage}
-            emptyMessage="No gifts for this child"
+            emptyMessage="Chưa có quà cho trẻ này"
           />
         ) : null}
       </section>
 
       <DetailModal
-        title="Gift"
+        title="Quà tặng"
         open={giftDetailOpen}
         onClose={() => {
           setGiftDetailOpen(false);

@@ -16,38 +16,38 @@ import {
 const LINKS = [
   {
     href: '/donor/transactions',
-    label: 'Wallet & transactions',
-    description: 'View your transaction history',
+    label: 'Ví & giao dịch',
+    description: 'Xem lịch sử giao dịch',
     icon: History,
   },
   {
     href: '/donor/gifts',
-    label: 'Gifts',
-    description: 'Send and track gifts',
+    label: 'Quà tặng',
+    description: 'Gửi và theo dõi quà',
     icon: Gift,
   },
   {
     href: '/donor/notifications',
-    label: 'Notifications',
-    description: 'Updates and alerts',
+    label: 'Thông báo',
+    description: 'Cập nhật và cảnh báo',
     icon: Bell,
   },
   {
     href: '/donor/register',
-    label: 'Register role',
-    description: 'Apply for donor, volunteer, or leader roles',
+    label: 'Đăng ký vai trò',
+    description: 'Đăng ký nhà hảo tâm, tình nguyện viên hoặc trưởng vùng',
     icon: UserPlus,
   },
   {
     href: '/donor/child-upload',
-    label: 'Request child upload',
-    description: 'Propose a new child profile',
+    label: 'Yêu cầu tải hồ sơ trẻ',
+    description: 'Đề xuất hồ sơ trẻ mới',
     icon: FileUp,
   },
   {
     href: '/donor/profile',
-    label: 'Profile',
-    description: 'Personal information and account',
+    label: 'Hồ sơ',
+    description: 'Thông tin cá nhân và tài khoản',
     icon: User,
   },
 ];
@@ -56,8 +56,8 @@ export default function DonorSettingsHubPage() {
   return (
     <div className="mx-auto max-w-2xl space-y-8">
       <PageHeader
-        title="Settings"
-        description="Wallet, notifications, registration, and profile — same scope as mobile Settings"
+        title="Cài đặt"
+        description="Ví, thông báo, đăng ký và hồ sơ — tương đương Cài đặt trên ứng dụng di động"
       />
 
       <div className="rounded-2xl border border-slate-200/80 bg-white p-2 shadow-sm">
@@ -87,7 +87,7 @@ export default function DonorSettingsHubPage() {
 
       <p className="flex items-center gap-2 text-xs text-slate-500">
         <Wallet className="h-3.5 w-3.5" />
-        Donations and pool payments still require an authenticated wallet session.
+        Quyên góp và thanh toán quỹ vẫn cần phiên đăng nhập ví đã xác thực.
       </p>
     </div>
   );

@@ -42,7 +42,7 @@ export default function VolunteerNotificationsPage() {
 
   return (
     <div>
-      <PageHeader title="Notifications" description="Your activity notifications" />
+      <PageHeader title="Thông báo" description="Thông báo hoạt động của bạn" />
 
       {loading ? (
         <div className="flex h-48 items-center justify-center">
@@ -50,7 +50,7 @@ export default function VolunteerNotificationsPage() {
         </div>
       ) : notis.length === 0 ? (
         <div className="rounded-xl border border-slate-200 bg-white p-12 text-center text-sm text-slate-400">
-          No notifications
+          Chưa có thông báo
         </div>
       ) : (
         <div className="space-y-2">
@@ -71,7 +71,7 @@ export default function VolunteerNotificationsPage() {
             disabled={page === 0}
             className="rounded-lg border border-slate-200 px-3 py-1.5 text-sm font-medium text-slate-600 hover:bg-slate-50 disabled:opacity-40"
           >
-            Previous
+            Trước
           </button>
           <span className="text-sm text-slate-500">Trang {page + 1} / {Math.max(1, totalPages)}</span>
           <button
@@ -80,7 +80,7 @@ export default function VolunteerNotificationsPage() {
             disabled={page >= Math.max(1, totalPages) - 1}
             className="rounded-lg border border-slate-200 px-3 py-1.5 text-sm font-medium text-slate-600 hover:bg-slate-50 disabled:opacity-40"
           >
-            Next
+            Sau
           </button>
         </div>
       )}

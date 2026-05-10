@@ -17,14 +17,14 @@ function PaymentCallbackContent() {
 
   const displayTitle =
     title ||
-    (isSuccess ? 'Payment successful' : isCancelled ? 'Transaction cancelled' : 'Something went wrong');
+    (isSuccess ? 'Thanh toán thành công' : isCancelled ? 'Giao dịch đã hủy' : 'Đã xảy ra lỗi');
   const displayMessage =
     message ||
     (isSuccess
-      ? 'Your payment was recorded. You can continue exploring or check your transactions.'
+      ? 'Thanh toán đã được ghi nhận. Bạn có thể tiếp tục khám phá hoặc xem giao dịch.'
       : isCancelled
-        ? 'You cancelled the transaction or the payment provider closed the session.'
-        : 'Please try again or contact support if the problem persists.');
+        ? 'Bạn đã hủy giao dịch hoặc cổng thanh toán đã đóng phiên.'
+        : 'Vui lòng thử lại hoặc liên hệ hỗ trợ nếu lỗi vẫn tiếp diễn.');
 
   const Icon = isSuccess ? CheckCircle2 : isCancelled ? AlertCircle : XCircle;
   const iconClass = isSuccess ? 'text-blue-800' : isCancelled ? 'text-amber-700' : 'text-red-700';
@@ -32,7 +32,7 @@ function PaymentCallbackContent() {
 
   return (
     <div>
-      <PageHeader title="Payment result" description="Return URL after PayOS or similar checkout" />
+      <PageHeader title="Kết quả thanh toán" description="Trang quay về sau PayOS hoặc cổng thanh toán tương tự" />
       <div className={`mx-auto max-w-md rounded-xl border border-slate-200 p-8 text-center ${bgClass}`}>
         <Icon className={`mx-auto h-14 w-14 ${iconClass}`} />
         <h2 className="mt-4 text-lg font-semibold text-slate-900">{displayTitle}</h2>
@@ -42,10 +42,10 @@ function PaymentCallbackContent() {
             href="/donor/discover"
             className="rounded-lg bg-blue-800 px-4 py-2 text-sm font-medium text-white hover:bg-blue-900"
           >
-            Discover
+            Khám phá
           </Link>
           <Link href="/donor/transactions" className="rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-medium">
-            Transactions
+            Giao dịch
           </Link>
         </div>
       </div>

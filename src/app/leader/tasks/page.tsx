@@ -8,7 +8,7 @@ import EntityBlobThumb from '@/src/components/ui/EntityBlobThumb';
 import StatusBadge from '@/src/components/ui/StatusBadge';
 import CopyableTruncated from '@/src/components/ui/CopyableTruncated';
 import { collectBlobIdEntries, blobFieldDisplayLabel } from '@/src/lib/blobFields';
-import { formatDate, truncateAddress } from '@/src/lib/formatters';
+import { formatDate, toDDMMYYYY, truncateAddress } from '@/src/lib/formatters';
 import { toast } from 'sonner';
 import { useAppSelector } from '@/src/store/hooks';
 import { useLeaderCenter } from '@/src/contexts/LeaderCenterContext';
@@ -257,11 +257,11 @@ export default function LeaderTasksPage() {
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!canUseRegion || !effectiveRegion) {
-      toast.error('Your region is not loaded yet. Please wait or try again later.');
+      toast.error('Vùng của bạn chưa tải xong. Vui lòng đợi hoặc thử lại sau.');
       return;
     }
     if (!description.trim() || !startPeriod || !endPeriod) {
-      toast.error('Description and date range are required');
+      toast.error('Cần có mô tả và khoảng thời gian');
       return;
     }
 
@@ -282,12 +282,14 @@ export default function LeaderTasksPage() {
 
     setSubmitting(true);
     try {
+      const startPayload = toDDMMYYYY(startPeriod);
+      const endPayload = toDDMMYYYY(endPeriod);
       if (isChildTask) {
         await taskService.create({
           description: description.trim(),
           region: effectiveRegion,
-          start_period: startPeriod,
-          end_period: endPeriod,
+          start_period: startPayload,
+          end_period: endPayload,
           is_child_task: true,
           child_id: selectedChildId,
           need_id: resolvedNeedId,
@@ -296,8 +298,8 @@ export default function LeaderTasksPage() {
         await taskService.create({
           description: description.trim(),
           region: effectiveRegion,
-          start_period: startPeriod,
-          end_period: endPeriod,
+          start_period: startPayload,
+          end_period: endPayload,
           is_child_task: false,
         });
       }
@@ -332,7 +334,7 @@ export default function LeaderTasksPage() {
       (!selectedChildId || !needKind || !resolvedNeedId || detailLoading));
 
   const emptyMsg = !dataReady
-    ? 'Loading your region…'
+    ? 'Đang tải vùng của bạn…'
     : !effectiveRegion
       ? poolStatus === 'failed'
         ? poolError || 'Could not resolve your region for tasks.'
@@ -347,11 +349,11 @@ export default function LeaderTasksPage() {
   return (
     <div className="space-y-8">
       <PageHeader
-        title="Tasks"
+        title="Nhiệm vụ"
         description={
           user?.address
-            ? `Tasks for your assigned region · ${truncateAddress(user.address)}`
-            : 'Tasks for your assigned region'
+            ? `Nhiệm vụ trong vùng được giao · ${truncateAddress(user.address)}`
+            : 'Nhiệm vụ trong vùng được giao'
         }
         actions={
           <button
@@ -360,18 +362,18 @@ export default function LeaderTasksPage() {
             className="inline-flex items-center gap-2 rounded-lg bg-blue-800 px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-blue-900"
           >
             <Plus className="h-4 w-4" />
-            Create
+            Tạo mới
           </button>
         }
       />
 
       <section className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
-        <h2 className="mb-4 text-lg font-semibold text-slate-900">Tasks in your region</h2>
+        <h2 className="mb-4 text-lg font-semibold text-slate-900">Nhiệm vụ trong vùng bạn</h2>
         <DataTable<Task>
           columns={[
             {
               key: 'description',
-              label: 'Description',
+              label: 'Mô tả',
               render: (r) => <span className="line-clamp-2 max-w-xs">{r.description}</span>,
             },
             { key: 'region', label: 'Vùng' },
@@ -453,13 +455,13 @@ export default function LeaderTasksPage() {
             onClick={(e) => e.stopPropagation()}
           >
             <div className="mb-4 flex items-center justify-between gap-2">
-              <h2 className="text-lg font-semibold text-slate-900">Create new task</h2>
+              <h2 className="text-lg font-semibold text-slate-900">Tạo nhiệm vụ mới</h2>
               <button
                 type="button"
                 onClick={() => setCreateOpen(false)}
                 className="rounded-lg px-3 py-1.5 text-sm text-slate-600 hover:bg-slate-100"
               >
-                Close
+                Đóng
               </button>
             </div>
             <p className="mb-4 rounded-lg border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700">
@@ -491,7 +493,7 @@ export default function LeaderTasksPage() {
                       setChildDetail(null);
                     }}
                   />
-                  <span>Task tổng (vùng)</span>
+                  <span>Nhiệm vụ cấp vùng</span>
                 </label>
                 <label className="flex cursor-pointer items-center gap-2 text-sm">
                   <input
@@ -500,7 +502,7 @@ export default function LeaderTasksPage() {
                     checked={isChildTask}
                     onChange={() => setIsChildTask(true)}
                   />
-                  <span>Task theo trẻ</span>
+                  <span>Nhiệm vụ theo trẻ</span>
                 </label>
               </fieldset>
 
@@ -593,7 +595,7 @@ export default function LeaderTasksPage() {
 
               <div>
                 <label htmlFor="task-desc" className="mb-1 block text-xs font-medium text-slate-500">
-                  Description
+                  Mô tả
                 </label>
                 <textarea
                   id="task-desc"
@@ -606,7 +608,7 @@ export default function LeaderTasksPage() {
               <div className="grid gap-4 sm:grid-cols-2">
                 <div>
                   <label htmlFor="start" className="mb-1 block text-xs font-medium text-slate-500">
-                    Start period
+                    Ngày bắt đầu
                   </label>
                   <input
                     id="start"
@@ -618,7 +620,7 @@ export default function LeaderTasksPage() {
                 </div>
                 <div>
                   <label htmlFor="end" className="mb-1 block text-xs font-medium text-slate-500">
-                    End period
+                    Ngày kết thúc
                   </label>
                   <input
                     id="end"
@@ -629,12 +631,15 @@ export default function LeaderTasksPage() {
                   />
                 </div>
               </div>
+              <p className="text-[11px] text-slate-500">
+                Gửi API dạng <span className="font-medium">DD/MM/YYYY</span> (chuyển tự động từ ngày đã chọn).
+              </p>
               <button
                 type="submit"
                 disabled={createDisabled}
                 className="rounded-lg bg-blue-800 px-4 py-2 text-sm font-medium text-white transition hover:bg-blue-900 disabled:opacity-50"
               >
-                {submitting ? 'Creating…' : 'Create task'}
+                {submitting ? 'Đang tạo…' : 'Tạo nhiệm vụ'}
               </button>
             </form>
           </div>
@@ -644,16 +649,16 @@ export default function LeaderTasksPage() {
       {reviewTask && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
           <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-xl">
-            <h3 className="mb-4 text-lg font-bold text-slate-900">Review Task</h3>
+            <h3 className="mb-4 text-lg font-bold text-slate-900">Duyệt nhiệm vụ</h3>
             <div className="mb-4 rounded-lg bg-slate-50 p-3 text-sm">
               <p className="flex flex-wrap items-center gap-2">
-                <span className="font-medium">Task:</span> <CopyableTruncated value={reviewTask.id} chars={8} />
+                <span className="font-medium">Nhiệm vụ:</span> <CopyableTruncated value={reviewTask.id} chars={8} />
               </p>
               <p className="mt-1">
-                <span className="font-medium">Description:</span> {reviewTask.description}
+                <span className="font-medium">Mô tả:</span> {reviewTask.description}
               </p>
               <p className="mt-1">
-                <span className="font-medium">Region:</span> {reviewTask.region}
+                <span className="font-medium">Vùng:</span> {reviewTask.region}
               </p>
             </div>
 
@@ -665,7 +670,7 @@ export default function LeaderTasksPage() {
                   reviewVote ? 'border-blue-600 bg-blue-50 text-blue-800' : 'border-slate-200 text-slate-500'
                 }`}
               >
-                <ThumbsUp className="h-4 w-4" /> Approve
+                <ThumbsUp className="h-4 w-4" /> Đồng ý
               </button>
               <button
                 type="button"
@@ -674,7 +679,7 @@ export default function LeaderTasksPage() {
                   !reviewVote ? 'border-red-500 bg-red-50 text-red-700' : 'border-slate-200 text-slate-500'
                 }`}
               >
-                <ThumbsDown className="h-4 w-4" /> Refuse
+                <ThumbsDown className="h-4 w-4" /> Từ chối
               </button>
             </div>
 
@@ -682,7 +687,7 @@ export default function LeaderTasksPage() {
               <textarea
                 value={reviewReason}
                 onChange={(e) => setReviewReason(e.target.value)}
-                placeholder="Reason for refusal..."
+                placeholder="Lý do từ chối…"
                 rows={2}
                 className="mb-4 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-blue-800 focus:outline-none focus:ring-1 focus:ring-blue-800"
               />
@@ -694,7 +699,7 @@ export default function LeaderTasksPage() {
                 onClick={() => setReviewTask(null)}
                 className="rounded-lg border border-slate-200 px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-50"
               >
-                Cancel
+                Hủy
               </button>
               <button
                 type="button"
@@ -704,7 +709,7 @@ export default function LeaderTasksPage() {
                   reviewVote ? 'bg-blue-800 hover:bg-blue-900' : 'bg-red-600 hover:bg-red-700'
                 }`}
               >
-                {busyId === reviewTask.id ? 'Submitting...' : 'Confirm'}
+                {busyId === reviewTask.id ? 'Đang gửi…' : 'Xác nhận'}
               </button>
             </div>
           </div>
@@ -712,7 +717,7 @@ export default function LeaderTasksPage() {
       )}
 
       <DetailModal
-        title="Task"
+        title="Nhiệm vụ"
         open={taskDetailOpen}
         onClose={() => {
           setTaskDetailOpen(false);
@@ -729,18 +734,18 @@ export default function LeaderTasksPage() {
           return (
             <div className="space-y-1">
               {detailField('ID', <CopyableTruncated value={t.id} chars={4} />)}
-              {detailField('Description', t.description)}
+              {detailField('Mô tả', t.description)}
               {detailField('Vùng', t.region)}
-              {detailField('Start', formatDate(t.start_period))}
-              {detailField('End', formatDate(t.end_period))}
-              {detailField('Status', <StatusBadge status={t.status} />)}
-              {detailField('Assigned staff', t.assigned_staff ? <CopyableTruncated value={t.assigned_staff} /> : '—')}
-              {detailField('Reviewed by', t.reviewed_by ? <CopyableTruncated value={t.reviewed_by} /> : '—')}
+              {detailField('Bắt đầu', formatDate(t.start_period))}
+              {detailField('Kết thúc', formatDate(t.end_period))}
+              {detailField('Trạng thái', <StatusBadge status={t.status} />)}
+              {detailField('Nhân sự được giao', t.assigned_staff ? <CopyableTruncated value={t.assigned_staff} /> : '—')}
+              {detailField('Người duyệt', t.reviewed_by ? <CopyableTruncated value={t.reviewed_by} /> : '—')}
               {detailField('Ngày tạo', formatDate(t.created_at))}
-              {detailField('Updated', formatDate(t.updated_at))}
+              {detailField('Cập nhật', formatDate(t.updated_at))}
               {blobs.length > 0 && (
                 <div className="border-t border-slate-100 pt-3">
-                  <div className="mb-2 text-xs font-medium text-slate-600">Images</div>
+                  <div className="mb-2 text-xs font-medium text-slate-600">Hình ảnh</div>
                   <div className="flex flex-wrap gap-4">
                     {blobs.map(({ key, blobId }) => (
                       <div key={key} className="text-center">

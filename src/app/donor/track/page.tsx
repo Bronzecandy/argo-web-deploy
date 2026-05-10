@@ -57,26 +57,26 @@ export default function DonorTrackPage() {
   return (
     <div>
       <PageHeader
-        title="My track"
+        title="Trẻ tôi hỗ trợ"
         description={
           user?.address
-            ? `Children you support — ${formatInteger(totalAmount)} total (API count)`
-            : 'Sign in to see children you have supported'
+            ? `Trẻ bạn đang hỗ trợ — ${formatInteger(totalAmount)} (theo API)`
+            : 'Đăng nhập để xem các trẻ bạn đã hỗ trợ'
         }
       />
 
       {!user?.address ? (
-        <p className="text-sm text-slate-600">Connect your wallet to load this list.</p>
+        <p className="text-sm text-slate-600">Kết nối ví để tải danh sách.</p>
       ) : loading ? (
         <div className="flex h-48 items-center justify-center">
           <div className="h-8 w-8 animate-spin rounded-full border-4 border-blue-800 border-t-transparent" />
         </div>
       ) : children.length === 0 ? (
         <div className="rounded-xl border border-slate-200 bg-white p-12 text-center text-sm text-slate-500">
-          No supported children yet. Explore the network to donate.
+          Chưa có trẻ được hỗ trợ. Khám phá mạng lưới để quyên góp.
           <div className="mt-4">
             <Link href="/donor/discover" className="text-blue-800 font-medium hover:underline">
-              Go to Discover
+              Đi tới Khám phá
             </Link>
           </div>
         </div>
@@ -107,7 +107,7 @@ export default function DonorTrackPage() {
                   <p className="mt-0.5 flex items-center gap-1 text-xs text-slate-500">
                     <MapPin className="h-3 w-3" /> {child.region}
                   </p>
-                  <p className="mt-1 text-xs text-slate-400">DOB: {formatDate(child.date_of_birth)}</p>
+                  <p className="mt-1 text-xs text-slate-400">Ngày sinh: {formatDate(child.date_of_birth)}</p>
                 </div>
               </Link>
             ))}
@@ -119,10 +119,10 @@ export default function DonorTrackPage() {
               disabled={page === 0}
               className="rounded-lg border border-slate-200 px-3 py-1.5 text-sm disabled:opacity-40"
             >
-              Previous
+              Trước
             </button>
             <span className="text-sm text-slate-500">
-              Page {page + 1} / {totalPages}
+              Trang {page + 1} / {totalPages}
             </span>
             <button
               type="button"
@@ -130,7 +130,7 @@ export default function DonorTrackPage() {
               disabled={page >= totalPages - 1}
               className="rounded-lg border border-slate-200 px-3 py-1.5 text-sm disabled:opacity-40"
             >
-              Next
+              Sau
             </button>
           </div>
         </>

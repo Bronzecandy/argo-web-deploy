@@ -280,7 +280,7 @@ export default function LeaderChildrenPage() {
       const { needMeal, needBooks, needHealth, mealValue, booksValue, healthValue } = opts;
       const childId = child.id.trim();
       if (!childId) {
-        toast.error('Resolved child record has no id');
+        toast.error('Bản ghi trẻ đã giải quyết không có mã');
         return false;
       }
 
@@ -350,7 +350,7 @@ export default function LeaderChildrenPage() {
     if (!approveModal) return;
     const identityCode = (approveModal.identity_code || '').trim();
     if (!identityCode) {
-      toast.error('Missing identity code on this upload request');
+      toast.error('Thiếu mã định danh trong yêu cầu tải lên này');
       return;
     }
 
@@ -373,7 +373,7 @@ export default function LeaderChildrenPage() {
         region: approveModal.region,
       });
       if (!child) {
-        toast.error('Không tìm thấy child với mã định danh này trong danh sách trẻ');
+        toast.error('Không tìm thấy trẻ với mã định danh này trong danh sách trẻ');
         return;
       }
 
@@ -558,7 +558,7 @@ export default function LeaderChildrenPage() {
   return (
     <div>
       <PageHeader
-        title="Children"
+        title="Trẻ em"
         description={`Upload / profiles / danh sách trẻ theo vùng trưởng${leaderRegion ? `: ${leaderRegion}` : ''}`}
       />
 
@@ -666,7 +666,7 @@ export default function LeaderChildrenPage() {
               },
               {
                 key: 'ai_evaluation',
-                label: 'AI note',
+                label: 'Đánh giá AI',
                 render: (u) => (
                   <span className="max-w-[200px] truncate text-slate-600" title={u.ai_evaluation}>
                     {u.ai_evaluation ?? '—'}
@@ -757,6 +757,15 @@ export default function LeaderChildrenPage() {
                 render: (u) => (u.review_status ? <StatusBadge status={u.review_status} /> : <span className="text-slate-400">—</span>),
               },
               { key: 'status', label: 'Status', render: (u) => <StatusBadge status={u.status} /> },
+              {
+                key: 'ai_evaluation',
+                label: 'Đánh giá AI',
+                render: (u) => (
+                  <span className="max-w-[200px] truncate text-slate-600" title={u.ai_evaluation}>
+                    {u.ai_evaluation ?? '—'}
+                  </span>
+                ),
+              },
               { key: 'created_at', label: 'Ngày tạo', render: (u) => formatDate(u.created_at) },
               {
                 key: 'closed_at',
@@ -786,7 +795,7 @@ export default function LeaderChildrenPage() {
                       disabled={voteBusyId === u.id}
                       onClick={() => void handleVoteYes(u.id)}
                       className="inline-flex items-center gap-0.5 rounded-md border border-blue-200 bg-blue-50 px-2 py-1 text-xs font-medium text-blue-900 hover:bg-blue-100 disabled:opacity-50"
-                      title="Vote yes"
+                      title="Phiếu đồng ý"
                     >
                       <ThumbsUp className="h-3.5 w-3.5" />
                     </button>
@@ -795,7 +804,7 @@ export default function LeaderChildrenPage() {
                       disabled={voteBusyId === u.id}
                       onClick={() => handleVoteNo(u.id)}
                       className="inline-flex items-center gap-0.5 rounded-md border border-red-200 bg-red-50 px-2 py-1 text-xs font-medium text-red-800 hover:bg-red-100 disabled:opacity-50"
-                      title="Vote no"
+                      title="Phiếu từ chối"
                     >
                       <ThumbsDown className="h-3.5 w-3.5" />
                     </button>
@@ -848,7 +857,7 @@ export default function LeaderChildrenPage() {
                 type="button"
                 onClick={() => !approveSubmitting && !executing && setApproveModal(null)}
                 className="shrink-0 rounded-lg p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-700 disabled:opacity-50"
-                aria-label="Close"
+                aria-label="Đóng"
               >
                 <X className="h-5 w-5" />
               </button>
@@ -983,7 +992,7 @@ export default function LeaderChildrenPage() {
                 type="button"
                 onClick={() => !configNeedsSubmitting && !executing && setNeedsConfigChild(null)}
                 className="shrink-0 rounded-lg p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-700 disabled:opacity-50"
-                aria-label="Close"
+                aria-label="Đóng"
               >
                 <X className="h-5 w-5" />
               </button>
@@ -1104,7 +1113,7 @@ export default function LeaderChildrenPage() {
                 type="button"
                 onClick={() => setRefuseModal(null)}
                 className="rounded-lg p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-700"
-                aria-label="Close"
+                aria-label="Đóng"
               >
                 <X className="h-5 w-5" />
               </button>
@@ -1114,7 +1123,7 @@ export default function LeaderChildrenPage() {
               onChange={(e) => setRefuseReason(e.target.value)}
               rows={3}
               className="mb-4 w-full rounded-lg border border-slate-200 p-2 text-sm outline-none ring-blue-800/20 focus:ring-2"
-              placeholder="Optional reason…"
+              placeholder="Lý do (tùy chọn)…"
             />
             <div className="flex justify-end gap-2">
               <button
@@ -1141,7 +1150,7 @@ export default function LeaderChildrenPage() {
       )}
 
       <DetailModal
-        title="Child profile"
+        title="Hồ sơ trẻ"
         open={childDetailOpen}
         onClose={() => {
           setChildDetailOpen(false);
@@ -1209,7 +1218,7 @@ export default function LeaderChildrenPage() {
       </DetailModal>
 
       <DetailModal
-        title="Child upload request"
+        title="Yêu cầu tải hồ sơ trẻ"
         open={uploadDetailOpen}
         onClose={() => {
           setUploadDetailOpen(false);
@@ -1234,7 +1243,7 @@ export default function LeaderChildrenPage() {
                 {detailField('Status', <StatusBadge status={u.status} />)}
                 {detailField('Review status', u.review_status ? <StatusBadge status={u.review_status} /> : <span className="text-slate-400">—</span>)}
                 {detailField('Reviewed by', u.reviewed_by ? <CopyableTruncated value={u.reviewed_by} /> : '—')}
-                {detailField('AI note', u.ai_evaluation ?? '—')}
+                {detailField('Đánh giá AI', u.ai_evaluation ?? '—')}
                 {detailField('Người tạo', <CopyableTruncated value={u.created_by} />)}
                 {detailField('Ngày tạo', formatDate(u.created_at))}
                 {detailField('Updated', formatDate(u.updated_at))}

@@ -81,21 +81,21 @@ export default function LeaderCentersPage() {
 
   const columns = [
     { key: 'region', label: 'Vùng' },
-    { key: 'center_address', label: 'Address' },
-    { key: 'center_phone_number', label: 'Phone' },
+    { key: 'center_address', label: 'Địa chỉ' },
+    { key: 'center_phone_number', label: 'Điện thoại' },
     {
       key: 'uploaded_at',
-      label: 'Uploaded',
+      label: 'Ngày tải lên',
       render: (row: SupportCenter) => formatDate(row.uploaded_at),
     },
     {
       key: 'updated_at',
-      label: 'Updated',
+      label: 'Cập nhật',
       render: (row: SupportCenter) => formatDate(row.updated_at),
     },
     {
       key: 'actions',
-      label: 'Actions',
+      label: 'Thao tác',
       className: 'whitespace-nowrap',
       render: (row: SupportCenter) => (
         <button
@@ -107,7 +107,7 @@ export default function LeaderCentersPage() {
           }}
           className="rounded-lg border border-slate-200 bg-white px-2 py-1 text-xs font-medium text-slate-800 hover:bg-slate-50"
         >
-          Details
+          Chi tiết
         </button>
       ),
     },
@@ -116,8 +116,8 @@ export default function LeaderCentersPage() {
   return (
     <div>
       <PageHeader
-        title="Centers"
-        description="View your center registrations and submit new ones"
+        title="Trung tâm"
+        description="Xem đăng ký trung tâm của bạn và gửi đăng ký mới"
         actions={
           <button
             type="button"
@@ -125,14 +125,14 @@ export default function LeaderCentersPage() {
             className="inline-flex items-center gap-2 rounded-lg bg-blue-800 px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-blue-900"
           >
             <Plus className="h-4 w-4" />
-            Create
+            Tạo mới
           </button>
         }
       />
 
       {!user?.address ? (
         <div className="rounded-xl border border-slate-200 bg-white p-8 text-center text-sm text-slate-500">
-          Connect your wallet to load your centers.
+          Kết nối ví để tải trung tâm của bạn.
         </div>
       ) : (
         <DataTable<SupportCenter>
@@ -142,7 +142,7 @@ export default function LeaderCentersPage() {
           page={page}
           totalPages={totalPages}
           onPageChange={setPage}
-          emptyMessage="No center registrations yet"
+          emptyMessage="Chưa có đăng ký trung tâm"
         />
       )}
 
@@ -156,7 +156,7 @@ export default function LeaderCentersPage() {
       />
 
       <DetailModal
-        title="Support center"
+        title="Trung tâm hỗ trợ"
         open={centerDetailOpen}
         onClose={() => {
           setCenterDetailOpen(false);
@@ -170,15 +170,15 @@ export default function LeaderCentersPage() {
             const blobs = collectBlobIdEntries(c);
             return (
               <div className="space-y-1">
-                {detailField('ID', <span className="font-mono text-xs break-all">{c.id}</span>)}
+                {detailField('Mã', <span className="font-mono text-xs break-all">{c.id}</span>)}
                 {detailField('Vùng', c.region)}
-                {detailField('Address', c.center_address)}
-                {detailField('Phone', c.center_phone_number)}
-                {detailField('Uploaded', formatDate(c.uploaded_at))}
-                {detailField('Updated', formatDate(c.updated_at))}
+                {detailField('Địa chỉ', c.center_address)}
+                {detailField('Điện thoại', c.center_phone_number)}
+                {detailField('Ngày tải lên', formatDate(c.uploaded_at))}
+                {detailField('Cập nhật', formatDate(c.updated_at))}
                 {blobs.length > 0 && (
                   <div className="border-t border-slate-100 pt-3">
-                    <div className="mb-2 text-xs font-medium text-slate-600">Images</div>
+                    <div className="mb-2 text-xs font-medium text-slate-600">Hình ảnh</div>
                     <div className="flex flex-wrap gap-4">
                       {blobs.map(({ key, blobId }) => (
                         <div key={key} className="text-center">

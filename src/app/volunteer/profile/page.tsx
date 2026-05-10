@@ -44,7 +44,7 @@ export default function VolunteerProfilePage() {
 
   const handleSave = async () => {
     if (!user?.profileId) {
-      toast.error('No profile ID found');
+      toast.error('Không tìm thấy ID hồ sơ');
       return;
     }
     setSaving(true);
@@ -62,7 +62,7 @@ export default function VolunteerProfilePage() {
       toast.success('Đã cập nhật hồ sơ');
       void loadProfile();
     } catch (e: any) {
-      toast.error(e?.response?.data?.message || 'Update failed');
+      toast.error(e?.response?.data?.message || 'Cập nhật thất bại');
     } finally {
       setSaving(false);
     }
@@ -78,7 +78,7 @@ export default function VolunteerProfilePage() {
 
   return (
     <div className="space-y-6">
-      <PageHeader title="Profile" description="View and edit your personal information" />
+      <PageHeader title="Hồ sơ" description="Xem và chỉnh sửa thông tin cá nhân" />
 
       {/* Wallet overview */}
       <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
@@ -97,10 +97,10 @@ export default function VolunteerProfilePage() {
 
       {/* Edit form */}
       <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
-        <h2 className="mb-4 text-lg font-semibold text-slate-900">Edit Information</h2>
+        <h2 className="mb-4 text-lg font-semibold text-slate-900">Chỉnh sửa thông tin</h2>
         <div className="grid gap-4 max-w-2xl sm:grid-cols-2">
           <div>
-            <label className="mb-1 block text-xs font-medium text-slate-500">First name</label>
+            <label className="mb-1 block text-xs font-medium text-slate-500">Tên</label>
             <input
               type="text"
               value={firstName}
@@ -109,7 +109,7 @@ export default function VolunteerProfilePage() {
             />
           </div>
           <div>
-            <label className="mb-1 block text-xs font-medium text-slate-500">Last name</label>
+            <label className="mb-1 block text-xs font-medium text-slate-500">Họ</label>
             <input
               type="text"
               value={lastName}
@@ -118,20 +118,20 @@ export default function VolunteerProfilePage() {
             />
           </div>
           <div>
-            <label className="mb-1 block text-xs font-medium text-slate-500">Gender</label>
+            <label className="mb-1 block text-xs font-medium text-slate-500">Giới tính</label>
             <select
               value={gender}
               onChange={(e) => setGender(e.target.value)}
               className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-blue-700 focus:outline-none focus:ring-1 focus:ring-blue-700"
             >
-              <option value="">Select</option>
-              <option value="male">Male</option>
-              <option value="female">Female</option>
-              <option value="other">Other</option>
+              <option value="">Chọn</option>
+              <option value="male">Nam</option>
+              <option value="female">Nữ</option>
+              <option value="other">Khác</option>
             </select>
           </div>
           <div>
-            <label className="mb-1 block text-xs font-medium text-slate-500">Date of birth</label>
+            <label className="mb-1 block text-xs font-medium text-slate-500">Ngày sinh</label>
             <input
               type="date"
               value={dob}
@@ -140,7 +140,7 @@ export default function VolunteerProfilePage() {
             />
           </div>
           <div>
-            <label className="mb-1 block text-xs font-medium text-slate-500">Phone</label>
+            <label className="mb-1 block text-xs font-medium text-slate-500">Điện thoại</label>
             <input
               type="tel"
               value={phone}
@@ -158,7 +158,7 @@ export default function VolunteerProfilePage() {
             />
           </div>
           <div className="sm:col-span-2">
-            <label className="mb-1 block text-xs font-medium text-slate-500">Identity code</label>
+            <label className="mb-1 block text-xs font-medium text-slate-500">Số định danh</label>
             <input
               type="text"
               value={identityCode}
@@ -173,7 +173,7 @@ export default function VolunteerProfilePage() {
           className="mt-6 inline-flex items-center gap-2 rounded-lg bg-blue-800 px-5 py-2.5 text-sm font-medium text-white hover:bg-blue-900 disabled:opacity-50"
         >
           <Save className="h-4 w-4" />
-          {saving ? 'Đang lưu...' : 'Save changes'}
+          {saving ? 'Đang lưu...' : 'Lưu thay đổi'}
         </button>
       </div>
     </div>

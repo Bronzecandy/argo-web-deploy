@@ -23,11 +23,11 @@ const PAGE_SIZE = 20;
 /** Values aligned with backend `review_status` (e.g. "Approved"). */
 const STATUS_OPTIONS = [
   { value: '', label: 'Tất cả trạng thái' },
-  { value: 'Pending', label: 'Pending' },
-  { value: 'PendingReview', label: 'Pending review' },
-  { value: 'Approved', label: 'Approved' },
-  { value: 'Refused', label: 'Refused' },
-  { value: 'Rejected', label: 'Rejected' },
+  { value: 'Pending', label: 'Chờ xử lý' },
+  { value: 'PendingReview', label: 'Chờ duyệt' },
+  { value: 'Approved', label: 'Đã duyệt' },
+  { value: 'Refused', label: 'Đã từ chối' },
+  { value: 'Rejected', label: 'Bị từ chối' },
 ];
 
 /** Normalize API status for comparison (handles "Pending Review", empty, etc.). */
@@ -132,7 +132,7 @@ export default function LeaderTaskProofsPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!taskId.trim() || !imageBlobId.trim()) {
-      toast.error('Task ID and image blob ID are required');
+      toast.error('Vui lòng nhập ID nhiệm vụ và ID blob ảnh');
       return;
     }
     setSubmitting(true);
@@ -154,7 +154,7 @@ export default function LeaderTaskProofsPage() {
   const handleApprove = async (id: string) => {
     const ok = await execute(
       () => taskProofService.approve(id),
-      { successMessage: 'Proof approved & executed on-chain' },
+      { successMessage: 'Đã duyệt bằng chứng và thực thi on-chain' },
     );
     if (ok) refresh();
   };
@@ -173,20 +173,20 @@ export default function LeaderTaskProofsPage() {
   return (
     <div className="space-y-8">
       <PageHeader
-        title="Task proofs"
+        title="Bằng chứng nhiệm vụ"
         description={
           user?.address
-            ? `Submit and review task proof images · ${truncateAddress(user.address)}`
-            : 'Submit and review task proof images'
+            ? `Gửi và duyệt ảnh bằng chứng nhiệm vụ · ${truncateAddress(user.address)}`
+            : 'Gửi và duyệt ảnh bằng chứng nhiệm vụ'
         }
       />
 
       <section className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
-        <h2 className="mb-4 text-lg font-semibold text-slate-900">Submit new proof</h2>
+        <h2 className="mb-4 text-lg font-semibold text-slate-900">Gửi bằng chứng mới</h2>
         <form onSubmit={handleSubmit} className="max-w-xl space-y-4">
           <div>
             <label htmlFor="task_id" className="mb-1 block text-xs font-medium text-slate-500">
-              Task ID
+              ID nhiệm vụ
             </label>
             <input
               id="task_id"
@@ -197,26 +197,26 @@ export default function LeaderTaskProofsPage() {
             />
           </div>
           <FileUploadInput
-            label="Proof image"
+            label="Ảnh bằng chứng"
             value={imageBlobId}
             onChange={setImageBlobId}
             accept="image/*"
-            placeholder="Upload proof image or paste blob ID"
+            placeholder="Tải ảnh bằng chứng hoặc dán ID blob"
           />
           <button
             type="submit"
             disabled={submitting}
             className="rounded-lg bg-blue-800 px-4 py-2 text-sm font-medium text-white transition hover:bg-blue-900 disabled:opacity-50"
           >
-            {submitting ? 'Submitting…' : 'Submit proof'}
+            {submitting ? 'Đang gửi…' : 'Gửi bằng chứng'}
           </button>
         </form>
       </section>
 
       <section className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
-        <h2 className="mb-4 text-lg font-semibold text-slate-900">Proofs</h2>
+        <h2 className="mb-4 text-lg font-semibold text-slate-900">Danh sách bằng chứng</h2>
         <div className="mb-4">
-          <label className="mb-1 block text-xs font-medium text-slate-500">Review status</label>
+          <label className="mb-1 block text-xs font-medium text-slate-500">Trạng thái duyệt</label>
           <select
             value={status}
             onChange={(e) => {
@@ -236,13 +236,13 @@ export default function LeaderTaskProofsPage() {
           columns={[
             {
               key: 'task_id',
-              label: 'Task',
+              label: 'Nhiệm vụ',
               render: (r) => (r.task_id ? <CopyableTruncated value={r.task_id} chars={4} /> : '-'),
             },
-            { key: 'actor_address', label: 'Actor', render: (r) => <CopyableTruncated value={r.actor_address} /> },
+            { key: 'actor_address', label: 'Người thực hiện', render: (r) => <CopyableTruncated value={r.actor_address} /> },
             {
               key: 'image_blob_id',
-              label: 'Image',
+              label: 'Ảnh',
               render: (r) => {
                 const url = blobService.getUrl(r.image_blob_id);
                 if (!url) return '-';
@@ -255,17 +255,26 @@ export default function LeaderTaskProofsPage() {
             },
             {
               key: 'review_status',
-              label: 'Status',
+              label: 'Trạng thái',
               render: (r) => {
                 const label = proofReviewStatus(r);
                 return label ? <StatusBadge status={label} /> : <span className="text-slate-400">—</span>;
               },
             },
-            { key: 'reviewed_by', label: 'Reviewed by', render: (r) => (r.reviewed_by ? <CopyableTruncated value={r.reviewed_by} /> : '-') },
+            {
+              key: 'ai_evaluation',
+              label: 'Đánh giá AI',
+              render: (r) => (
+                <span className="max-w-[200px] truncate text-slate-600" title={r.ai_evaluation}>
+                  {r.ai_evaluation ?? '—'}
+                </span>
+              ),
+            },
+            { key: 'reviewed_by', label: 'Người duyệt', render: (r) => (r.reviewed_by ? <CopyableTruncated value={r.reviewed_by} /> : '-') },
             { key: 'created_at', label: 'Ngày tạo', render: (r) => formatDate(r.created_at) },
             {
               key: 'actions',
-              label: 'Actions',
+              label: 'Thao tác',
               className: 'whitespace-nowrap',
               render: (r) => {
                 const actionable = isProofActionable(proofReviewStatus(r));
@@ -281,12 +290,12 @@ export default function LeaderTaskProofsPage() {
                       }}
                       className="rounded-lg border border-slate-200 bg-white px-2 py-1 text-xs font-medium text-slate-800 hover:bg-slate-50"
                     >
-                      Details
+                      Chi tiết
                     </button>
                     <button
                       type="button"
                       disabled={!actionable}
-                      title={actionable ? undefined : 'This proof is already reviewed'}
+                      title={actionable ? undefined : 'Bằng chứng này đã được duyệt'}
                       onClick={(e) => {
                         e.stopPropagation();
                         if (!actionable) return;
@@ -294,12 +303,12 @@ export default function LeaderTaskProofsPage() {
                       }}
                       className="rounded-lg border border-blue-200 px-2 py-1 text-xs font-medium text-blue-900 hover:bg-blue-50 disabled:pointer-events-none disabled:opacity-40 disabled:grayscale"
                     >
-                      Approve
+                      Duyệt
                     </button>
                     <button
                       type="button"
                       disabled={!actionable}
-                      title={actionable ? undefined : 'This proof is already reviewed'}
+                      title={actionable ? undefined : 'Bằng chứng này đã được duyệt'}
                       onClick={(e) => {
                         e.stopPropagation();
                         if (!actionable) return;
@@ -307,7 +316,7 @@ export default function LeaderTaskProofsPage() {
                       }}
                       className="rounded-lg border border-red-200 px-2 py-1 text-xs font-medium text-red-700 hover:bg-red-50 disabled:pointer-events-none disabled:opacity-40 disabled:grayscale"
                     >
-                      Refuse
+                      Từ chối
                     </button>
                   </div>
                 );
@@ -319,12 +328,12 @@ export default function LeaderTaskProofsPage() {
           page={page}
           totalPages={totalPages}
           onPageChange={setPage}
-          emptyMessage="No task proofs match your filters"
+          emptyMessage="Không có bằng chứng nào khớp bộ lọc"
         />
       </section>
 
       <DetailModal
-        title="Task proof"
+        title="Chi tiết bằng chứng nhiệm vụ"
         open={proofDetailOpen}
         onClose={() => {
           setProofDetailOpen(false);
@@ -341,20 +350,20 @@ export default function LeaderTaskProofsPage() {
           const label = proofReviewStatus(p);
           return (
             <div className="space-y-1">
-              {detailField('ID', <CopyableTruncated value={p.id} chars={4} />)}
-              {detailField('Task ID', p.task_id ? <CopyableTruncated value={p.task_id} chars={4} /> : '—')}
-              {detailField('Actor', <CopyableTruncated value={p.actor_address} />)}
-              {detailField('Actor profile', p.actor_profile_id ? <CopyableTruncated value={p.actor_profile_id} /> : '—')}
-              {detailField('Status', label ? <StatusBadge status={label} /> : <span className="text-slate-400">—</span>)}
-              {detailField('Description', p.description ?? '—')}
-              {detailField('AI note', p.ai_evaluation ?? '—')}
-              {detailField('Raw submit date', p.raw_submit_date ? formatDate(p.raw_submit_date) : '—')}
-              {detailField('Reviewed by', p.reviewed_by ? <CopyableTruncated value={p.reviewed_by} /> : '—')}
+              {detailField('Mã', <CopyableTruncated value={p.id} chars={4} />)}
+              {detailField('ID nhiệm vụ', p.task_id ? <CopyableTruncated value={p.task_id} chars={4} /> : '—')}
+              {detailField('Người thực hiện', <CopyableTruncated value={p.actor_address} />)}
+              {detailField('Hồ sơ người thực hiện', p.actor_profile_id ? <CopyableTruncated value={p.actor_profile_id} /> : '—')}
+              {detailField('Trạng thái', label ? <StatusBadge status={label} /> : <span className="text-slate-400">—</span>)}
+              {detailField('Mô tả', p.description ?? '—')}
+              {detailField('Ghi chú AI', p.ai_evaluation ?? '—')}
+              {detailField('Ngày gửi thô', p.raw_submit_date ? formatDate(p.raw_submit_date) : '—')}
+              {detailField('Người duyệt', p.reviewed_by ? <CopyableTruncated value={p.reviewed_by} /> : '—')}
               {detailField('Ngày tạo', formatDate(p.created_at))}
-              {detailField('Updated', formatDate(p.updated_at))}
+              {detailField('Cập nhật lúc', formatDate(p.updated_at))}
               {blobs.length > 0 && (
                 <div className="border-t border-slate-100 pt-3">
-                  <div className="mb-2 text-xs font-medium text-slate-600">Images (Walrus)</div>
+                  <div className="mb-2 text-xs font-medium text-slate-600">Ảnh (Walrus)</div>
                   <div className="flex flex-wrap gap-4">
                     {blobs.map(({ key, blobId }) => (
                       <div key={key} className="text-center">

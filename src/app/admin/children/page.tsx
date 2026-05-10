@@ -18,9 +18,9 @@ const PAGE_SIZE = 20;
 
 const GENDER_OPTIONS = [
   { value: '', label: 'Tất cả giới tính' },
-  { value: 'male', label: 'Male' },
-  { value: 'female', label: 'Female' },
-  { value: 'other', label: 'Other' },
+  { value: 'male', label: 'Nam' },
+  { value: 'female', label: 'Nữ' },
+  { value: 'other', label: 'Khác' },
 ];
 
 function ChildDetailWalrusImage({
@@ -111,25 +111,25 @@ export default function AdminChildrenPage() {
   return (
     <div className="p-6">
       <PageHeader
-        title="Children"
-        description="Browse on-chain child profiles (upload request review is handled by local leaders)"
+        title="Trẻ em"
+        description="Xem hồ sơ trẻ trên chuỗi (duyệt yêu cầu upload do trưởng vùng phụ trách)"
         actions={
           <span className="rounded-lg border border-blue-200 bg-blue-50 px-3 py-1.5 text-xs font-medium text-blue-900">
-            Admin
+            Quản trị
           </span>
         }
       />
 
       <div className="mb-6 flex items-center gap-2 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-600">
         <Baby className="h-4 w-4 text-blue-800" />
-        <span>Child profiles list</span>
+        <span>Danh sách hồ sơ trẻ</span>
       </div>
 
       <div className="space-y-4">
         <div className="flex flex-wrap gap-3">
           <input
             type="text"
-            placeholder="Region"
+            placeholder="Vùng"
             value={childRegion}
             onChange={(e) => {
               setChildRegion(e.target.value);
@@ -157,24 +157,24 @@ export default function AdminChildrenPage() {
           columns={[
             {
               key: 'name',
-              label: 'Name',
+              label: 'Họ tên',
               render: (c) => (
                 <span>
                   {c.first_name} {c.last_name}
                 </span>
               ),
             },
-            { key: 'gender', label: 'Gender', render: (c) => <span className="capitalize">{c.gender}</span> },
+            { key: 'gender', label: 'Giới tính', render: (c) => <span className="capitalize">{c.gender}</span> },
             { key: 'region', label: 'Vùng' },
             { key: 'date_of_birth', label: 'Ngày sinh', render: (c) => formatDate(c.date_of_birth) },
             {
               key: 'identity_code',
-              label: 'Identity',
+              label: 'CMND/CCCD',
               render: (c) => <CopyableTruncated value={c.identity_code} chars={10} />,
             },
             {
               key: 'actions',
-              label: 'Actions',
+              label: 'Thao tác',
               className: 'whitespace-nowrap',
               render: (c) => (
                 <button
@@ -185,7 +185,7 @@ export default function AdminChildrenPage() {
                   }}
                   className="rounded-lg border border-blue-200 px-2 py-1 text-xs font-medium text-blue-900 hover:bg-blue-50"
                 >
-                  Details
+                  Chi tiết
                 </button>
               ),
             },
@@ -195,12 +195,12 @@ export default function AdminChildrenPage() {
           page={childPage}
           totalPages={childTotalPages}
           onPageChange={(p) => setChildPage(p)}
-          emptyMessage="Không tìm thấy trẻ em for the selected filters."
+          emptyMessage="Không tìm thấy trẻ em phù hợp bộ lọc."
         />
       </div>
 
       <DetailModal
-        title="Child profile"
+        title="Hồ sơ trẻ"
         open={detailOpen}
         onClose={() => {
           setDetailOpen(false);
@@ -213,39 +213,39 @@ export default function AdminChildrenPage() {
         {detailChild && (
           <div className="space-y-3 text-sm">
             <div className="flex flex-wrap gap-4">
-              <ChildDetailWalrusImage label="Avatar" blobId={detailChild.avatar_blob_id} />
-              <ChildDetailWalrusImage label="Home" blobId={detailChild.home_blob_id} />
-              <ChildDetailWalrusImage label="Birth certificate" blobId={detailChild.birth_certificate_blob_id} />
+              <ChildDetailWalrusImage label="Ảnh đại diện" blobId={detailChild.avatar_blob_id} />
+              <ChildDetailWalrusImage label="Ảnh nhà ở" blobId={detailChild.home_blob_id} />
+              <ChildDetailWalrusImage label="Giấy khai sinh" blobId={detailChild.birth_certificate_blob_id} />
               <ChildDetailWalrusImage
-                label="Guardian ID card"
+                label="CMND/CCCD người giám hộ"
                 blobId={detailChild.first_guardian?.identity_card_blob_id}
               />
               <ChildDetailWalrusImage
-                label="Second guardian ID card"
+                label="CMND/CCCD người giám hộ thứ hai"
                 blobId={detailChild.second_guardian?.identity_card_blob_id}
               />
             </div>
             <p>
-              <span className="text-slate-500">Name:</span>{' '}
+              <span className="text-slate-500">Họ tên:</span>{' '}
               <span className="font-medium">
                 {detailChild.first_name} {detailChild.last_name}
               </span>
             </p>
             <p className="flex flex-wrap items-center gap-2">
-              <span className="text-slate-500">ID:</span> <CopyableTruncated value={detailChild.id} chars={8} />
+              <span className="text-slate-500">Mã:</span> <CopyableTruncated value={detailChild.id} chars={8} />
             </p>
             <p>
-              <span className="text-slate-500">Region:</span> {detailChild.region}
+              <span className="text-slate-500">Vùng:</span> {detailChild.region}
             </p>
             <p>
-              <span className="text-slate-500">DOB:</span> {formatDate(detailChild.date_of_birth)}
+              <span className="text-slate-500">Ngày sinh:</span> {formatDate(detailChild.date_of_birth)}
             </p>
             <p>
-              <span className="text-slate-500">Home:</span> {detailChild.home_address || '—'}
+              <span className="text-slate-500">Địa chỉ nhà:</span> {detailChild.home_address || '—'}
             </p>
             {detailChild.image_blob_ids && detailChild.image_blob_ids.length > 0 && (
               <div>
-                <p className="mb-2 text-xs font-medium text-slate-500">Gallery</p>
+                <p className="mb-2 text-xs font-medium text-slate-500">Thư viện ảnh</p>
                 <div className="flex flex-wrap gap-2">
                   {detailChild.image_blob_ids.map((bid) => (
                     <ExpandableImage

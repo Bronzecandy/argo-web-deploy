@@ -76,7 +76,7 @@ export default function LeaderCampaignsPage() {
     e.preventDefault();
     const targetNum = Number(target);
     if (!childId.trim() || !description.trim() || !Number.isFinite(targetNum) || targetNum <= 0) {
-      toast.error('Valid child ID, description, and target amount are required');
+      toast.error('Vui lòng nhập mã trẻ, mô tả và số tiền mục tiêu hợp lệ');
       return;
     }
     const data: CreateSpecialNeedProposalRequest = {
@@ -107,11 +107,11 @@ export default function LeaderCampaignsPage() {
   return (
     <div className="space-y-8">
       <PageHeader
-        title="Special need campaigns"
+        title="Chiến dịch nhu cầu đặc biệt"
         description={
           user?.address
-            ? `Review pending proposals and submit new urgent special needs · ${truncateAddress(user.address)}`
-            : 'Review pending proposals and submit new urgent special needs'
+            ? `Duyệt đề xuất đang chờ và gửi đề xuất nhu cầu đặc biệt khẩn cấp · ${truncateAddress(user.address)}`
+            : 'Duyệt đề xuất đang chờ và gửi đề xuất nhu cầu đặc biệt khẩn cấp'
         }
         actions={
           <button
@@ -120,29 +120,29 @@ export default function LeaderCampaignsPage() {
             className="inline-flex items-center gap-2 rounded-lg bg-blue-800 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-blue-900"
           >
             <Plus className="h-4 w-4" />
-            Create proposal
+            Tạo đề xuất
           </button>
         }
       />
 
       <section className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
-        <h2 className="mb-4 text-lg font-semibold text-slate-900">Pending special needs</h2>
+        <h2 className="mb-4 text-lg font-semibold text-slate-900">Nhu cầu đặc biệt đang chờ</h2>
         <DataTable<PendingSpecialNeedProposal>
           columns={[
-            { key: 'child_id', label: 'Child', render: (r) => <CopyableTruncated value={r.child_id} chars={4} /> },
+            { key: 'child_id', label: 'Trẻ', render: (r) => <CopyableTruncated value={r.child_id} chars={4} /> },
             {
               key: 'description',
-              label: 'Description',
+              label: 'Mô tả',
               render: (r) => <span className="line-clamp-2 max-w-xs">{r.description}</span>,
             },
-            { key: 'target', label: 'Target', render: (r) => formatVND(r.target) },
+            { key: 'target', label: 'Mục tiêu', render: (r) => formatVND(r.target) },
             { key: 'region', label: 'Vùng' },
             {
               key: 'ai_evaluation',
-              label: 'AI evaluation',
+              label: 'Đánh giá AI',
               render: (r) => <span className="line-clamp-2 max-w-[200px] text-xs">{r.ai_evaluation || '-'}</span>,
             },
-            { key: 'review_status', label: 'Review', render: (r) => <StatusBadge status={r.review_status} /> },
+            { key: 'review_status', label: 'Duyệt', render: (r) => <StatusBadge status={r.review_status} /> },
             { key: 'created_at', label: 'Ngày tạo', render: (r) => formatDate(r.created_at) },
             {
               key: 'details',
@@ -156,7 +156,7 @@ export default function LeaderCampaignsPage() {
                   }}
                   className="rounded-lg border border-slate-200 px-2 py-1 text-xs font-medium text-slate-700 hover:bg-slate-50"
                 >
-                  Details
+                  Chi tiết
                 </button>
               ),
             },
@@ -166,12 +166,12 @@ export default function LeaderCampaignsPage() {
           page={page}
           totalPages={totalPages}
           onPageChange={setPage}
-          emptyMessage="No pending special needs"
+          emptyMessage="Không có nhu cầu đặc biệt đang chờ"
         />
       </section>
 
       <DetailModal
-        title="Special need proposal"
+        title="Đề xuất nhu cầu đặc biệt"
         open={detailId !== null}
         onClose={() => setDetailId(null)}
         loading={detailLoading}
@@ -180,19 +180,19 @@ export default function LeaderCampaignsPage() {
         {detailRow && (
           <div className="space-y-2 text-sm">
             <p className="flex flex-wrap items-center gap-2">
-              <span className="text-slate-500">ID:</span> <CopyableTruncated value={detailRow.id} chars={4} />
+              <span className="text-slate-500">Mã:</span> <CopyableTruncated value={detailRow.id} chars={4} />
             </p>
             <p className="flex flex-wrap items-center gap-2">
-              <span className="text-slate-500">Child:</span> <CopyableTruncated value={detailRow.child_id} chars={4} />
+              <span className="text-slate-500">Trẻ:</span> <CopyableTruncated value={detailRow.child_id} chars={4} />
             </p>
             <p>
-              <span className="text-slate-500">Region:</span> {detailRow.region}
+              <span className="text-slate-500">Vùng:</span> {detailRow.region}
             </p>
             <p>
-              <span className="text-slate-500">Description:</span> {detailRow.description}
+              <span className="text-slate-500">Mô tả:</span> {detailRow.description}
             </p>
             <p>
-              <span className="text-slate-500">Target:</span> {formatVND(detailRow.target)}
+              <span className="text-slate-500">Mục tiêu:</span> {formatVND(detailRow.target)}
             </p>
             <p>
               <span className="text-slate-500">AI:</span> {detailRow.ai_evaluation || '—'}
@@ -208,19 +208,19 @@ export default function LeaderCampaignsPage() {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 p-4">
           <div className="max-h-[90vh] w-full max-w-xl overflow-y-auto rounded-xl border border-slate-200 bg-white p-6 shadow-xl">
             <div className="mb-4 flex items-center justify-between">
-              <h2 className="text-lg font-semibold text-slate-900">Create special need proposal</h2>
+              <h2 className="text-lg font-semibold text-slate-900">Tạo đề xuất nhu cầu đặc biệt</h2>
               <button
                 type="button"
                 onClick={() => setCreateOpen(false)}
                 className="rounded-lg px-2 py-1 text-sm text-slate-500 hover:bg-slate-100"
               >
-                Close
+                Đóng
               </button>
             </div>
             <form onSubmit={handleCreateProposal} className="space-y-4">
               <div>
                 <label htmlFor="child_id" className="mb-1 block text-xs font-medium text-slate-500">
-                  Child ID
+                  Mã trẻ
                 </label>
                 <input
                   id="child_id"
@@ -232,7 +232,7 @@ export default function LeaderCampaignsPage() {
               </div>
               <div>
                 <label htmlFor="desc" className="mb-1 block text-xs font-medium text-slate-500">
-                  Description
+                  Mô tả
                 </label>
                 <textarea
                   id="desc"
@@ -244,7 +244,7 @@ export default function LeaderCampaignsPage() {
               </div>
               <div>
                 <label htmlFor="target" className="mb-1 block text-xs font-medium text-slate-500">
-                  Target (VND)
+                  Mục tiêu (VND)
                 </label>
                 <GroupedNumericInput
                   id="target"
@@ -254,13 +254,13 @@ export default function LeaderCampaignsPage() {
                   className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-blue-800 focus:outline-none focus:ring-1 focus:ring-blue-800"
                 />
               </div>
-              <FileUploadInput label="Proof (optional)" value={proofBlobId} onChange={setProofBlobId} />
+              <FileUploadInput label="Ảnh chứng từ (tùy chọn)" value={proofBlobId} onChange={setProofBlobId} />
               <button
                 type="submit"
                 disabled={submitting}
                 className="rounded-lg bg-blue-800 px-4 py-2 text-sm font-medium text-white transition hover:bg-blue-900 disabled:opacity-50"
               >
-                {submitting ? 'Submitting…' : 'Submit proposal'}
+                {submitting ? 'Đang gửi…' : 'Gửi đề xuất'}
               </button>
             </form>
           </div>

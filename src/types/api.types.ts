@@ -102,6 +102,7 @@ export interface RegistrationRequest {
   created_at: string;
   updated_at: string;
   closed_at: string;
+  ai_evaluation?: string;
 }
 
 export interface CreateRegistrationRequest {

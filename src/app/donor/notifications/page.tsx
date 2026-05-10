@@ -47,14 +47,14 @@ export default function DonorNotificationsPage() {
   return (
     <div>
       <PageHeader
-        title="Notifications"
-        description="Stay updated with platform activities"
+        title="Thông báo"
+        description="Cập nhật hoạt động trên nền tảng"
       />
 
       {notifications.length === 0 ? (
         <div className="flex flex-col items-center justify-center rounded-xl border border-slate-200 bg-white p-12">
           <Inbox className="h-12 w-12 text-slate-300 mb-3" />
-          <p className="text-sm text-slate-400">No notifications yet</p>
+          <p className="text-sm text-slate-400">Chưa có thông báo</p>
         </div>
       ) : (
         <div className="space-y-2">
@@ -81,7 +81,7 @@ export default function DonorNotificationsPage() {
                 disabled={page === 0}
                 className="rounded-lg border border-slate-200 px-3 py-1.5 text-sm font-medium text-slate-600 hover:bg-slate-50 disabled:opacity-40"
               >
-                Previous
+                Trước
               </button>
               <span className="text-sm text-slate-500">Trang {page + 1} / {Math.max(1, totalPages)}</span>
               <button
@@ -90,7 +90,7 @@ export default function DonorNotificationsPage() {
                 disabled={page >= Math.max(1, totalPages) - 1}
                 className="rounded-lg border border-slate-200 px-3 py-1.5 text-sm font-medium text-slate-600 hover:bg-slate-50 disabled:opacity-40"
               >
-                Next
+                Sau
               </button>
             </div>
           )}

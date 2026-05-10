@@ -106,7 +106,7 @@ export default function AdminRegionsPage() {
   const submitRefuse = async () => {
     if (!refuseModal) return;
     if (!refuseReason.trim()) {
-      toast.error('Please enter a refuse reason');
+      toast.error('Vui lòng nhập lý do từ chối');
       return;
     }
     try {
@@ -126,27 +126,27 @@ export default function AdminRegionsPage() {
   return (
     <div className="space-y-6">
       <PageHeader
-        title="Supported region suggestions (admin)"
-        description="Review suggestions from local leaders — approve or refuse with an optional reason."
+        title="Đề xuất vùng được hỗ trợ (quản trị)"
+        description="Xem đề xuất từ trưởng vùng — phê duyệt hoặc từ chối (có thể kèm lý do)."
       />
 
       <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           <div>
-            <label className="mb-1 block text-xs font-medium text-slate-500">keyword</label>
+            <label className="mb-1 block text-xs font-medium text-slate-500">Từ khóa</label>
             <input
               value={keywordDraft}
               onChange={(e) => setKeywordDraft(e.target.value)}
-              placeholder="Search region or content…"
+              placeholder="Tìm vùng hoặc nội dung…"
               className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-blue-700 focus:outline-none focus:ring-1 focus:ring-blue-700"
             />
           </div>
           <div>
-            <label className="mb-1 block text-xs font-medium text-slate-500">created_by</label>
+            <label className="mb-1 block text-xs font-medium text-slate-500">Người tạo (địa chỉ ví)</label>
             <input
               value={createdByDraft}
               onChange={(e) => setCreatedByDraft(e.target.value)}
-              placeholder="Wallet address"
+              placeholder="Địa chỉ ví"
               className="w-full rounded-lg border border-slate-200 px-3 py-2 font-mono text-xs focus:border-blue-700 focus:outline-none focus:ring-1 focus:ring-blue-700"
             />
           </div>
@@ -160,7 +160,7 @@ export default function AdminRegionsPage() {
               }}
               className="rounded-lg bg-blue-800 px-4 py-2 text-sm font-medium text-white hover:bg-blue-900"
             >
-              Search
+              Tìm kiếm
             </button>
             <button
               type="button"
@@ -173,7 +173,7 @@ export default function AdminRegionsPage() {
               }}
               className="rounded-lg border border-slate-200 px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-50"
             >
-              Clear filters
+              Xóa bộ lọc
             </button>
           </div>
         </div>
@@ -185,22 +185,22 @@ export default function AdminRegionsPage() {
         page={page}
         totalPages={totalPages}
         onPageChange={setPage}
-        emptyMessage="No suggestions"
+        emptyMessage="Không có đề xuất"
         columns={[
-          { key: 'region', label: 'region' },
-          { key: 'content', label: 'content', render: (r) => <span className="max-w-md truncate">{r.content || '-'}</span> },
+          { key: 'region', label: 'Vùng' },
+          { key: 'content', label: 'Nội dung', render: (r) => <span className="max-w-md truncate">{r.content || '-'}</span> },
           {
             key: 'status',
-            label: 'status',
+            label: 'Trạng thái',
             render: (r) => <StatusBadge status={r.status || 'pending'} />,
           },
-          { key: 'created_by', label: 'created_by', render: (r) => <CopyableTruncated value={r.created_by} chars={6} /> },
+          { key: 'created_by', label: 'Người tạo', render: (r) => <CopyableTruncated value={r.created_by} chars={6} /> },
           {
             key: 'reviewed_by',
-            label: 'reviewed_by',
+            label: 'Người duyệt',
             render: (r) => (r.reviewed_by ? <CopyableTruncated value={r.reviewed_by} chars={6} /> : <span className="text-slate-400">—</span>),
           },
-          { key: 'created_at', label: 'created_at', render: (r) => formatDate(r.created_at) },
+          { key: 'created_at', label: 'Ngày tạo', render: (r) => formatDate(r.created_at) },
           {
             key: 'detail_btn',
             label: 'Chi tiết',
@@ -213,13 +213,13 @@ export default function AdminRegionsPage() {
                 }}
                 className="rounded-lg border border-slate-200 px-2 py-1 text-xs font-medium text-slate-700 hover:bg-slate-50"
               >
-                Details
+                Chi tiết
               </button>
             ),
           },
           {
             key: 'actions',
-            label: 'Actions',
+            label: 'Thao tác',
             className: 'whitespace-nowrap',
             render: (r) => {
               const can = isPendingReview(r.status);
@@ -231,7 +231,7 @@ export default function AdminRegionsPage() {
                     onClick={() => void handleApprove(r.id)}
                     className="rounded-lg border border-blue-200 px-2 py-1 text-xs font-medium text-blue-900 hover:bg-blue-50 disabled:cursor-not-allowed disabled:opacity-40"
                   >
-                    Approve
+                    Phê duyệt
                   </button>
                   <button
                     type="button"
@@ -239,7 +239,7 @@ export default function AdminRegionsPage() {
                     onClick={() => handleRefuse(r.id)}
                     className="rounded-lg border border-red-200 px-2 py-1 text-xs font-medium text-red-700 hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-40"
                   >
-                    Refuse
+                    Từ chối
                   </button>
                 </div>
               );
@@ -249,7 +249,7 @@ export default function AdminRegionsPage() {
       />
 
       <DetailModal
-        title="Supported region suggestion"
+        title="Đề xuất vùng được hỗ trợ"
         open={detailId !== null}
         onClose={() => setDetailId(null)}
         loading={detailLoading}
@@ -261,23 +261,23 @@ export default function AdminRegionsPage() {
           return (
             <div className="space-y-2 text-sm">
               <p className="flex flex-wrap items-center gap-2">
-                <span className="text-slate-500">id:</span> <CopyableTruncated value={r.id} chars={6} />
+                <span className="text-slate-500">Mã:</span> <CopyableTruncated value={r.id} chars={6} />
               </p>
               <p>
-                <span className="text-slate-500">region:</span> {r.region}
+                <span className="text-slate-500">Vùng:</span> {r.region}
               </p>
               <p>
-                <span className="text-slate-500">content:</span> {r.content}
+                <span className="text-slate-500">Nội dung:</span> {r.content}
               </p>
               <p>
-                <span className="text-slate-500">created_by:</span>{' '}
+                <span className="text-slate-500">Người tạo:</span>{' '}
                 <CopyableTruncated value={r.created_by} chars={6} />
               </p>
               <p>
-                <span className="text-slate-500">status:</span> <StatusBadge status={r.status || 'pending'} />
+                <span className="text-slate-500">Trạng thái:</span> <StatusBadge status={r.status || 'pending'} />
               </p>
               <p>
-                <span className="text-slate-500">created_at:</span> {formatDate(r.created_at)}
+                <span className="text-slate-500">Ngày tạo:</span> {formatDate(r.created_at)}
               </p>
             </div>
           );
@@ -288,7 +288,7 @@ export default function AdminRegionsPage() {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 p-4">
           <div className="w-full max-w-md rounded-xl border border-slate-200 bg-white p-5 shadow-xl">
             <div className="mb-3 flex items-center justify-between">
-              <h3 className="text-lg font-semibold text-slate-900">Refuse suggestion</h3>
+              <h3 className="text-lg font-semibold text-slate-900">Từ chối đề xuất</h3>
               <button
                 type="button"
                 onClick={() => setRefuseModal(null)}
@@ -297,13 +297,13 @@ export default function AdminRegionsPage() {
                 <X className="h-5 w-5" />
               </button>
             </div>
-            <p className="mb-2 text-sm text-slate-600">A reason is required when refusing a suggestion.</p>
+            <p className="mb-2 text-sm text-slate-600">Khi từ chối, bạn cần nhập lý do.</p>
             <textarea
               value={refuseReason}
               onChange={(e) => setRefuseReason(e.target.value)}
               rows={3}
               className="mb-4 w-full rounded-lg border border-slate-200 p-2 text-sm outline-none ring-blue-800/20 focus:ring-2"
-              placeholder="Reason…"
+              placeholder="Lý do…"
             />
             <div className="flex justify-end gap-2">
               <button
@@ -311,7 +311,7 @@ export default function AdminRegionsPage() {
                 onClick={() => setRefuseModal(null)}
                 className="rounded-lg border border-slate-200 px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
               >
-                Cancel
+                Hủy
               </button>
               <button
                 type="button"
@@ -319,7 +319,7 @@ export default function AdminRegionsPage() {
                 className="inline-flex items-center gap-1 rounded-lg bg-red-600 px-3 py-2 text-sm font-medium text-white hover:bg-red-700"
               >
                 <Check className="h-4 w-4" />
-                Confirm refuse
+                Xác nhận từ chối
               </button>
             </div>
           </div>

@@ -26,11 +26,11 @@ export default function DonorDonatePage() {
 
   const handleDonate = async () => {
     if (!poolId.trim()) {
-      toast.error('Please enter a pool ID');
+      toast.error('Vui lòng nhập mã quỹ (pool ID)');
       return;
     }
     if (!amount || amount < 1000) {
-      toast.error('Please enter a valid amount (minimum 1,000 VND)');
+      toast.error('Vui lòng nhập số tiền hợp lệ (tối thiểu 1.000 đ)');
       return;
     }
 
@@ -58,8 +58,8 @@ export default function DonorDonatePage() {
   return (
     <div>
       <PageHeader
-        title="Donate"
-        description="Make a donation to a specific pool via PayOS"
+        title="Quyên góp"
+        description="Quyên góp vào một quỹ cụ thể qua PayOS"
       />
 
       <div className="mx-auto max-w-lg">
@@ -69,30 +69,30 @@ export default function DonorDonatePage() {
               <HandCoins className="h-6 w-6 text-blue-800" />
             </div>
             <div>
-              <h2 className="text-lg font-bold text-slate-900">General Donation</h2>
-              <p className="text-sm text-slate-500">Donate to any pool in the network</p>
+              <h2 className="text-lg font-bold text-slate-900">Quyên góp chung</h2>
+              <p className="text-sm text-slate-500">Chọn quỹ bất kỳ trong mạng lưới</p>
             </div>
           </div>
 
           <div className="space-y-5">
             <div>
-              <label className="mb-1 block text-sm font-medium text-slate-700">Pool ID</label>
+              <label className="mb-1 block text-sm font-medium text-slate-700">Mã quỹ (Pool ID)</label>
               <input
                 type="text"
-                placeholder="Enter pool ID"
+                placeholder="Nhập mã quỹ"
                 value={poolId}
                 onChange={(e) => setPoolId(e.target.value)}
                 className="w-full rounded-lg border border-slate-200 px-3 py-2.5 text-sm focus:border-blue-700 focus:outline-none focus:ring-1 focus:ring-blue-700"
               />
               <p className="mt-1 text-xs text-slate-400">
-                You can find pool IDs on the child detail or campaign pages
+                Bạn có thể tìm mã quỹ ở trang chi tiết trẻ hoặc chiến dịch
               </p>
             </div>
 
             <div>
-              <label className="mb-1 block text-sm font-medium text-slate-700">Amount (VND)</label>
+              <label className="mb-1 block text-sm font-medium text-slate-700">Số tiền (VND)</label>
                 <GroupedNumericInput
-                  placeholder="Enter amount"
+                  placeholder="Nhập số tiền"
                   value={amountDigits}
                   onChange={setAmountDigits}
                   className="w-full rounded-lg border border-slate-200 px-3 py-2.5 text-sm focus:border-blue-700 focus:outline-none focus:ring-1 focus:ring-blue-700"
@@ -117,9 +117,9 @@ export default function DonorDonatePage() {
             </div>
 
             <div>
-              <label className="mb-1 block text-sm font-medium text-slate-700">Message (optional)</label>
+              <label className="mb-1 block text-sm font-medium text-slate-700">Lời nhắn (tùy chọn)</label>
               <textarea
-                placeholder="Leave a message for the community..."
+                placeholder="Để lại lời nhắn cho cộng đồng…"
                 value={message}
                 onChange={(e) => setMessage(e.target.value)}
                 rows={3}
@@ -130,10 +130,10 @@ export default function DonorDonatePage() {
             {amount > 0 && (
               <div className="rounded-lg bg-blue-50 p-4 border border-blue-100">
                 <p className="text-sm text-blue-900">
-                  You are about to donate <span className="font-bold">{formatVND(amount)}</span>
+                  Bạn sắp quyên góp <span className="font-bold">{formatVND(amount)}</span>
                 </p>
                 <p className="mt-1 text-xs text-blue-800">
-                  Payment will be processed securely via PayOS
+                  Thanh toán được xử lý an toàn qua PayOS
                 </p>
               </div>
             )}
@@ -146,12 +146,12 @@ export default function DonorDonatePage() {
               {submitting ? (
                 <>
                   <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
-                  Processing...
+                  Đang xử lý…
                 </>
               ) : (
                 <>
                   <ExternalLink className="h-4 w-4" />
-                  Donate Now
+                  Quyên góp ngay
                 </>
               )}
             </button>

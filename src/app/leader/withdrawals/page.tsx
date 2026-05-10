@@ -16,7 +16,7 @@ import FileUploadInput from '@/src/components/ui/FileUploadInput';
 import { Plus } from 'lucide-react';
 import type { Child, WithdrawProposal } from '@/src/types/api.types';
 
-type NeedKind = 'meal' | 'books' | 'health' | 'special';
+type NeedKind = 'meal' | 'books' | 'health' | '';
 type WithdrawMode = 'child' | 'pool';
 
 const PAGE_SIZE = 20;
@@ -39,12 +39,12 @@ function bookNeedOptionLabel(needIds: string[], index: number, id: string): stri
   const idShort = truncateAddress(id);
   const n = needIds.length;
   if (n === 2) {
-    return `${index === 0 ? 'Semester 1' : 'Semester 2'} · ${idShort}`;
+    return `${index === 0 ? 'Học kỳ 1' : 'Học kỳ 2'} · ${idShort}`;
   }
   if (n === 1) {
-    return `Books need · ${idShort}`;
+    return `Nhu cầu sách · ${idShort}`;
   }
-  return `Semester ${index + 1} · ${idShort}`;
+  return `Học kỳ ${index + 1} · ${idShort}`;
 }
 
 export default function LeaderWithdrawalsPage() {
@@ -73,8 +73,6 @@ export default function LeaderWithdrawalsPage() {
 
   const [needKind, setNeedKind] = useState<NeedKind | ''>('');
   const [booksNeedId, setBooksNeedId] = useState('');
-  const [specialDescription, setSpecialDescription] = useState('');
-  const [specialTarget, setSpecialTarget] = useState('');
   const [poolTaskDescription, setPoolTaskDescription] = useState('');
   const [poolWithdrawAmount, setPoolWithdrawAmount] = useState('');
   const [proofBlobId, setProofBlobId] = useState('');
@@ -223,10 +221,7 @@ export default function LeaderWithdrawalsPage() {
         ? healthNeedOk
         : needKind === 'books'
           ? booksNeedOk && !!booksNeedId
-          : needKind === 'special' &&
-            !!specialDescription.trim() &&
-            Number.isFinite(Number(specialTarget)) &&
-            Number(specialTarget) > 0);
+          : false);
 
   const canSubmit = withdrawMode === 'pool' ? poolFlowReady : childFlowReady;
 
@@ -283,21 +278,10 @@ export default function LeaderWithdrawalsPage() {
           proof_blob_id: proof,
         }),
       );
-    } else if (needKind === 'special') {
-      ok = await execute(() =>
-        childrenService.createSpecialNeedProposal({
-          child_id: childDetail.id,
-          description: specialDescription.trim(),
-          target: Number(specialTarget),
-          proof_blob_id: proof,
-        }),
-      );
     }
 
     if (ok) {
       setNeedKind('');
-      setSpecialDescription('');
-      setSpecialTarget('');
       setProofBlobId('');
       setCreateOpen(false);
       setPage(0);
@@ -423,21 +407,21 @@ export default function LeaderWithdrawalsPage() {
         >
           {poolStatus === 'failed' && (
             <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
-              Cannot load region: {poolError || 'pool unavailable'}
+              Không tải được vùng: {poolError || 'quỹ không khả dụng'}
             </div>
           )}
           {canUseRegion && (
             <div className="rounded-lg border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700">
-              <p className="font-medium text-slate-900">Your region</p>
+              <p className="font-medium text-slate-900">Vùng của bạn</p>
               <p className="mt-1">{poolName}</p>
             </div>
           )}
           {(poolStatus === 'loading' || poolStatus === 'idle') && (
-            <p className="text-sm text-slate-500">Loading your leader region…</p>
+            <p className="text-sm text-slate-500">Đang tải vùng trưởng…</p>
           )}
 
           <fieldset className="space-y-2" disabled={regionBlocked}>
-            <legend className="mb-2 text-sm font-medium text-slate-700">Withdrawal category</legend>
+            <legend className="mb-2 text-sm font-medium text-slate-700">Loại rút tiền</legend>
             <label className="flex items-center gap-2 text-sm">
               <input
                 type="radio"
@@ -449,7 +433,7 @@ export default function LeaderWithdrawalsPage() {
                   setPoolWithdrawAmount('');
                 }}
               />
-              <span>Child need (meal, books, health, special)</span>
+              <span>Nhu cầu trẻ (ăn, sách, sức khỏe)</span>
             </label>
             <label className="flex items-center gap-2 text-sm">
               <input
@@ -460,17 +444,15 @@ export default function LeaderWithdrawalsPage() {
                   setWithdrawMode('pool');
                   setSelectedChildId('');
                   setNeedKind('');
-                  setSpecialDescription('');
-                  setSpecialTarget('');
                 }}
               />
-              <span>Regional pool — general tasks (not tied to a child)</span>
+              <span>Quỹ vùng — nhiệm vụ chung (không gắn trẻ cụ thể)</span>
             </label>
           </fieldset>
 
           {withdrawMode === 'pool' && canUseRegion && poolId && (
             <div className="rounded-lg border border-blue-100 bg-blue-50/60 px-4 py-3 text-xs text-blue-900">
-              Withdrawal request for your leader pool (not linked to a child). Pool ID:{' '}
+              Đề xuất rút cho quỹ trưởng vùng (không liên kết trẻ). Mã quỹ:{' '}
               <span className="font-mono break-all">{poolId}</span>
             </div>
           )}
@@ -478,18 +460,18 @@ export default function LeaderWithdrawalsPage() {
           {withdrawMode === 'pool' && (
             <>
               <div>
-                <label className="mb-1.5 block text-sm font-medium text-slate-700">Description</label>
+                <label className="mb-1.5 block text-sm font-medium text-slate-700">Mô tả</label>
                 <textarea
                   className={`${inputClass} min-h-[100px] resize-y`}
                   disabled={poolFieldsDisabled}
                   value={poolTaskDescription}
                   onChange={(e) => setPoolTaskDescription(e.target.value)}
-                  placeholder="Describe the expense or task (operational costs, logistics, etc.)"
+                  placeholder="Mô tả chi phí hoặc nhiệm vụ (vận hành, logistics, …)"
                 />
               </div>
               <div>
                 <label className="mb-1.5 block text-sm font-medium text-slate-700">
-                  Withdraw amount (VND)
+                  Số tiền rút (VND)
                 </label>
                 <input
                   type="number"
@@ -502,7 +484,7 @@ export default function LeaderWithdrawalsPage() {
                 />
               </div>
               <p className="text-xs text-slate-500">
-                This withdrawal is not linked to a child record. Optional proof image below.
+                Lần rút này không gắn hồ sơ trẻ. Có thể đính kèm ảnh chứng từ bên dưới.
               </p>
             </>
           )}
@@ -510,7 +492,7 @@ export default function LeaderWithdrawalsPage() {
           {withdrawMode === 'child' && (
             <>
           <div>
-            <label className="mb-1.5 block text-sm font-medium text-slate-700">Child</label>
+            <label className="mb-1.5 block text-sm font-medium text-slate-700">Trẻ</label>
             <select
               className={inputClass}
               disabled={childSelectDisabled}
@@ -535,10 +517,10 @@ export default function LeaderWithdrawalsPage() {
                   className="rounded border border-slate-200 px-2 py-1 disabled:opacity-50"
                   onClick={() => setChildrenPage((p) => Math.max(0, p - 1))}
                 >
-                  Previous
+                  Trước
                 </button>
                 <span>
-                  Page {childrenPage + 1} / {childrenTotalPages}
+                  Trang {childrenPage + 1} / {childrenTotalPages}
                 </span>
                 <button
                   type="button"
@@ -546,20 +528,20 @@ export default function LeaderWithdrawalsPage() {
                   className="rounded border border-slate-200 px-2 py-1 disabled:opacity-50"
                   onClick={() => setChildrenPage((p) => p + 1)}
                 >
-                  Next
+                  Sau
                 </button>
               </div>
             )}
           </div>
 
           {detailLoading && selectedChildId && (
-            <p className="text-sm text-slate-500">Loading child needs…</p>
+            <p className="text-sm text-slate-500">Đang tải nhu cầu trẻ…</p>
           )}
 
           {selectedChildId && childDetail && !detailLoading && (
             <>
               <fieldset className="space-y-2" disabled={childSelectDisabled}>
-                <legend className="mb-2 text-sm font-medium text-slate-700">Need type</legend>
+                <legend className="mb-2 text-sm font-medium text-slate-700">Loại nhu cầu</legend>
                 <label className="flex items-center gap-2 text-sm">
                   <input
                     type="radio"
@@ -568,9 +550,9 @@ export default function LeaderWithdrawalsPage() {
                     disabled={!mealNeedOk}
                     onChange={() => setNeedKind('meal')}
                   />
-                  <span>Meal</span>
+                  <span>Bữa ăn</span>
                   {!mealNeedOk && (
-                    <span className="text-slate-400">(no meal need on this child)</span>
+                    <span className="text-slate-400">(trẻ không có nhu cầu bữa ăn)</span>
                   )}
                 </label>
                 <label className="flex items-center gap-2 text-sm">
@@ -581,9 +563,9 @@ export default function LeaderWithdrawalsPage() {
                     disabled={!booksNeedOk}
                     onChange={() => setNeedKind('books')}
                   />
-                  <span>Books</span>
+                  <span>Sách</span>
                   {!booksNeedOk && (
-                    <span className="text-slate-400">(no book needs on this child)</span>
+                    <span className="text-slate-400">(trẻ không có nhu cầu sách)</span>
                   )}
                 </label>
                 <label className="flex items-center gap-2 text-sm">
@@ -594,29 +576,20 @@ export default function LeaderWithdrawalsPage() {
                     disabled={!healthNeedOk}
                     onChange={() => setNeedKind('health')}
                   />
-                  <span>Health insurance</span>
+                  <span>Bảo hiểm y tế</span>
                   {!healthNeedOk && (
-                    <span className="text-slate-400">(no health need on this child)</span>
+                    <span className="text-slate-400">(trẻ không có nhu cầu sức khỏe)</span>
                   )}
-                </label>
-                <label className="flex items-center gap-2 text-sm">
-                  <input
-                    type="radio"
-                    name="needKind"
-                    checked={needKind === 'special'}
-                    onChange={() => setNeedKind('special')}
-                  />
-                  <span>Special need (new proposal)</span>
                 </label>
               </fieldset>
 
               {needKind === 'books' && booksNeedOk && (
                 <div>
-                  <label className="mb-1.5 block text-sm font-medium text-slate-700">books need</label>
+                  <label className="mb-1.5 block text-sm font-medium text-slate-700">Nhu cầu sách</label>
                   {childDetail.books_needs.length === 2 && (
                     <p className="mb-1.5 text-xs text-slate-500">
-                      Two <code className="rounded bg-slate-50 px-1">need_id</code> values map to semester 1 and 2 — pick
-                      the correct books need to withdraw.
+                      Hai giá trị <code className="rounded bg-slate-50 px-1">need_id</code> tương ứng học kỳ 1 và 2 — chọn
+                      đúng nhu cầu sách để rút.
                     </p>
                   )}
                   <select
@@ -633,40 +606,9 @@ export default function LeaderWithdrawalsPage() {
                 </div>
               )}
 
-              {needKind === 'special' && (
-                <>
-                  <div>
-                    <label className="mb-1.5 block text-sm font-medium text-slate-700">
-                      Description
-                    </label>
-                    <textarea
-                      className={`${inputClass} min-h-[100px] resize-y`}
-                      value={specialDescription}
-                      onChange={(e) => setSpecialDescription(e.target.value)}
-                      required
-                    />
-                  </div>
-                  <div>
-                    <label className="mb-1.5 block text-sm font-medium text-slate-700">
-                      Target amount (VND)
-                    </label>
-                    <input
-                      type="number"
-                      min={1}
-                      step={1}
-                      className={inputClass}
-                      value={specialTarget}
-                      onChange={(e) => setSpecialTarget(e.target.value)}
-                      required
-                    />
-                  </div>
-                </>
-              )}
-
-              {needKind && needKind !== 'special' && (
+              {needKind && (
                 <p className="text-xs text-slate-500">
-                  Withdraw proposal uses the selected need on this child. Add an optional proof image
-                  below.
+                  Đề xuất rút dùng nhu cầu đã chọn trên trẻ. Có thể thêm ảnh chứng từ tùy chọn bên dưới.
                 </p>
               )}
             </>
@@ -676,11 +618,11 @@ export default function LeaderWithdrawalsPage() {
 
           {(showChildProofUpload || showPoolProofUpload) && (
             <FileUploadInput
-              label="Proof image (optional)"
+              label="Ảnh chứng từ (tùy chọn)"
               value={proofBlobId}
               onChange={setProofBlobId}
               accept="image/*"
-              placeholder="Upload proof image or paste blob ID"
+              placeholder="Tải ảnh chứng từ hoặc dán blob ID"
             />
           )}
 
@@ -689,7 +631,7 @@ export default function LeaderWithdrawalsPage() {
             disabled={submitting || !canSubmit}
             className="rounded-lg bg-blue-800 px-5 py-2.5 text-sm font-medium text-white shadow-sm transition hover:bg-blue-900 disabled:opacity-60"
           >
-            {submitting ? 'Submitting…' : 'Submit'}
+            {submitting ? 'Đang gửi…' : 'Gửi'}
           </button>
         </form>
           </div>
@@ -697,7 +639,7 @@ export default function LeaderWithdrawalsPage() {
       )}
 
       <DetailModal
-        title="Withdrawal proposal"
+        title="Đề xuất rút tiền"
         open={proposalDetailOpen}
         onClose={() => {
           setProposalDetailOpen(false);
@@ -710,13 +652,13 @@ export default function LeaderWithdrawalsPage() {
           <div className="space-y-2 text-sm">
             <p className="font-mono text-xs break-all">{proposalDetail.id}</p>
             <p>
-              <span className="text-slate-500">Pool:</span> {proposalDetail.pool_name}
+              <span className="text-slate-500">Quỹ:</span> {proposalDetail.pool_name}
             </p>
             <p>
-              <span className="text-slate-500">Amount:</span> {formatVND(proposalDetail.withdraw_amount)}
+              <span className="text-slate-500">Số tiền:</span> {formatVND(proposalDetail.withdraw_amount)}
             </p>
             <p>
-              <span className="text-slate-500">Description:</span> {proposalDetail.description}
+              <span className="text-slate-500">Mô tả:</span> {proposalDetail.description}
             </p>
             <p>
               <span className="text-slate-500">Thời gian đóng:</span> {formatDateTimeSeconds(proposalDetail.closed_at)}

@@ -63,7 +63,7 @@ export default function RegisterCenterModal({
     e.preventDefault();
     const regionVal = (lockedRegion?.trim() || form.region.trim());
     if (!form.address.trim() || !form.image_blob_id.trim() || !form.phone_number.trim() || !regionVal) {
-      toast.error('All fields are required');
+      toast.error('Vui lòng điền đủ các trường');
       return;
     }
     const data: CreateCenterRequest = {
@@ -75,12 +75,12 @@ export default function RegisterCenterModal({
     setSubmitting(true);
     try {
       await centerService.create(data);
-      toast.success('Center registration submitted');
+      toast.success('Đã gửi đăng ký trung tâm');
       setForm({ region: lockedRegion?.trim() || '', address: '', phone_number: '', image_blob_id: '' });
       onSuccess?.();
       onClose();
     } catch (err: unknown) {
-      toast.error(getErrorMessage(err, 'Registration failed'));
+      toast.error(getErrorMessage(err, 'Đăng ký thất bại'));
     } finally {
       setSubmitting(false);
     }
@@ -99,18 +99,18 @@ export default function RegisterCenterModal({
         onClick={(e) => e.stopPropagation()}
       >
         <div className="mb-4 flex items-center justify-between gap-2">
-          <h2 className="text-lg font-semibold text-slate-900">Register center</h2>
+          <h2 className="text-lg font-semibold text-slate-900">Đăng ký trung tâm</h2>
           <button
             type="button"
             onClick={onClose}
             className="rounded-lg px-3 py-1.5 text-sm text-slate-600 hover:bg-slate-100"
           >
-            Close
+            Đóng
           </button>
         </div>
         <form onSubmit={handleRegister} className="space-y-4">
           <div>
-            <label className="mb-1.5 block text-sm font-medium text-slate-700">Region</label>
+            <label className="mb-1.5 block text-sm font-medium text-slate-700">Vùng</label>
             {regionReadOnly ? (
               <input
                 className={`${inputClass} cursor-not-allowed bg-slate-50 text-slate-700`}
@@ -125,7 +125,7 @@ export default function RegisterCenterModal({
                 onChange={(e) => setForm((f) => ({ ...f, region: e.target.value }))}
                 required
               >
-                <option value="">Select region…</option>
+                <option value="">Chọn vùng…</option>
                 {regions.map((r) => (
                   <option key={r} value={r}>
                     {r}
@@ -135,7 +135,7 @@ export default function RegisterCenterModal({
             )}
           </div>
           <div>
-            <label className="mb-1.5 block text-sm font-medium text-slate-700">Address</label>
+            <label className="mb-1.5 block text-sm font-medium text-slate-700">Địa chỉ</label>
             <input
               className={inputClass}
               value={form.address}
@@ -144,7 +144,7 @@ export default function RegisterCenterModal({
             />
           </div>
           <div>
-            <label className="mb-1.5 block text-sm font-medium text-slate-700">Phone number</label>
+            <label className="mb-1.5 block text-sm font-medium text-slate-700">Số điện thoại</label>
             <input
               className={inputClass}
               value={form.phone_number}
@@ -153,18 +153,18 @@ export default function RegisterCenterModal({
             />
           </div>
           <FileUploadInput
-            label="Center image"
+            label="Hình trung tâm"
             value={form.image_blob_id}
             onChange={(val) => setForm((f) => ({ ...f, image_blob_id: val }))}
             accept="image/*"
-            placeholder="Upload center image or paste blob ID"
+            placeholder="Tải ảnh hoặc dán blob ID"
           />
           <button
             type="submit"
             disabled={submitting}
             className="rounded-lg bg-blue-800 px-5 py-2.5 text-sm font-medium text-white shadow-sm transition hover:bg-blue-900 disabled:opacity-60"
           >
-            {submitting ? 'Submitting…' : 'Register center'}
+            {submitting ? 'Đang gửi…' : 'Đăng ký trung tâm'}
           </button>
         </form>
       </div>

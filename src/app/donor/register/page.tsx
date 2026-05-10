@@ -11,8 +11,8 @@ import { ROLES } from '@/src/lib/constants';
 
 const ROLE_OPTIONS = [
   { value: ROLES.VOLUNTEER, label: 'Tình nguyện viên' },
-  { value: ROLES.LOCAL_LEADER, label: 'Local leader' },
-  { value: ROLES.DONOR, label: 'Donor' },
+  { value: ROLES.LOCAL_LEADER, label: 'Trưởng vùng' },
+  { value: ROLES.DONOR, label: 'Nhà hảo tâm' },
 ] as const;
 
 export default function DonorRegisterPage() {
@@ -33,11 +33,11 @@ export default function DonorRegisterPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!region.trim()) {
-      toast.error('Select a region');
+      toast.error('Vui lòng chọn vùng');
       return;
     }
     if (!avatarBlobId.trim() || !identityBlobId.trim()) {
-      toast.error('Avatar and identity document are required');
+      toast.error('Cần ảnh đại diện và ảnh giấy tờ tùy thân');
       return;
     }
     setSubmitting(true);
@@ -65,13 +65,13 @@ export default function DonorRegisterPage() {
   return (
     <div className="mx-auto max-w-xl space-y-6">
       <PageHeader
-        title="Register role"
-        description="Submit KYC-style documents and choose a role (parity with mobile registration form). Confirm on-chain from Regions → My registrations when available."
+        title="Đăng ký vai trò"
+        description="Gửi giấy tờ xác minh danh tính và chọn vai trò (tương thích form đăng ký trên mobile). Xác nhận on-chain tại Vùng → Đăng ký của tôi khi có."
       />
       <p className="text-sm text-slate-600">
-        After submitting, track status under{' '}
+        Sau khi gửi, theo dõi trạng thái tại{' '}
         <Link href="/donor/regions" className="font-medium text-blue-800 hover:underline">
-          Regions → My registrations
+          Vùng → Đăng ký của tôi
         </Link>
         .
       </p>
@@ -79,7 +79,7 @@ export default function DonorRegisterPage() {
       <form onSubmit={handleSubmit} className="space-y-4 rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
         <div>
           <label htmlFor="reg-region" className="mb-1 block text-xs font-medium text-slate-500">
-            Region
+            Vùng
           </label>
           <select
             id="reg-region"
@@ -88,7 +88,7 @@ export default function DonorRegisterPage() {
             className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-blue-800 focus:outline-none focus:ring-1 focus:ring-blue-800"
             required
           >
-            <option value="">Select region</option>
+            <option value="">Chọn vùng</option>
             {regions.map((r) => (
               <option key={r} value={r}>
                 {r}
@@ -99,7 +99,7 @@ export default function DonorRegisterPage() {
 
         <div>
           <label htmlFor="reg-role" className="mb-1 block text-xs font-medium text-slate-500">
-            Role to register
+            Vai trò đăng ký
           </label>
           <select
             id="reg-role"
@@ -116,13 +116,13 @@ export default function DonorRegisterPage() {
         </div>
 
         <FileUploadInput
-          label="Avatar (photo)"
+          label="Ảnh đại diện"
           value={avatarBlobId}
           onChange={setAvatarBlobId}
           accept="image/*"
         />
         <FileUploadInput
-          label="Identity document (image)"
+          label="Giấy tờ tùy thân (ảnh)"
           value={identityBlobId}
           onChange={setIdentityBlobId}
           accept="image/*"
@@ -133,7 +133,7 @@ export default function DonorRegisterPage() {
           disabled={submitting}
           className="w-full rounded-lg bg-blue-800 py-2.5 text-sm font-medium text-white transition hover:bg-blue-900 disabled:opacity-50"
         >
-          {submitting ? 'Submitting…' : 'Submit registration'}
+          {submitting ? 'Đang gửi…' : 'Gửi đăng ký'}
         </button>
       </form>
     </div>

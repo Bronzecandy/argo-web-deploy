@@ -133,8 +133,8 @@ export default function LeaderRegisterCenterPage() {
   return (
     <div className="space-y-6">
       <PageHeader
-        title="Register center"
-        description="Create a proposal to establish a support center in your assigned region once minimum staffing is met."
+        title="Đăng ký trung tâm"
+        description="Tạo đề xuất thiết lập trung tâm hỗ trợ trong vùng được giao khi đủ nhân sự tối thiểu."
       />
 
       {centerStatus === 'loading' ? (

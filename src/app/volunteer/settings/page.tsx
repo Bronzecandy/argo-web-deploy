@@ -40,7 +40,7 @@ const MORE_LINKS = [
 
     href: '/volunteer/task-proofs',
 
-    label: 'Task proof history',
+    label: 'Lịch sử bằng chứng nhiệm vụ',
 
     description: 'Bằng chứng đã gửi và nhập thủ công',
 
@@ -52,9 +52,9 @@ const MORE_LINKS = [
 
     href: '/volunteer/notifications',
 
-    label: 'Notifications',
+    label: 'Thông báo',
 
-    description: 'In-app updates',
+    description: 'Cập nhật trong ứng dụng',
 
     icon: Bell,
 
@@ -64,9 +64,9 @@ const MORE_LINKS = [
 
     href: '/volunteer/profile',
 
-    label: 'Profile',
+    label: 'Hồ sơ',
 
-    description: 'Your volunteer profile',
+    description: 'Hồ sơ tình nguyện viên của bạn',
 
     icon: User,
 
@@ -98,9 +98,9 @@ export default function VolunteerSettingsPage() {
 
       <PageHeader
 
-        title="Volunteer settings"
+        title="Cài đặt tình nguyện viên"
 
-        description="Shortcuts aligned with mobile — proofs and notifications live here"
+        description="Lối tắt tương thích mobile — bằng chứng và thông báo nằm tại đây"
 
       />
 
@@ -108,7 +108,7 @@ export default function VolunteerSettingsPage() {
 
       <div className="rounded-2xl border border-slate-200/80 bg-white p-2 shadow-sm">
 
-        <h2 className="px-4 py-2 text-xs font-semibold uppercase tracking-wide text-slate-500">More</h2>
+        <h2 className="px-4 py-2 text-xs font-semibold uppercase tracking-wide text-slate-500">Thêm</h2>
 
         <ul className="divide-y divide-slate-100">
 
@@ -154,7 +154,7 @@ export default function VolunteerSettingsPage() {
 
       <div className="rounded-2xl border border-slate-200/80 bg-white shadow-sm">
 
-        <h2 className="border-b border-slate-100 px-4 py-3 text-sm font-semibold text-slate-900">Account</h2>
+        <h2 className="border-b border-slate-100 px-4 py-3 text-sm font-semibold text-slate-900">Tài khoản</h2>
 
         <ul className="divide-y divide-slate-100">
 
@@ -168,7 +168,7 @@ export default function VolunteerSettingsPage() {
 
             >
 
-              <User className="h-4 w-4 text-blue-800" /> Edit profile
+              <User className="h-4 w-4 text-blue-800" /> Chỉnh sửa hồ sơ
 
             </Link>
 
@@ -180,7 +180,7 @@ export default function VolunteerSettingsPage() {
 
               <Link href="/donor" className="flex items-center gap-3 px-4 py-3 text-sm text-slate-800 hover:bg-slate-50/90">
 
-                <Wallet className="h-4 w-4 text-blue-800" /> Donor / member area
+                <Wallet className="h-4 w-4 text-blue-800" /> Khu vực nhà hảo tâm / thành viên
 
               </Link>
 
@@ -196,7 +196,7 @@ export default function VolunteerSettingsPage() {
 
       <div className="rounded-2xl border border-slate-200/80 bg-white shadow-sm">
 
-        <h2 className="border-b border-slate-100 px-4 py-3 text-sm font-semibold text-slate-900">Notifications</h2>
+        <h2 className="border-b border-slate-100 px-4 py-3 text-sm font-semibold text-slate-900">Thông báo</h2>
 
         <div className="flex items-center justify-between px-4 py-3">
 
@@ -204,7 +204,7 @@ export default function VolunteerSettingsPage() {
 
             <Bell className="h-4 w-4 text-slate-500" />
 
-            Task alerts (local)
+            Cảnh báo nhiệm vụ (cục bộ)
 
           </div>
 
@@ -238,7 +238,7 @@ export default function VolunteerSettingsPage() {
 
         <div className="flex items-center justify-between border-t border-slate-100 px-4 py-3">
 
-          <span className="text-sm text-slate-800">Email summaries (local)</span>
+          <span className="text-sm text-slate-800">Tóm tắt email (cục bộ)</span>
 
           <button
 
@@ -270,7 +270,7 @@ export default function VolunteerSettingsPage() {
 
         <p className="border-t border-slate-100 px-4 py-2 text-xs text-slate-500">
 
-          Toggles are UI-only until a notification-preferences API exists.
+          Công tắc chỉ hiển thị trên giao diện cho đến khi có API cài đặt thông báo.
 
         </p>
 
@@ -288,7 +288,7 @@ export default function VolunteerSettingsPage() {
 
       >
 
-        <LogOut className="h-4 w-4" /> Log out
+        <LogOut className="h-4 w-4" /> Đăng xuất
 
       </button>
 
