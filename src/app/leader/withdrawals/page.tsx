@@ -7,7 +7,13 @@ import DataTable from '@/src/components/ui/DataTable';
 import StatusBadge from '@/src/components/ui/StatusBadge';
 import DetailModal from '@/src/components/ui/DetailModal';
 import BlobImage from '@/src/components/ui/BlobImage';
-import { formatDate, formatDateTimeSeconds, formatVND, truncateAddress } from '@/src/lib/formatters';
+import {
+  formatDate,
+  formatDateTimeSeconds,
+  formatVND,
+  getWithdrawProposalUiStatus,
+  truncateAddress,
+} from '@/src/lib/formatters';
 import { useAppSelector } from '@/src/store/hooks';
 import { withdrawService } from '@/src/services/withdraw.service';
 import { childrenService } from '@/src/services/children.service';
@@ -17,7 +23,7 @@ import { Plus } from 'lucide-react';
 import type { Child, WithdrawProposal } from '@/src/types/api.types';
 
 type NeedKind = 'meal' | 'books' | 'health' | '';
-type WithdrawMode = 'child' | 'pool';
+type WithdrawMode = 'child' | 'child_quick' | 'pool';
 
 const PAGE_SIZE = 20;
 const CHILD_LIST_PAGE_SIZE = 50;
@@ -223,11 +229,32 @@ export default function LeaderWithdrawalsPage() {
           ? booksNeedOk && !!booksNeedId
           : false);
 
-  const canSubmit = withdrawMode === 'pool' ? poolFlowReady : childFlowReady;
+  const canSubmit =
+    withdrawMode === 'pool'
+      ? poolFlowReady
+      : withdrawMode === 'child_quick'
+        ? canUseRegion
+        : childFlowReady;
 
   async function handleCreate(e: React.FormEvent) {
     e.preventDefault();
     const proof = proofBlobId.trim() || undefined;
+
+    if (withdrawMode === 'child_quick') {
+      if (!canUseRegion) return;
+      setSubmitting(true);
+      const ok = await execute(() => withdrawService.proposeChildrenWithdrawals(), {
+        successMessage: 'Đã tạo đề xuất rút nhanh cho nhu cầu trẻ',
+      });
+      if (ok) {
+        setProofBlobId('');
+        setCreateOpen(false);
+        setPage(0);
+        void loadProposals();
+      }
+      setSubmitting(false);
+      return;
+    }
 
     if (withdrawMode === 'pool') {
       if (!poolFlowReady || !poolId?.trim()) return;
@@ -301,11 +328,9 @@ export default function LeaderWithdrawalsPage() {
     { key: 'approve_weight', label: 'Trọng số duyệt' },
     { key: 'refuse_weight', label: 'Trọng số từ chối' },
     {
-      key: 'is_executed',
-      label: 'Thực thi',
-      render: (row: WithdrawProposal) => (
-        <StatusBadge status={row.is_executed ? 'executed' : 'pending'} />
-      ),
+      key: 'status_ui',
+      label: 'Trạng thái',
+      render: (row: WithdrawProposal) => <StatusBadge status={getWithdrawProposalUiStatus(row)} />,
     },
     {
       key: 'created_at',
@@ -439,6 +464,21 @@ export default function LeaderWithdrawalsPage() {
               <input
                 type="radio"
                 name="withdrawMode"
+                checked={withdrawMode === 'child_quick'}
+                onChange={() => {
+                  setWithdrawMode('child_quick');
+                  setSelectedChildId('');
+                  setNeedKind('');
+                  setPoolTaskDescription('');
+                  setPoolWithdrawAmount('');
+                }}
+              />
+              <span>Rút nhanh — nhu cầu trẻ (đề xuất hàng loạt)</span>
+            </label>
+            <label className="flex items-center gap-2 text-sm">
+              <input
+                type="radio"
+                name="withdrawMode"
                 checked={withdrawMode === 'pool'}
                 onChange={() => {
                   setWithdrawMode('pool');
@@ -449,6 +489,13 @@ export default function LeaderWithdrawalsPage() {
               <span>Quỹ vùng — nhiệm vụ chung (không gắn trẻ cụ thể)</span>
             </label>
           </fieldset>
+
+          {withdrawMode === 'child_quick' && (
+            <div className="rounded-lg border border-emerald-100 bg-emerald-50/80 px-4 py-3 text-xs text-emerald-950">
+              Gửi yêu cầu tạo đề xuất rút cho các nhu cầu trẻ trong vùng (API không cần payload). Sau khi gửi, kiểm tra
+              danh sách đề xuất bên dưới.
+            </div>
+          )}
 
           {withdrawMode === 'pool' && canUseRegion && poolId && (
             <div className="rounded-lg border border-blue-100 bg-blue-50/60 px-4 py-3 text-xs text-blue-900">
@@ -656,6 +703,10 @@ export default function LeaderWithdrawalsPage() {
             </p>
             <p>
               <span className="text-slate-500">Số tiền:</span> {formatVND(proposalDetail.withdraw_amount)}
+            </p>
+            <p className="flex flex-wrap items-center gap-2">
+              <span className="text-slate-500">Trạng thái:</span>
+              <StatusBadge status={getWithdrawProposalUiStatus(proposalDetail)} />
             </p>
             <p>
               <span className="text-slate-500">Mô tả:</span> {proposalDetail.description}

@@ -24,6 +24,11 @@ class WithdrawService {
     return apiService.post<CreateWithdrawResponse>('/withdraw-proposals', data);
   }
 
+  /** POST /withdraw-proposals/children/propose — batch propose withdrawals for child needs (body often empty). */
+  async proposeChildrenWithdrawals() {
+    return apiService.post<CreateWithdrawResponse>('/withdraw-proposals/children/propose', {});
+  }
+
   async vote(id: string, is_vote_yes: boolean, refuse_reason?: string) {
     const params: Record<string, any> = { is_vote_yes };
     if (refuse_reason) params.refuse_reason = refuse_reason;
