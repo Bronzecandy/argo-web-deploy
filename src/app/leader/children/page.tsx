@@ -559,7 +559,7 @@ export default function LeaderChildrenPage() {
     <div>
       <PageHeader
         title="Trẻ em"
-        description={`Upload / profiles / danh sách trẻ theo vùng trưởng${leaderRegion ? `: ${leaderRegion}` : ''}`}
+        description={`Tải lên / hồ sơ / danh sách trẻ theo vùng trưởng${leaderRegion ? `: ${leaderRegion}` : ''}`}
       />
 
       {centerStatus === 'loading' && (
