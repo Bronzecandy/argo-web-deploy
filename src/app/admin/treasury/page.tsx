@@ -30,6 +30,15 @@ import type {
   WithdrawProposal,
   ManualBankTransferConfirmResponse,
 } from '@/src/types/api.types';
+import {
+  clearWithdrawConfirmPayloads,
+  clearWithdrawManualPayload,
+  clearWithdrawPayosPayload,
+  loadWithdrawManualPayload,
+  loadWithdrawPayosPayload,
+  saveWithdrawManualPayload,
+  saveWithdrawPayosPayload,
+} from '@/src/lib/withdrawConfirmStorage';
 
 const PAGE_SIZE = 20;
 
@@ -256,8 +265,21 @@ function TreasuryPageContent() {
   }, [specialDetail.open, specialDetail.id]);
 
   const openWithdrawConfirmModal = (id: string) => {
-    setManualBankInfo(null);
     setWithdrawConfirmProofBlob('');
+    const cachedManual = loadWithdrawManualPayload(id);
+    const cachedPayos = loadWithdrawPayosPayload(id);
+    if (cachedPayos?.url && !cachedManual) {
+      applyPayOSFromResult({
+        open: true,
+        url: cachedPayos.url,
+        paymentId: cachedPayos.paymentId,
+        title: cachedPayos.title ?? 'Thanh toán PayOS',
+        proposalId: id,
+      });
+      toast.message('Tiếp tục phiên PayOS — hoàn tất thanh toán hoặc dùng «Kiểm tra thanh toán».');
+      return;
+    }
+    setManualBankInfo(cachedManual);
     setWithdrawConfirmModal({ open: true, proposalId: id });
   };
 
@@ -271,19 +293,37 @@ function TreasuryPageContent() {
   const handleWithdrawConfirmStep1 = async () => {
     const id = withdrawConfirmModal.proposalId;
     if (!id) return;
+
+    const storedManual = loadWithdrawManualPayload(id);
+    if (storedManual) {
+      setManualBankInfo(storedManual);
+      toast.message('Hiển thị lại thông tin chuyển khoản (đã lấy trước đó — không gọi lại API).');
+      return;
+    }
+
     const result = await runConfirmFirstStep(id, { successMessage: 'Đã xác nhận và thực hiện đề xuất' });
     if (result.kind === 'payos') {
-      applyPayOSFromResult(result.state);
+      saveWithdrawPayosPayload(id, {
+        url: result.state.url,
+        paymentId: result.state.paymentId,
+        title: result.state.title,
+      });
+      applyPayOSFromResult({
+        ...result.state,
+        proposalId: id,
+      });
       closeWithdrawConfirmModal();
       refresh();
       setWithdrawDetail((d) => (d.id === id ? { ...d, open: false } : d));
       return;
     }
     if (result.kind === 'manual_pending') {
+      saveWithdrawManualPayload(id, result.data);
       setManualBankInfo(result.data);
       return;
     }
     if (result.kind === 'done' && result.ok) {
+      clearWithdrawConfirmPayloads(id);
       refresh();
       closeWithdrawConfirmModal();
       setWithdrawDetail((d) => (d.id === id ? { ...d, open: false } : d));
@@ -299,6 +339,10 @@ function TreasuryPageContent() {
     );
     if (ok) {
       const pid = withdrawConfirmModal.proposalId;
+      if (pid) {
+        clearWithdrawManualPayload(pid);
+        clearWithdrawPayosPayload(pid);
+      }
       refresh();
       closeWithdrawConfirmModal();
       if (pid) setWithdrawDetail((d) => (d.id === pid ? { ...d, open: false } : d));
@@ -461,9 +505,9 @@ function TreasuryPageContent() {
       },
       {
         key: 'closed_at',
-        label: 'Đóng bỏ phiếu',
+        label: 'Thời gian đóng',
         render: (r: WithdrawProposal) => (
-          <span className="whitespace-nowrap text-xs">{formatDateTimeSeconds(r.closed_at)}</span>
+          <span className="whitespace-nowrap text-xs text-slate-700">{formatDateTimeSeconds(r.closed_at)}</span>
         ),
       },
       { key: 'created_at', label: 'Ngày tạo', render: (r: WithdrawProposal) => formatDate(r.created_at) },
@@ -487,7 +531,7 @@ function TreasuryPageContent() {
   return (
     <div>
       <PageHeader
-        title="Kho bạc"
+        title="Rút tiền"
         description="Đề xuất rút tiền, yêu cầu rút chờ xử lý, nhu cầu đặc biệt chờ duyệt"
       />
 
@@ -626,7 +670,7 @@ function TreasuryPageContent() {
               ),
             )}
             {detailField('Trạng thái', <StatusBadge status={getWithdrawProposalUiStatus(wd)} />)}
-            {detailField('Đóng bỏ phiếu', formatDateTimeSeconds(wd.closed_at))}
+            {detailField('Thời gian đóng', formatDateTimeSeconds(wd.closed_at))}
             {detailField('Ngày tạo', formatDate(wd.created_at))}
             {wd.proof_blob_id &&
               detailField(
@@ -836,7 +880,11 @@ function TreasuryPageContent() {
       <PayOSPaymentDialog
         state={payOS}
         onClose={closePayOS}
-        onPaymentSuccess={() => refresh()}
+        onPaymentSuccess={() => {
+          const pid = payOS.proposalId?.trim();
+          if (pid) clearWithdrawConfirmPayloads(pid);
+          refresh();
+        }}
       />
     </div>
   );

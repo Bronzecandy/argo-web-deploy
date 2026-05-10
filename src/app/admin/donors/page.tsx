@@ -8,6 +8,7 @@ import { formatInteger, formatVND, formatDateTime } from '@/src/lib/formatters';
 import { donorService } from '@/src/services/donor.service';
 import type { Donor } from '@/src/types/api.types';
 import CopyableTruncated from '@/src/components/ui/CopyableTruncated';
+import ExpandableImage from '@/src/components/ui/ExpandableImage';
 import { HandCoins, Search, X, ExternalLink } from 'lucide-react';
 
 const PAGE_SIZE = 20;
@@ -161,8 +162,7 @@ export default function AdminDonorsPage() {
               <div className="space-y-4">
                 <div className="flex items-start gap-4">
                   {selectedDonor.url ? (
-                    /* eslint-disable-next-line @next/next/no-img-element */
-                    <img
+                    <ExpandableImage
                       src={selectedDonor.url}
                       alt=""
                       className="h-20 w-20 shrink-0 rounded-full border border-slate-200 object-cover"

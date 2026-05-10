@@ -5,6 +5,7 @@ import { Upload, X, CheckCircle } from 'lucide-react';
 import { blobService } from '@/src/services/blob.service';
 import { BLOB_URL } from '@/src/lib/constants';
 import WalrusFallbackImg from '@/src/components/ui/WalrusFallbackImg';
+import ExpandableImage from '@/src/components/ui/ExpandableImage';
 import { toast } from 'sonner';
 
 interface FileUploadInputProps {
@@ -122,12 +123,7 @@ export default function FileUploadInput({
       {previewUrlApi && (
         <div className="mt-3 rounded-lg border border-slate-200 bg-slate-50 p-2">
           <p className="mb-2 text-[10px] font-medium uppercase tracking-wide text-slate-500">Preview</p>
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src={previewUrlApi}
-            alt=""
-            className="max-h-48 max-w-full rounded-md object-contain"
-          />
+          <ExpandableImage src={previewUrlApi} alt="" className="max-h-48 max-w-full rounded-md object-contain" />
         </div>
       )}
     </div>

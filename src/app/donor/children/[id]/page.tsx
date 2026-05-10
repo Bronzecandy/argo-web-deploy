@@ -8,6 +8,7 @@ import { giftService } from '@/src/services/gift.service';
 import { BLOB_URL } from '@/src/lib/constants';
 import { formatVND, formatDate, parseDigitsToNumber } from '@/src/lib/formatters';
 import PageHeader from '@/src/components/ui/PageHeader';
+import ExpandableImage from '@/src/components/ui/ExpandableImage';
 import GroupedNumericInput from '@/src/components/ui/GroupedNumericInput';
 import type { Child, Gift } from '@/src/types/api.types';
 import { toast } from 'sonner';
@@ -226,7 +227,7 @@ export default function DonorChildDetailPage() {
         <div className="lg:col-span-1">
           <div className="overflow-hidden rounded-xl border border-slate-200 bg-white">
             {child.avatar_blob_id && (
-              <img
+              <ExpandableImage
                 src={BLOB_URL(child.avatar_blob_id)}
                 alt={`${child.first_name} ${child.last_name}`}
                 className="h-56 w-full object-cover"
@@ -250,7 +251,7 @@ export default function DonorChildDetailPage() {
                   <p className="text-xs font-medium text-slate-500 mb-2">Photos</p>
                   <div className="flex flex-wrap gap-2">
                     {child.image_blob_ids.map((blobId, i) => (
-                      <img
+                      <ExpandableImage
                         key={i}
                         src={BLOB_URL(blobId)}
                         alt={`Photo ${i + 1}`}
@@ -372,7 +373,11 @@ export default function DonorChildDetailPage() {
                     {gifts.map((g) => (
                       <div key={g.id} className="flex items-center gap-3 rounded-lg bg-slate-50 p-3">
                         {g.gift_image_blob_id && (
-                          <img src={BLOB_URL(g.gift_image_blob_id)} alt="Gift" className="h-10 w-10 rounded-lg object-cover" />
+                          <ExpandableImage
+                            src={BLOB_URL(g.gift_image_blob_id)}
+                            alt="Gift"
+                            className="h-10 w-10 rounded-lg object-cover"
+                          />
                         )}
                         <div className="flex-1">
                           <p className="text-sm font-medium text-slate-700">{g.category}: {g.description}</p>

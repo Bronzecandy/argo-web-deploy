@@ -11,6 +11,7 @@ import { BLOB_URL } from '@/src/lib/constants';
 import PageHeader from '@/src/components/ui/PageHeader';
 import type { SupportCenter, Child } from '@/src/types/api.types';
 import { Building2, MapPin, Baby, Search, Megaphone } from 'lucide-react';
+import ExpandableImage from '@/src/components/ui/ExpandableImage';
 
 export interface ExploreContentProps {
   title?: string;
@@ -222,7 +223,7 @@ function ExploreInner({
                 >
                   <div className="flex h-36 items-center justify-center overflow-hidden bg-gradient-to-br from-slate-100 to-slate-50">
                     {ch.avatar_blob_id ? (
-                      <img
+                      <ExpandableImage
                         src={BLOB_URL(ch.avatar_blob_id)}
                         alt={`${ch.first_name} ${ch.last_name}`}
                         className="h-full w-full object-cover transition group-hover:scale-105"

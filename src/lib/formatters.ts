@@ -45,8 +45,8 @@ export function formatDateTime(dateString: string | null | undefined): string {
 }
 
 /** Full date/time including seconds (e.g. withdraw proposal `closed_at`). */
-export function formatDateTimeSeconds(dateString: string): string {
-  if (!dateString) return '-';
+export function formatDateTimeSeconds(dateString: string | null | undefined): string {
+  if (!dateString?.trim()) return '-';
   const date = new Date(dateString);
   if (Number.isNaN(date.getTime())) return '-';
   return new Intl.DateTimeFormat('vi-VN', {

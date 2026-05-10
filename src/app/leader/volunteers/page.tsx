@@ -10,7 +10,7 @@ import EntityBlobThumb from '@/src/components/ui/EntityBlobThumb';
 import StatusBadge from '@/src/components/ui/StatusBadge';
 import CopyableTruncated from '@/src/components/ui/CopyableTruncated';
 import { collectBlobIdEntries, blobFieldDisplayLabel } from '@/src/lib/blobFields';
-import { formatDate } from '@/src/lib/formatters';
+import { formatDate, formatDateTimeSeconds } from '@/src/lib/formatters';
 import { registrationService } from '@/src/services/registration.service';
 import { useExecuteTransaction } from '@/src/hooks/useExecuteTransaction';
 import { useAppSelector } from '@/src/store/hooks';
@@ -265,6 +265,13 @@ export default function LeaderVolunteersPage() {
             { key: 'status', label: 'Trạng thái', render: (r) => <StatusBadge status={r.status} /> },
             { key: 'created_at', label: 'Ngày tạo', render: (r) => formatDate(r.created_at) },
             {
+              key: 'closed_at',
+              label: 'Thời gian đóng',
+              render: (r) => (
+                <span className="whitespace-nowrap text-xs text-slate-700">{formatDateTimeSeconds(r.closed_at)}</span>
+              ),
+            },
+            {
               key: 'actions',
               label: 'Thao tác',
               className: 'whitespace-nowrap',
@@ -408,6 +415,7 @@ export default function LeaderVolunteersPage() {
               {detailField('Người tạo', <CopyableTruncated value={r.created_by} />)}
               {detailField('Ngày tạo', formatDate(r.created_at))}
               {detailField('Cập nhật', formatDate(r.updated_at))}
+              {detailField('Thời gian đóng', formatDateTimeSeconds(r.closed_at))}
               {blobs.length > 0 && (
                 <div className="border-t border-slate-100 pt-3">
                   <div className="mb-2 text-xs font-medium text-slate-600">Ảnh (Walrus)</div>

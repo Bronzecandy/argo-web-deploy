@@ -11,6 +11,7 @@ import PageHeader from '@/src/components/ui/PageHeader';
 import type { Child } from '@/src/types/api.types';
 import { toast } from 'sonner';
 import GuestPublicShell from '@/src/components/guest/GuestPublicShell';
+import ExpandableImage from '@/src/components/ui/ExpandableImage';
 import { MapPin, Calendar, Utensils, BookOpen, HeartPulse, Sparkles, HandCoins } from 'lucide-react';
 
 export default function PublicChildDetailPage() {
@@ -109,7 +110,7 @@ export default function PublicChildDetailPage() {
         <div className="lg:col-span-1">
           <div className="overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-sm">
             {child.avatar_blob_id && (
-              <img
+              <ExpandableImage
                 src={BLOB_URL(child.avatar_blob_id)}
                 alt={`${child.first_name} ${child.last_name}`}
                 className="h-56 w-full object-cover"

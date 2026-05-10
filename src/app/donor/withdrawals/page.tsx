@@ -4,7 +4,7 @@ import { useEffect, useState, useCallback } from 'react';
 import { withdrawService } from '@/src/services/withdraw.service';
 import { useAppSelector } from '@/src/store/hooks';
 import { useExecuteTransaction } from '@/src/hooks/useExecuteTransaction';
-import { formatVND, formatDateTime } from '@/src/lib/formatters';
+import { formatVND, formatDateTime, formatDateTimeSeconds } from '@/src/lib/formatters';
 import PageHeader from '@/src/components/ui/PageHeader';
 import DataTable from '@/src/components/ui/DataTable';
 import CopyableTruncated from '@/src/components/ui/CopyableTruncated';
@@ -124,6 +124,13 @@ export default function DonorWithdrawalsPage() {
       ),
     },
     {
+      key: 'closed_at',
+      label: 'Thời gian đóng',
+      render: (item: WithdrawProposal) => (
+        <span className="whitespace-nowrap text-xs text-slate-700">{formatDateTimeSeconds(item.closed_at)}</span>
+      ),
+    },
+    {
       key: 'actions',
       label: 'Thao tác',
       render: (item: WithdrawProposal) => {
@@ -189,6 +196,10 @@ export default function DonorWithdrawalsPage() {
               <p className="mt-1"><span className="font-medium text-slate-700">Số tiền:</span> {formatVND(selectedProposal.withdraw_amount)}</p>
               <p className="mt-1"><span className="font-medium text-slate-700">Mô tả:</span> {selectedProposal.description || '-'}</p>
               <p className="mt-1"><span className="font-medium text-slate-700">Ngày tạo:</span> {formatDateTime(selectedProposal.created_at)}</p>
+              <p className="mt-1">
+                <span className="font-medium text-slate-700">Thời gian đóng:</span>{' '}
+                {formatDateTimeSeconds(selectedProposal.closed_at)}
+              </p>
             </div>
 
             <div className="flex gap-3 mb-4">

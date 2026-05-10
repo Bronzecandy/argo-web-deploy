@@ -8,8 +8,8 @@ import DataTable from '@/src/components/ui/DataTable';
 import DetailModal from '@/src/components/ui/DetailModal';
 import CopyableTruncated from '@/src/components/ui/CopyableTruncated';
 import WalrusFallbackImg from '@/src/components/ui/WalrusFallbackImg';
+import ExpandableImage from '@/src/components/ui/ExpandableImage';
 import { BLOB_URL } from '@/src/lib/constants';
-import { blobService } from '@/src/services/blob.service';
 import { formatDate } from '@/src/lib/formatters';
 import { childrenService } from '@/src/services/children.service';
 import type { Child } from '@/src/types/api.types';
@@ -32,24 +32,10 @@ function ChildDetailWalrusImage({
 }) {
   const bid = blobId?.trim();
   if (!bid) return null;
-  const openUrl = blobService.getUrl(bid);
-  const img = (
-    <WalrusFallbackImg
-      blobId={bid}
-      alt={label}
-      className="h-24 w-24 rounded-lg border border-slate-200 object-cover"
-    />
-  );
   return (
     <div>
       <p className="mb-1 text-xs font-medium text-slate-500">{label}</p>
-      {openUrl ? (
-        <a href={openUrl} target="_blank" rel="noopener noreferrer" className="inline-block">
-          {img}
-        </a>
-      ) : (
-        img
-      )}
+      <WalrusFallbackImg blobId={bid} alt={label} className="h-24 w-24 rounded-lg border border-slate-200 object-cover" />
     </div>
   );
 }
@@ -262,8 +248,7 @@ export default function AdminChildrenPage() {
                 <p className="mb-2 text-xs font-medium text-slate-500">Gallery</p>
                 <div className="flex flex-wrap gap-2">
                   {detailChild.image_blob_ids.map((bid) => (
-                    /* eslint-disable-next-line @next/next/no-img-element */
-                    <img
+                    <ExpandableImage
                       key={bid}
                       src={BLOB_URL(bid)}
                       alt=""

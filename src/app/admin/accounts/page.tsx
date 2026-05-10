@@ -19,7 +19,7 @@ import DetailModal from '@/src/components/ui/DetailModal';
 import CopyableTruncated from '@/src/components/ui/CopyableTruncated';
 import EntityBlobThumb from '@/src/components/ui/EntityBlobThumb';
 import { collectBlobIdEntries, blobFieldDisplayLabel } from '@/src/lib/blobFields';
-import { formatDate, formatVND } from '@/src/lib/formatters';
+import { formatDate, formatDateTimeSeconds, formatVND } from '@/src/lib/formatters';
 import { registrationService } from '@/src/services/registration.service';
 import { staffService } from '@/src/services/staff.service';
 import { adminService } from '@/src/services/admin.service';
@@ -371,6 +371,13 @@ export default function AdminAccountsPage() {
               { key: 'status', label: 'Trạng thái', render: (r) => <StatusBadge status={r.status} /> },
               { key: 'created_at', label: 'Ngày tạo', render: (r) => formatDate(r.created_at) },
               {
+                key: 'closed_at',
+                label: 'Thời gian đóng',
+                render: (r) => (
+                  <span className="whitespace-nowrap text-xs text-slate-700">{formatDateTimeSeconds(r.closed_at)}</span>
+                ),
+              },
+              {
                 key: 'actions',
                 label: 'Thao tác',
                 className: 'whitespace-nowrap',
@@ -636,6 +643,7 @@ export default function AdminAccountsPage() {
               {detailField('Người tạo', <CopyableTruncated value={r.created_by} chars={8} />)}
               {detailField('Ngày tạo', formatDate(r.created_at))}
               {detailField('Cập nhật', formatDate(r.updated_at))}
+              {detailField('Thời gian đóng', formatDateTimeSeconds(r.closed_at))}
               {blobs.length > 0 && (
                 <div className="border-t border-slate-100 pt-3">
                   <div className="mb-2 text-xs font-medium text-slate-600">Images (Walrus)</div>

@@ -8,7 +8,7 @@ import PageHeader from '@/src/components/ui/PageHeader';
 import DataTable from '@/src/components/ui/DataTable';
 import StatusBadge from '@/src/components/ui/StatusBadge';
 import CopyableTruncated from '@/src/components/ui/CopyableTruncated';
-import { formatDate } from '@/src/lib/formatters';
+import { formatDate, formatDateTimeSeconds } from '@/src/lib/formatters';
 import { regionService } from '@/src/services/region.service';
 import { registrationService } from '@/src/services/registration.service';
 import { useAppSelector } from '@/src/store/hooks';
@@ -234,6 +234,13 @@ export default function DonorRegionsPage() {
               { key: 'register_role', label: 'Vai trò', render: (r) => <span className="capitalize">{r.register_role}</span> },
               { key: 'status', label: 'Trạng thái', render: (r) => <StatusBadge status={r.status} /> },
               { key: 'created_at', label: 'Ngày tạo', render: (r) => formatDate(r.created_at) },
+              {
+                key: 'closed_at',
+                label: 'Thời gian đóng',
+                render: (r) => (
+                  <span className="whitespace-nowrap text-xs text-slate-700">{formatDateTimeSeconds(r.closed_at)}</span>
+                ),
+              },
               {
                 key: 'actions',
                 label: 'Thao tác',

@@ -9,7 +9,7 @@ import StatusBadge from '@/src/components/ui/StatusBadge';
 import DetailModal from '@/src/components/ui/DetailModal';
 import BlobImage from '@/src/components/ui/BlobImage';
 import CopyableTruncated from '@/src/components/ui/CopyableTruncated';
-import { formatDate, formatInteger, formatVND } from '@/src/lib/formatters';
+import { formatDate, formatDateTimeSeconds, formatInteger, formatVND } from '@/src/lib/formatters';
 import { centerService } from '@/src/services/center.service';
 import { useExecuteTransaction } from '@/src/hooks/useExecuteTransaction';
 import type { CenterRequest, SupportCenter } from '@/src/types/api.types';
@@ -67,6 +67,13 @@ const CENTER_REQUEST_COLUMNS = [
   },
   { key: 'status', label: 'Status', render: (c: CenterRequest) => <StatusBadge status={c.status} /> },
   { key: 'created_at', label: 'Ngày tạo', render: (c: CenterRequest) => formatDate(c.created_at) },
+  {
+    key: 'closed_at',
+    label: 'Thời gian đóng',
+    render: (c: CenterRequest) => (
+      <span className="whitespace-nowrap text-xs text-slate-700">{formatDateTimeSeconds(c.closed_at)}</span>
+    ),
+  },
 ];
 
 function isSupportCenter(row: SupportCenter | CenterRequest): row is SupportCenter {
@@ -492,6 +499,10 @@ export default function AdminCentersPage() {
                 </p>
                 <p>
                   <span className="text-slate-500">Status:</span> <StatusBadge status={detailFetched.status} />
+                </p>
+                <p>
+                  <span className="text-slate-500">Thời gian đóng:</span>{' '}
+                  {formatDateTimeSeconds(detailFetched.closed_at)}
                 </p>
                 <p className="font-mono text-xs break-all">
                   <span className="text-slate-500">ID:</span> {detailFetched.id}

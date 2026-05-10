@@ -10,6 +10,9 @@ export const STORAGE_KEYS = {
 
 export const BLOB_URL = (blobId: string) => `${API_BASE_URL}/blobs/${blobId}`;
 
+/** Path for PayOS `returnUrl` (full URL = site origin + this path). Configure the same URL on the backend. */
+export const PAYMENT_RESULT_PATH = '/payment/result';
+
 export const ROLES = {
   ADMIN: 'Admin',
   LOCAL_LEADER: 'LocalLeader',

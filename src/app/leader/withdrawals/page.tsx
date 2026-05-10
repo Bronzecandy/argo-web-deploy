@@ -7,7 +7,7 @@ import DataTable from '@/src/components/ui/DataTable';
 import StatusBadge from '@/src/components/ui/StatusBadge';
 import DetailModal from '@/src/components/ui/DetailModal';
 import BlobImage from '@/src/components/ui/BlobImage';
-import { formatDate, formatVND, truncateAddress } from '@/src/lib/formatters';
+import { formatDate, formatDateTimeSeconds, formatVND, truncateAddress } from '@/src/lib/formatters';
 import { useAppSelector } from '@/src/store/hooks';
 import { withdrawService } from '@/src/services/withdraw.service';
 import { childrenService } from '@/src/services/children.service';
@@ -327,6 +327,13 @@ export default function LeaderWithdrawalsPage() {
       key: 'created_at',
       label: 'Ngày tạo',
       render: (row: WithdrawProposal) => formatDate(row.created_at),
+    },
+    {
+      key: 'closed_at',
+      label: 'Thời gian đóng',
+      render: (row: WithdrawProposal) => (
+        <span className="whitespace-nowrap text-xs text-slate-700">{formatDateTimeSeconds(row.closed_at)}</span>
+      ),
     },
     {
       key: 'details',
@@ -710,6 +717,12 @@ export default function LeaderWithdrawalsPage() {
             </p>
             <p>
               <span className="text-slate-500">Description:</span> {proposalDetail.description}
+            </p>
+            <p>
+              <span className="text-slate-500">Thời gian đóng:</span> {formatDateTimeSeconds(proposalDetail.closed_at)}
+            </p>
+            <p>
+              <span className="text-slate-500">Ngày tạo:</span> {formatDate(proposalDetail.created_at)}
             </p>
             {proposalDetail.proof_blob_id && (
               <BlobImage blobId={proposalDetail.proof_blob_id} className="max-h-56 rounded-lg border object-contain" />

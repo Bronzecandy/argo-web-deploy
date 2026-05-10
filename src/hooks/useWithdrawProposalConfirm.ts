@@ -1,5 +1,6 @@
 'use client';
 
+/** Withdraw proposal confirm + PayOS polling for **Admin treasury** (`/admin/treasury`). Not used on leader routes. */
 import { useCallback, useState } from 'react';
 import { toast } from 'sonner';
 import { withdrawService } from '@/src/services/withdraw.service';
@@ -18,6 +19,8 @@ export type PayOSDialogState = {
   url: string;
   paymentId?: string | number;
   title?: string;
+  /** Withdraw proposal id — used to clear session draft after PayOS success. */
+  proposalId?: string | null;
 };
 
 const initialPayOS: PayOSDialogState = { open: false, url: '' };

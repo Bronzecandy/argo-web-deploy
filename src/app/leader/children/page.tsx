@@ -11,7 +11,7 @@ import GroupedNumericInput from '@/src/components/ui/GroupedNumericInput';
 import StatusBadge from '@/src/components/ui/StatusBadge';
 import CopyableTruncated from '@/src/components/ui/CopyableTruncated';
 import { collectBlobIdEntries, blobFieldDisplayLabel } from '@/src/lib/blobFields';
-import { formatDate } from '@/src/lib/formatters';
+import { formatDate, formatDateTimeSeconds } from '@/src/lib/formatters';
 import { childUploadService } from '@/src/services/child-upload.service';
 import { childrenService } from '@/src/services/children.service';
 import { useExecuteTransaction } from '@/src/hooks/useExecuteTransaction';
@@ -66,12 +66,6 @@ function detailField(label: string, value: ReactNode) {
       <div className="text-sm text-slate-900">{value}</div>
     </div>
   );
-}
-
-/** Use API-served image for avatar field; other blob fields use Walrus URLs. */
-function childBlobThumbSource(key: string): 'api' | 'walrus' {
-  if (key === 'avatar_blob_id') return 'api';
-  return 'walrus';
 }
 
 function validateNeedAmounts(
@@ -681,6 +675,13 @@ export default function LeaderChildrenPage() {
               },
               { key: 'created_at', label: 'Ngày tạo', render: (u) => formatDate(u.created_at) },
               {
+                key: 'closed_at',
+                label: 'Thời gian đóng',
+                render: (u) => (
+                  <span className="whitespace-nowrap text-xs text-slate-700">{formatDateTimeSeconds(u.closed_at)}</span>
+                ),
+              },
+              {
                 key: 'actions',
                 label: 'Review',
                 className: 'min-w-[120px]',
@@ -757,6 +758,13 @@ export default function LeaderChildrenPage() {
               },
               { key: 'status', label: 'Status', render: (u) => <StatusBadge status={u.status} /> },
               { key: 'created_at', label: 'Ngày tạo', render: (u) => formatDate(u.created_at) },
+              {
+                key: 'closed_at',
+                label: 'Thời gian đóng',
+                render: (u) => (
+                  <span className="whitespace-nowrap text-xs text-slate-700">{formatDateTimeSeconds(u.closed_at)}</span>
+                ),
+              },
               {
                 key: 'actions',
                 label: 'Vote',
@@ -1184,11 +1192,11 @@ export default function LeaderChildrenPage() {
               )}
               {blobs.length > 0 && (
                 <div className="border-t border-slate-100 pt-3">
-                  <div className="mb-2 text-xs font-medium text-slate-600">Blob images</div>
+                  <div className="mb-2 text-xs font-medium text-slate-600">Images</div>
                   <div className="flex flex-wrap gap-4">
                     {blobs.map(({ key, blobId }) => (
                       <div key={key} className="text-center">
-                        <EntityBlobThumb blobId={blobId} source={childBlobThumbSource(key)} className="h-20 w-20 rounded-md border border-slate-200 object-cover" />
+                        <EntityBlobThumb blobId={blobId} source="walrus" className="h-20 w-20 rounded-md border border-slate-200 object-cover" />
                         <div className="mt-1 text-[10px] text-slate-500">{blobFieldDisplayLabel(key)}</div>
                       </div>
                     ))}
@@ -1230,7 +1238,7 @@ export default function LeaderChildrenPage() {
                 {detailField('Người tạo', <CopyableTruncated value={u.created_by} />)}
                 {detailField('Ngày tạo', formatDate(u.created_at))}
                 {detailField('Updated', formatDate(u.updated_at))}
-                {detailField('Closed', formatDate(u.closed_at))}
+                {detailField('Thời gian đóng', formatDateTimeSeconds(u.closed_at))}
                 {detailField('Confirm upload', u.is_confirm_upload ? 'Yes' : 'No')}
                 {u.first_guardian_profile && (
                   <div className="border-t border-slate-100 py-2">
@@ -1256,7 +1264,7 @@ export default function LeaderChildrenPage() {
                         <div key={key} className="text-center">
                           <EntityBlobThumb
                             blobId={blobId}
-                            source={key.includes('avatar') ? 'api' : 'walrus'}
+                            source="walrus"
                             className="h-20 w-20 rounded-md border border-slate-200 object-cover"
                           />
                           <div className="mt-1 text-[10px] text-slate-500">{blobFieldDisplayLabel(key)}</div>

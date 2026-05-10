@@ -9,7 +9,7 @@ import StatusBadge from '@/src/components/ui/StatusBadge';
 import BlobImage from '@/src/components/ui/BlobImage';
 import DetailModal from '@/src/components/ui/DetailModal';
 import CopyableTruncated from '@/src/components/ui/CopyableTruncated';
-import { formatDate } from '@/src/lib/formatters';
+import { formatDate, formatDateTimeSeconds } from '@/src/lib/formatters';
 import { centerService } from '@/src/services/center.service';
 import { useExecuteTransaction } from '@/src/hooks/useExecuteTransaction';
 import type { CenterRequest } from '@/src/types/api.types';
@@ -134,6 +134,13 @@ export default function VolunteerCenterRequestsPage() {
           { key: 'status', label: 'Status', render: (r) => <StatusBadge status={r.status} /> },
           { key: 'created_at', label: 'Ngày tạo', render: (r) => formatDate(r.created_at) },
           {
+            key: 'closed_at',
+            label: 'Thời gian đóng',
+            render: (r) => (
+              <span className="whitespace-nowrap text-xs text-slate-700">{formatDateTimeSeconds(r.closed_at)}</span>
+            ),
+          },
+          {
             key: 'actions',
             label: 'Actions',
             className: 'whitespace-nowrap',
@@ -202,6 +209,9 @@ export default function VolunteerCenterRequestsPage() {
             </p>
             <p><span className="text-slate-500">Phone:</span> {detail.phone_number}</p>
             <p><span className="text-slate-500">Status:</span> <StatusBadge status={detail.status} /></p>
+            <p>
+              <span className="text-slate-500">Thời gian đóng:</span> {formatDateTimeSeconds(detail.closed_at)}
+            </p>
             {detail.image_blob_id && (
               <BlobImage blobId={detail.image_blob_id} className="max-h-48 rounded-lg border object-contain" />
             )}

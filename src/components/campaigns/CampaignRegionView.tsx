@@ -9,6 +9,7 @@ import { formatVND } from '@/src/lib/formatters';
 import PageHeader from '@/src/components/ui/PageHeader';
 import type { EstablishedRegionChild, EstablishedRegionDetail } from '@/src/types/api.types';
 import { Building2, Baby, MapPin, Phone } from 'lucide-react';
+import ExpandableImage from '@/src/components/ui/ExpandableImage';
 import { toast } from 'sonner';
 
 const PAGE_SIZE = 12;
@@ -100,7 +101,7 @@ export function CampaignRegionView({ backHref, backLabel, childHref }: CampaignR
             <div className="grid gap-6 p-6 md:grid-cols-[minmax(0,200px)_1fr]">
               <div className="flex h-44 overflow-hidden rounded-xl bg-slate-100 md:h-full md:min-h-[160px]">
                 {imageId ? (
-                  <img src={BLOB_URL(imageId)} alt="" className="h-full w-full object-cover" />
+                  <ExpandableImage src={BLOB_URL(imageId)} alt="" className="h-full w-full object-cover" />
                 ) : (
                   <div className="flex w-full items-center justify-center">
                     <Building2 className="h-14 w-14 text-slate-300" />

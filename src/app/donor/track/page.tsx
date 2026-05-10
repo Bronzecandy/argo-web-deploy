@@ -9,6 +9,7 @@ import { formatDate, formatInteger } from '@/src/lib/formatters';
 import PageHeader from '@/src/components/ui/PageHeader';
 import type { Child } from '@/src/types/api.types';
 import { Baby, MapPin } from 'lucide-react';
+import ExpandableImage from '@/src/components/ui/ExpandableImage';
 import { toast } from 'sonner';
 
 const PAGE_SIZE = 20;
@@ -90,7 +91,7 @@ export default function DonorTrackPage() {
               >
                 <div className="flex h-36 items-center justify-center overflow-hidden bg-slate-100">
                   {child.avatar_blob_id ? (
-                    <img
+                    <ExpandableImage
                       src={BLOB_URL(child.avatar_blob_id)}
                       alt=""
                       className="h-full w-full object-cover"
