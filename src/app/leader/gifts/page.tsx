@@ -105,7 +105,7 @@ export default function LeaderGiftsPage() {
     setConfirmingId(giftId);
     const ok = await execute(
       () => giftService.confirmReceive(giftId, blob),
-      { successMessage: 'Receive confirmed & executed on-chain' },
+      { successMessage: 'Đã xác nhận nhận quà và thực thi on-chain' },
     );
     if (ok) {
       setDeliveredInputs((prev) => ({ ...prev, [giftId]: '' }));
@@ -125,20 +125,20 @@ export default function LeaderGiftsPage() {
         title="Quà tặng"
         description={
           user?.address
-            ? `Track gifts for a child in your region · ${truncateAddress(user.address)}`
-            : 'Track gifts for a child in your region'
+            ? `Theo dõi quà tặng theo trẻ trong vùng · ${truncateAddress(user.address)}`
+            : 'Theo dõi quà tặng theo trẻ trong vùng'
         }
       />
 
       <section className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
-        <h2 className="mb-2 text-lg font-semibold text-slate-900">Child</h2>
+        <h2 className="mb-2 text-lg font-semibold text-slate-900">Trẻ</h2>
         <p className="mb-4 text-sm text-slate-500">
-          Enter a child ID to list their gifts (use your assigned default child ID from operations).
+          Nhập mã trẻ để xem danh sách quà (dùng mã trẻ được gán trong vận hành).
         </p>
         <div className="flex max-w-xl flex-col gap-3 sm:flex-row sm:items-end">
           <div className="flex-1">
             <label htmlFor="child_id" className="mb-1 block text-xs font-medium text-slate-500">
-              Child ID
+              Mã trẻ
             </label>
             <input
               id="child_id"
@@ -154,7 +154,7 @@ export default function LeaderGiftsPage() {
             onClick={applyChildId}
             className="rounded-lg bg-blue-800 px-4 py-2 text-sm font-medium text-white transition hover:bg-blue-900"
           >
-            Load gifts
+            Tải danh sách
           </button>
         </div>
       </section>
@@ -165,23 +165,23 @@ export default function LeaderGiftsPage() {
         {appliedChildId ? (
           <DataTable<Gift>
             columns={[
-              { key: 'category', label: 'Category' },
+              { key: 'category', label: 'Loại' },
               {
                 key: 'description',
-                label: 'Description',
+                label: 'Mô tả',
                 render: (r) => <span className="line-clamp-2 max-w-xs">{r.description}</span>,
               },
               {
                 key: 'message',
-                label: 'Message',
+                label: 'Lời nhắn',
                 render: (r) => <span className="line-clamp-2 max-w-[180px]">{r.message || '-'}</span>,
               },
-              { key: 'status', label: 'Status', render: (r) => <StatusBadge status={r.status} /> },
-              { key: 'carrier', label: 'Carrier', render: (r) => r.carrier || '-' },
+              { key: 'status', label: 'Trạng thái', render: (r) => <StatusBadge status={r.status} /> },
+              { key: 'carrier', label: 'Đơn vị vận chuyển', render: (r) => r.carrier || '-' },
               { key: 'tracking_code', label: 'Mã vận đơn', render: (r) => r.tracking_code || '-' },
               {
                 key: 'gift_image_blob_id',
-                label: 'Gift image',
+                label: 'Ảnh quà',
                 render: (r) => {
                   const url = blobService.getUrl(r.gift_image_blob_id);
                   if (!url) return '-';
@@ -207,14 +207,14 @@ export default function LeaderGiftsPage() {
                     }}
                     className="rounded-lg border border-slate-200 bg-white px-2 py-1 text-xs font-medium text-slate-800 hover:bg-slate-50"
                   >
-                    Details
+                    Chi tiết
                   </button>
                 ),
               },
-              { key: 'uploaded_at', label: 'Uploaded', render: (r) => formatDate(r.uploaded_at) },
+              { key: 'uploaded_at', label: 'Ngày tải', render: (r) => formatDate(r.uploaded_at) },
               {
                 key: 'confirm',
-                label: 'Confirm receive',
+                label: 'Xác nhận đã nhận',
                 className: 'min-w-[220px]',
                 render: (r) =>
                   canConfirm(r) ? (
@@ -231,7 +231,7 @@ export default function LeaderGiftsPage() {
                         onClick={() => void handleConfirmReceive(r.id)}
                         className="rounded-lg bg-blue-800 px-2 py-1 text-xs font-medium text-white hover:bg-blue-900 disabled:opacity-50"
                       >
-                        {confirmingId === r.id ? 'Confirming…' : 'Confirm receive'}
+                        {confirmingId === r.id ? 'Đang xử lý…' : 'Xác nhận nhận quà'}
                       </button>
                     </div>
                   ) : (

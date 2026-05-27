@@ -149,9 +149,10 @@ export default function DonorRegionsPage() {
   };
 
   const handleConfirmRegistration = async (id: string) => {
-    const ok = await execute(() => registrationService.confirm(id), {
-      successMessage: 'Đã xác nhận đăng ký on-chain',
-    });
+    const ok = await execute(
+      () => registrationService.vote(id, { is_vote_yes: true }),
+      { successMessage: 'Đã ghi nhận phiếu đăng ký' },
+    );
     if (ok) void loadRegistrations();
   };
 

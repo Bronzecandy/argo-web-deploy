@@ -14,8 +14,9 @@ import { useAppSelector } from '@/src/store/hooks';
 import { useLeaderCenter } from '@/src/contexts/LeaderCenterContext';
 import { taskService } from '@/src/services/task.service';
 import { childrenService } from '@/src/services/children.service';
+import { getTaskAssignedStaff } from '@/src/lib/taskFields';
 import type { Task, Child } from '@/src/types/api.types';
-import { Hand, ClipboardCheck, ThumbsUp, ThumbsDown, Plus } from 'lucide-react';
+import { Hand, Plus } from 'lucide-react';
 
 const PAGE_SIZE = 20;
 const CHILD_LIST_PAGE_SIZE = 50;
@@ -64,10 +65,6 @@ export default function LeaderTasksPage() {
   const [submitting, setSubmitting] = useState(false);
   const [busyId, setBusyId] = useState<string | null>(null);
   const [listVersion, setListVersion] = useState(0);
-
-  const [reviewTask, setReviewTask] = useState<Task | null>(null);
-  const [reviewVote, setReviewVote] = useState(true);
-  const [reviewReason, setReviewReason] = useState('');
 
   const [createOpen, setCreateOpen] = useState(false);
   const [isChildTask, setIsChildTask] = useState(false);
@@ -233,25 +230,6 @@ export default function LeaderTasksPage() {
     }
   };
 
-  const handleReview = async () => {
-    if (!reviewTask) return;
-    setBusyId(reviewTask.id);
-    try {
-      await taskService.review(reviewTask.id, reviewVote, reviewVote ? undefined : reviewReason || undefined);
-      toast.success(reviewVote ? 'Đã duyệt nhiệm vụ' : 'Đã từ chối nhiệm vụ');
-      setReviewTask(null);
-      refresh();
-    } catch (e: unknown) {
-      const msg =
-        e && typeof e === 'object' && 'response' in e
-          ? (e as { response?: { data?: { message?: string } } }).response?.data?.message
-          : undefined;
-      toast.error(msg || 'Duyệt thất bại');
-    } finally {
-      setBusyId(null);
-    }
-  };
-
   const resolvedNeedId = needIdFor(childDetail, needKind);
 
   const handleCreate = async (e: React.FormEvent) => {
@@ -337,13 +315,13 @@ export default function LeaderTasksPage() {
     ? 'Đang tải vùng của bạn…'
     : !effectiveRegion
       ? poolStatus === 'failed'
-        ? poolError || 'Could not resolve your region for tasks.'
-        : 'Could not resolve your region for tasks.'
-      : 'No tasks in your region';
+        ? poolError || 'Không xác định được vùng cho nhiệm vụ.'
+        : 'Không xác định được vùng cho nhiệm vụ.'
+      : 'Chưa có nhiệm vụ trong vùng của bạn.';
 
   const regionHint =
     poolName?.trim() && leaderRegion?.trim() && poolName.trim() !== leaderRegion.trim()
-      ? 'Pool label and center region differ — using pool name first, then center.'
+      ? 'Tên pool và vùng trung tâm khác nhau — ưu tiên tên pool, sau đó vùng trung tâm.'
       : null;
 
   return (
@@ -377,26 +355,28 @@ export default function LeaderTasksPage() {
               render: (r) => <span className="line-clamp-2 max-w-xs">{r.description}</span>,
             },
             { key: 'region', label: 'Vùng' },
-            { key: 'start_period', label: 'Start', render: (r) => formatDate(r.start_period) },
-            { key: 'end_period', label: 'End', render: (r) => formatDate(r.end_period) },
+            { key: 'start_period', label: 'Bắt đầu', render: (r) => formatDate(r.start_period) },
+            { key: 'end_period', label: 'Kết thúc', render: (r) => formatDate(r.end_period) },
             {
               key: 'assigned_staff',
               label: 'ID nhân sự được giao',
-              render: (r) =>
-                r.assigned_staff ? (
-                  <CopyableTruncated value={r.assigned_staff} truncateDisplay={false} className="max-w-[min(100%,24rem)]" />
+              render: (r) => {
+                const staff = getTaskAssignedStaff(r);
+                return staff ? (
+                  <CopyableTruncated value={staff} truncateDisplay={false} className="max-w-[min(100%,24rem)]" />
                 ) : (
                   <span className="text-slate-400">Chưa gán</span>
-                ),
+                );
+              },
             },
             { key: 'created_at', label: 'Ngày tạo', render: (r) => formatDate(r.created_at) },
             {
               key: 'actions',
-              label: 'Actions',
+              label: 'Thao tác',
               className: 'whitespace-nowrap',
               render: (r) => {
                 const s = r.status?.toLowerCase();
-                const isAssigned = !!r.assigned_staff;
+                const isAssigned = !!getTaskAssignedStaff(r);
                 return (
                   <div className="flex flex-wrap gap-1" onClick={(e) => e.stopPropagation()}>
                     <button
@@ -408,7 +388,7 @@ export default function LeaderTasksPage() {
                       }}
                       className="inline-flex items-center gap-1 rounded-md border border-slate-200 bg-white px-2 py-1 text-xs font-medium text-slate-800 hover:bg-slate-50"
                     >
-                      Details
+                      Chi tiết
                     </button>
                     {!isAssigned && (s === 'pending' || s === 'open') && (
                       <button
@@ -417,21 +397,7 @@ export default function LeaderTasksPage() {
                         onClick={() => void handleClaim(r.id)}
                         className="inline-flex items-center gap-1 rounded-md border border-blue-200 bg-blue-50 px-2 py-1 text-xs font-medium text-blue-800 hover:bg-blue-100 disabled:opacity-50"
                       >
-                        <Hand className="h-3 w-3" /> Claim
-                      </button>
-                    )}
-                    {(s === 'submitted' || s === 'pending_review' || s === 'completed') && (
-                      <button
-                        type="button"
-                        disabled={busyId === r.id}
-                        onClick={() => {
-                          setReviewTask(r);
-                          setReviewVote(true);
-                          setReviewReason('');
-                        }}
-                        className="inline-flex items-center gap-1 rounded-md border border-blue-200 bg-blue-50 px-2 py-1 text-xs font-medium text-blue-800 hover:bg-blue-100 disabled:opacity-50"
-                      >
-                        <ClipboardCheck className="h-3 w-3" /> Review
+                        <Hand className="h-3 w-3" /> Nhận
                       </button>
                     )}
                   </div>
@@ -646,76 +612,6 @@ export default function LeaderTasksPage() {
                 {submitting ? 'Đang tạo…' : 'Tạo nhiệm vụ'}
               </button>
             </form>
-          </div>
-        </div>
-      )}
-
-      {reviewTask && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-          <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-xl">
-            <h3 className="mb-4 text-lg font-bold text-slate-900">Duyệt nhiệm vụ</h3>
-            <div className="mb-4 rounded-lg bg-slate-50 p-3 text-sm">
-              <p className="flex flex-wrap items-center gap-2">
-                <span className="font-medium">Nhiệm vụ:</span> <CopyableTruncated value={reviewTask.id} chars={8} />
-              </p>
-              <p className="mt-1">
-                <span className="font-medium">Mô tả:</span> {reviewTask.description}
-              </p>
-              <p className="mt-1">
-                <span className="font-medium">Vùng:</span> {reviewTask.region}
-              </p>
-            </div>
-
-            <div className="mb-4 flex gap-3">
-              <button
-                type="button"
-                onClick={() => setReviewVote(true)}
-                className={`flex flex-1 items-center justify-center gap-2 rounded-lg border-2 py-3 text-sm font-medium transition ${
-                  reviewVote ? 'border-blue-600 bg-blue-50 text-blue-800' : 'border-slate-200 text-slate-500'
-                }`}
-              >
-                <ThumbsUp className="h-4 w-4" /> Đồng ý
-              </button>
-              <button
-                type="button"
-                onClick={() => setReviewVote(false)}
-                className={`flex flex-1 items-center justify-center gap-2 rounded-lg border-2 py-3 text-sm font-medium transition ${
-                  !reviewVote ? 'border-red-500 bg-red-50 text-red-700' : 'border-slate-200 text-slate-500'
-                }`}
-              >
-                <ThumbsDown className="h-4 w-4" /> Từ chối
-              </button>
-            </div>
-
-            {!reviewVote && (
-              <textarea
-                value={reviewReason}
-                onChange={(e) => setReviewReason(e.target.value)}
-                placeholder="Lý do từ chối…"
-                rows={2}
-                className="mb-4 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-blue-800 focus:outline-none focus:ring-1 focus:ring-blue-800"
-              />
-            )}
-
-            <div className="flex justify-end gap-3">
-              <button
-                type="button"
-                onClick={() => setReviewTask(null)}
-                className="rounded-lg border border-slate-200 px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-50"
-              >
-                Hủy
-              </button>
-              <button
-                type="button"
-                onClick={() => void handleReview()}
-                disabled={busyId === reviewTask.id}
-                className={`rounded-lg px-4 py-2 text-sm font-medium text-white disabled:opacity-50 ${
-                  reviewVote ? 'bg-blue-800 hover:bg-blue-900' : 'bg-red-600 hover:bg-red-700'
-                }`}
-              >
-                {busyId === reviewTask.id ? 'Đang gửi…' : 'Xác nhận'}
-              </button>
-            </div>
           </div>
         </div>
       )}

@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useState, type ReactNode } from 'react';
-import { Check, ClipboardCheck, ListChecks, Settings2, ThumbsDown, ThumbsUp, X } from 'lucide-react';
+import { Check, ClipboardCheck, Settings2, X } from 'lucide-react';
 import { toast } from 'sonner';
 import PageHeader from '@/src/components/ui/PageHeader';
 import DataTable from '@/src/components/ui/DataTable';
@@ -18,7 +18,7 @@ import { useExecuteTransaction } from '@/src/hooks/useExecuteTransaction';
 import { useLeaderCenter } from '@/src/contexts/LeaderCenterContext';
 import type { Child, UploadChildRequestEntity } from '@/src/types/api.types';
 
-type Tab = 'review' | 'profiles' | 'list';
+type Tab = 'review' | 'list';
 
 /** Rows where `review_status` normalizes to `approved` (case/spacing insensitive). */
 function isChildUploadReviewApproved(reviewStatus?: string) {
@@ -122,12 +122,7 @@ export default function LeaderChildrenPage() {
   const [uploadGender, setUploadGender] = useState('');
   const [busyId, setBusyId] = useState<string | null>(null);
 
-  const [profilesLoading, setProfilesLoading] = useState(false);
-  const [profileReqs, setProfileReqs] = useState<UploadChildRequestEntity[]>([]);
-  const [profilePage, setProfilePage] = useState(0);
-  const [profileTotalPages, setProfileTotalPages] = useState(1);
-  const [voteBusyId, setVoteBusyId] = useState<string | null>(null);
-  const [refuseModal, setRefuseModal] = useState<{ id: string; mode: 'review' | 'vote' } | null>(null);
+  const [refuseModal, setRefuseModal] = useState<{ id: string } | null>(null);
   const [refuseReason, setRefuseReason] = useState('');
 
   const [childDetailOpen, setChildDetailOpen] = useState(false);
@@ -218,39 +213,6 @@ export default function LeaderChildrenPage() {
     void loadUploads();
   }, [tab, loadUploads]);
 
-  const loadProfiles = useCallback(async () => {
-    if (!canLoad || !leaderRegion) {
-      setProfileReqs([]);
-      setProfileTotalPages(1);
-      setProfilesLoading(false);
-      return;
-    }
-    setProfilesLoading(true);
-    try {
-      const res = await childUploadService.list({
-        page: profilePage,
-        page_size: PAGE_SIZE,
-        sort_order: 'desc',
-        review_status: 'approved',
-        region: leaderRegion,
-      });
-      const body = res.data;
-      const raw = Array.isArray(body.data) ? body.data : [];
-      setProfileReqs(raw.filter((u) => isChildUploadReviewApproved(u.review_status)));
-      setProfileTotalPages(Math.max(1, body.total_pages ?? 1));
-    } catch (e: unknown) {
-      toast.error(getErrorMessage(e, 'Không tải được yêu cầu tải lên hồ sơ trẻ'));
-      setProfileReqs([]);
-    } finally {
-      setProfilesLoading(false);
-    }
-  }, [profilePage, leaderRegion, canLoad]);
-
-  useEffect(() => {
-    if (tab !== 'profiles') return;
-    void loadProfiles();
-  }, [tab, loadProfiles]);
-
   useEffect(() => {
     if (!childDetailOpen || !childDetailId) {
       setChildDetailData(null);
@@ -333,7 +295,7 @@ export default function LeaderChildrenPage() {
 
   function runReview(row: UploadChildRequestEntity, isYes: boolean) {
     if (!isYes) {
-      setRefuseModal({ id: row.id, mode: 'review' });
+      setRefuseModal({ id: row.id });
       setRefuseReason('');
       return;
     }
@@ -404,7 +366,7 @@ export default function LeaderChildrenPage() {
   }
 
   async function submitRefuseReview() {
-    if (!refuseModal || refuseModal.mode !== 'review') return;
+    if (!refuseModal) return;
     const { id } = refuseModal;
     setBusyId(id);
     try {
@@ -416,43 +378,6 @@ export default function LeaderChildrenPage() {
       toast.error(getErrorMessage(e, 'Duyệt thất bại'));
     } finally {
       setBusyId(null);
-    }
-  }
-
-  async function handleVoteYes(id: string) {
-    setVoteBusyId(id);
-    try {
-      await childUploadService.vote(id, { is_vote_yes: true });
-      toast.success('Đã ghi nhận phiếu');
-      await loadProfiles();
-    } catch (e: unknown) {
-      toast.error(getErrorMessage(e, 'Bỏ phiếu thất bại'));
-    } finally {
-      setVoteBusyId(null);
-    }
-  }
-
-  function handleVoteNo(id: string) {
-    setRefuseModal({ id, mode: 'vote' });
-    setRefuseReason('');
-  }
-
-  async function submitRefuseVote() {
-    if (!refuseModal || refuseModal.mode !== 'vote') return;
-    const { id } = refuseModal;
-    setVoteBusyId(id);
-    try {
-      await childUploadService.vote(id, {
-        is_vote_yes: false,
-        refuse_reason: refuseReason.trim() || undefined,
-      });
-      toast.success('Đã ghi nhận phiếu');
-      setRefuseModal(null);
-      await loadProfiles();
-    } catch (e: unknown) {
-      toast.error(getErrorMessage(e, 'Bỏ phiếu thất bại'));
-    } finally {
-      setVoteBusyId(null);
     }
   }
 
@@ -549,9 +474,6 @@ export default function LeaderChildrenPage() {
     },
   ];
 
-  const refuseModalTitle = refuseModal?.mode === 'review' ? 'Từ chối duyệt' : 'Bỏ phiếu không đồng ý';
-  const busyRefuseId = refuseModal?.mode === 'review' ? busyId : voteBusyId;
-
   const approveInputClass =
     'w-full rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none ring-blue-800/20 focus:border-blue-800 focus:ring-2';
 
@@ -559,7 +481,7 @@ export default function LeaderChildrenPage() {
     <div>
       <PageHeader
         title="Trẻ em"
-        description={`Tải lên / hồ sơ / danh sách trẻ theo vùng trưởng${leaderRegion ? `: ${leaderRegion}` : ''}`}
+        description={`Duyệt yêu cầu tải lên và quản lý trẻ theo vùng${leaderRegion ? `: ${leaderRegion}` : ''}`}
       />
 
       {centerStatus === 'loading' && (
@@ -590,18 +512,6 @@ export default function LeaderChildrenPage() {
         >
           <ClipboardCheck className="hidden h-4 w-4 shrink-0 sm:inline" />
           <span className="truncate">Yêu cầu tải lên</span>
-        </button>
-        <button
-          type="button"
-          onClick={() => setTab('profiles')}
-          className={`flex min-w-0 flex-1 items-center justify-center gap-1 rounded-md px-2 py-2 text-sm font-medium transition sm:px-3 ${
-            tab === 'profiles'
-              ? 'bg-white text-blue-900 shadow-sm ring-1 ring-blue-800/20'
-              : 'text-slate-600 hover:text-slate-900'
-          }`}
-        >
-          <ListChecks className="hidden h-4 w-4 shrink-0 sm:inline" />
-          <span className="truncate">Hồ sơ trẻ (bỏ phiếu)</span>
         </button>
         <button
           type="button"
@@ -703,79 +613,6 @@ export default function LeaderChildrenPage() {
               canLoad
                 ? 'Không có yêu cầu tải lên nào khớp bộ lọc.'
                 : 'Không có vùng trưởng — không tải được yêu cầu tải lên.'
-            }
-          />
-        </div>
-      )}
-
-      {tab === 'profiles' && (
-        <div className="space-y-4">
-          <p className="rounded-lg border border-slate-200 bg-slate-50 px-4 py-3 text-xs text-slate-600">
-            Các yêu cầu tải lên mà trưởng vùng đã duyệt (trường <code className="rounded bg-white px-1">review_status</code>) hiển thị
-            ở đây để bạn bỏ phiếu on-chain.
-          </p>
-          <DataTable<UploadChildRequestEntity>
-            columns={[
-              {
-                key: 'name',
-                label: 'Tên',
-                render: (u) => (
-                  <span>
-                    {u.first_name} {u.last_name}
-                  </span>
-                ),
-              },
-              { key: 'gender', label: 'Giới tính', render: (u) => <span className="capitalize">{u.gender}</span> },
-              { key: 'region', label: 'Vùng' },
-              { key: 'status', label: 'Trạng thái', render: (u) => <StatusBadge status={u.status} /> },
-              { key: 'created_at', label: 'Ngày tạo', render: (u) => formatDate(u.created_at) },
-              {
-                key: 'actions',
-                label: 'Bỏ phiếu',
-                className: 'whitespace-nowrap',
-                render: (u) => (
-                  <div className="flex flex-wrap gap-1" onClick={(e) => e.stopPropagation()}>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setUploadDetailRow(u);
-                        setUploadDetailOpen(true);
-                      }}
-                      className="inline-flex items-center gap-0.5 rounded-md border border-slate-200 bg-white px-2 py-1 text-xs font-medium text-slate-800 hover:bg-slate-50"
-                    >
-                      Chi tiết
-                    </button>
-                    <button
-                      type="button"
-                      disabled={voteBusyId === u.id}
-                      onClick={() => void handleVoteYes(u.id)}
-                      className="inline-flex items-center gap-0.5 rounded-md border border-blue-200 bg-blue-50 px-2 py-1 text-xs font-medium text-blue-900 hover:bg-blue-100 disabled:opacity-50"
-                      title="Phiếu đồng ý"
-                    >
-                      <ThumbsUp className="h-3.5 w-3.5" />
-                    </button>
-                    <button
-                      type="button"
-                      disabled={voteBusyId === u.id}
-                      onClick={() => handleVoteNo(u.id)}
-                      className="inline-flex items-center gap-0.5 rounded-md border border-red-200 bg-red-50 px-2 py-1 text-xs font-medium text-red-800 hover:bg-red-100 disabled:opacity-50"
-                      title="Phiếu từ chối"
-                    >
-                      <ThumbsDown className="h-3.5 w-3.5" />
-                    </button>
-                  </div>
-                ),
-              },
-            ]}
-            data={profileReqs}
-            loading={profilesLoading}
-            page={profilePage}
-            totalPages={profileTotalPages}
-            onPageChange={(p) => setProfilePage(p)}
-            emptyMessage={
-              canLoad
-                ? 'Chưa có yêu cầu tải hồ sơ đã được trưởng vùng duyệt để bỏ phiếu.'
-                : 'Không có vùng trưởng — không tải được hồ sơ để bỏ phiếu.'
             }
           />
         </div>
@@ -1063,7 +900,7 @@ export default function LeaderChildrenPage() {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 p-4">
           <div className="w-full max-w-md rounded-xl border border-slate-200 bg-white p-5 shadow-xl">
             <div className="mb-3 flex items-center justify-between">
-              <h3 className="text-lg font-semibold text-slate-900">{refuseModalTitle}</h3>
+              <h3 className="text-lg font-semibold text-slate-900">Từ chối duyệt</h3>
               <button
                 type="button"
                 onClick={() => setRefuseModal(null)}
@@ -1090,10 +927,8 @@ export default function LeaderChildrenPage() {
               </button>
               <button
                 type="button"
-                disabled={busyRefuseId === refuseModal.id}
-                onClick={() =>
-                  void (refuseModal.mode === 'review' ? submitRefuseReview() : submitRefuseVote())
-                }
+                disabled={busyId === refuseModal.id}
+                onClick={() => void submitRefuseReview()}
                 className="inline-flex items-center gap-1 rounded-lg bg-red-600 px-3 py-2 text-sm font-medium text-white hover:bg-red-700 disabled:opacity-50"
               >
                 <Check className="h-4 w-4" />

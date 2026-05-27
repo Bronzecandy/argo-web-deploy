@@ -543,6 +543,12 @@ export interface Task {
   end_period: string;
   status: string;
   assigned_staff?: string;
+  /** Backend typo in Swagger query/response. */
+  assgined_staff?: string;
+  child_task_detail_id?: string;
+  assigned_profile_id?: string;
+  is_submitted?: boolean;
+  review_profile_status?: string;
   reviewed_by?: string;
   created_at: string;
   updated_at: string;
@@ -726,6 +732,8 @@ export interface TaskQueryParams extends PaginationParams {
   region?: string;
   status?: string;
   assigned_staff?: string;
+  /** Swagger query name (typo). */
+  assgined_staff?: string;
   reviewed_by?: string;
 }
 

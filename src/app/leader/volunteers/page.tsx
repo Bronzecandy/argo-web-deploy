@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useState, type ReactNode } from 'react';
-import { Check, Search, ShieldCheck, ThumbsDown, ThumbsUp, X } from 'lucide-react';
+import { Check, Search, ThumbsDown, ThumbsUp, X } from 'lucide-react';
 import { toast } from 'sonner';
 import PageHeader from '@/src/components/ui/PageHeader';
 import DataTable from '@/src/components/ui/DataTable';
@@ -12,7 +12,6 @@ import CopyableTruncated from '@/src/components/ui/CopyableTruncated';
 import { collectBlobIdEntries, blobFieldDisplayLabel } from '@/src/lib/blobFields';
 import { formatDate, formatDateTimeSeconds } from '@/src/lib/formatters';
 import { registrationService } from '@/src/services/registration.service';
-import { useExecuteTransaction } from '@/src/hooks/useExecuteTransaction';
 import { useAppSelector } from '@/src/store/hooks';
 import { useLeaderCenter } from '@/src/contexts/LeaderCenterContext';
 import type { RegistrationRequest } from '@/src/types/api.types';
@@ -43,7 +42,6 @@ function detailField(label: string, value: ReactNode) {
 }
 
 export default function LeaderVolunteersPage() {
-  const { execute } = useExecuteTransaction();
   const { poolId, status: poolStatus } = useAppSelector((s) => s.leaderPool);
   const { status: centerStatus, leaderRegion, errorMessage: centerError } = useLeaderCenter();
 
@@ -57,7 +55,6 @@ export default function LeaderVolunteersPage() {
   const [regStatus, setRegStatus] = useState('');
 
   const [voteBusyId, setVoteBusyId] = useState<string | null>(null);
-  const [confirmBusyId, setConfirmBusyId] = useState<string | null>(null);
   const [refuseModal, setRefuseModal] = useState<{ id: string } | null>(null);
   const [refuseReason, setRefuseReason] = useState('');
 
@@ -160,16 +157,6 @@ export default function LeaderVolunteersPage() {
     } finally {
       setVoteBusyId(null);
     }
-  }
-
-  async function handleConfirm(id: string) {
-    setConfirmBusyId(id);
-    const ok = await execute(
-      () => registrationService.confirm(id),
-      { successMessage: 'Đã xác nhận đăng ký và thực thi on-chain' },
-    );
-    if (ok) await loadRegistrations();
-    setConfirmBusyId(null);
   }
 
   function applyRegSearch() {
@@ -311,18 +298,6 @@ export default function LeaderVolunteersPage() {
                     >
                       <ThumbsDown className="h-3.5 w-3.5" />
                     </button>
-                    {r.isAvailableToConfirm && (
-                      <button
-                        type="button"
-                        disabled={approved || confirmBusyId === r.id || !canLoad}
-                        onClick={() => handleConfirm(r.id)}
-                        className="inline-flex items-center gap-1 rounded-md border border-slate-200 bg-white px-2 py-1 text-xs font-medium text-slate-800 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
-                        title="Xác nhận on-chain"
-                      >
-                        <ShieldCheck className="h-3.5 w-3.5" />
-                        Xác nhận
-                      </button>
-                    )}
                   </div>
                 );
               },

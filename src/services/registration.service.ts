@@ -6,7 +6,6 @@ import type {
   CreateRegistrationRequest,
   RegistrationQueryParams,
   VoteRequest,
-  BuildTransactionResponse,
   MessageResponse,
 } from '@/src/types/api.types';
 
@@ -31,10 +30,6 @@ class RegistrationService {
 
   async vote(id: string, data: VoteRequest) {
     return apiService.post<MessageResponse>(`/registrations/${id}/vote`, data);
-  }
-
-  async confirm(id: string) {
-    return apiService.post<BuildTransactionResponse>(`/registrations/${id}/confirm`, null);
   }
 }
 

@@ -97,7 +97,7 @@ export default function LeaderNotificationsPage() {
                       }}
                       className="ml-auto rounded-md border border-slate-200 bg-white px-2 py-0.5 font-medium text-slate-700 hover:bg-slate-50"
                     >
-                      Details
+                      Chi tiết
                     </button>
                   </div>
                 </article>

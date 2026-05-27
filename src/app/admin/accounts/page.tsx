@@ -4,7 +4,6 @@ import { useCallback, useEffect, useState, type ReactNode } from 'react';
 import {
   Check,
   Search,
-  ShieldCheck,
   ThumbsDown,
   ThumbsUp,
   Users,
@@ -23,7 +22,6 @@ import { formatDate, formatDateTimeSeconds, formatVND } from '@/src/lib/formatte
 import { registrationService } from '@/src/services/registration.service';
 import { staffService } from '@/src/services/staff.service';
 import { adminService } from '@/src/services/admin.service';
-import { useExecuteTransaction } from '@/src/hooks/useExecuteTransaction';
 import type { RegistrationRequest, Staff } from '@/src/types/api.types';
 
 type Tab = 'registrations' | 'staff';
@@ -63,7 +61,6 @@ function detailField(label: string, value: ReactNode) {
 }
 
 export default function AdminAccountsPage() {
-  const { execute } = useExecuteTransaction();
   const [activeTab, setActiveTab] = useState<Tab>('registrations');
 
   const [regLoading, setRegLoading] = useState(true);
@@ -88,7 +85,6 @@ export default function AdminAccountsPage() {
   const [adminTotalPages, setAdminTotalPages] = useState(1);
 
   const [voteBusyId, setVoteBusyId] = useState<string | null>(null);
-  const [confirmBusyId, setConfirmBusyId] = useState<string | null>(null);
   const [refuseModal, setRefuseModal] = useState<{ id: string } | null>(null);
   const [refuseReason, setRefuseReason] = useState('');
 
@@ -258,16 +254,6 @@ export default function AdminAccountsPage() {
     }
   }
 
-  async function handleConfirm(id: string) {
-    setConfirmBusyId(id);
-    const ok = await execute(
-      () => registrationService.confirm(id),
-      { successMessage: 'Đã xác nhận đăng ký và thực thi on-chain' },
-    );
-    if (ok) await loadRegistrations();
-    setConfirmBusyId(null);
-  }
-
   function applyRegSearch() {
     setRegPage(0);
     setRegKeyword(regSearchDraft.trim());
@@ -417,18 +403,6 @@ export default function AdminAccountsPage() {
                       >
                         <ThumbsDown className="h-3.5 w-3.5" />
                       </button>
-                      {r.isAvailableToConfirm && (
-                        <button
-                          type="button"
-                          disabled={approved || confirmBusyId === r.id}
-                          onClick={() => handleConfirm(r.id)}
-                          className="inline-flex items-center gap-1 rounded-md border border-slate-200 bg-white px-2 py-1 text-xs font-medium text-slate-800 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
-                          title="Xác nhận on-chain"
-                        >
-                          <ShieldCheck className="h-3.5 w-3.5" />
-                          Xác nhận
-                        </button>
-                      )}
                     </div>
                   );
                 },

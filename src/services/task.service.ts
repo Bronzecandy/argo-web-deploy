@@ -41,12 +41,6 @@ class TaskService {
   async listStaffByWallet(walletAddress: string) {
     return apiService.get<Task[] | PaginationResponse<Task[]>>(`/tasks/staff/${walletAddress}`);
   }
-
-  async review(id: string, is_vote_yes: boolean, refuse_reason?: string) {
-    const params: Record<string, any> = { is_vote_yes };
-    if (refuse_reason) params.refuse_reason = refuse_reason;
-    return apiService.post<MessageResponse>(`/tasks/${id}/review`, null, { params });
-  }
 }
 
 export const taskService = new TaskService();

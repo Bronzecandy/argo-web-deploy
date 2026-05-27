@@ -5,7 +5,6 @@ import type {
   UploadChildRequest,
   ChildUploadQueryParams,
   VoteRequest,
-  BuildTransactionResponse,
   MessageResponse,
 } from '@/src/types/api.types';
 
@@ -28,14 +27,6 @@ class ChildUploadService {
 
   async review(id: string, data: VoteRequest) {
     return apiService.post<MessageResponse>(`/child-upload-reqs/${id}/review`, data);
-  }
-
-  async vote(id: string, data: VoteRequest) {
-    return apiService.post<MessageResponse>(`/child-upload-reqs/${id}/vote`, data);
-  }
-
-  async confirm(id: string) {
-    return apiService.post<BuildTransactionResponse>(`/child-upload-reqs/${id}/confirm`, null);
   }
 }
 
