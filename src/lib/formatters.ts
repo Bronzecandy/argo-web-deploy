@@ -95,6 +95,34 @@ export function truncateAddress(address: string, chars = 6): string {
   return `${address.slice(0, chars)}...${address.slice(-chars)}`;
 }
 
+/** Human-readable status for badges (keeps API value for color matching). */
+export function formatStatusLabel(status: string): string {
+  const s = (status || '').trim();
+  if (!s) return '—';
+  const map: Record<string, string> = {
+    pending: 'Đang chờ',
+    pending_review: 'Chờ duyệt',
+    Pending: 'Đang chờ',
+    PendingReview: 'Chờ duyệt',
+    approved: 'Đã duyệt',
+    Approved: 'Đã duyệt',
+    refused: 'Từ chối',
+    Refused: 'Từ chối',
+    rejected: 'Bị từ chối',
+    Rejected: 'Bị từ chối',
+    open: 'Mở',
+    submitted: 'Đã gửi',
+    completed: 'Hoàn thành',
+    executed: 'Đã thực thi',
+    invalid: 'Không hợp lệ',
+    valid: 'Hợp lệ',
+    Cancel: 'Đã hủy',
+    Success: 'Thành công',
+  };
+  if (map[s]) return map[s];
+  return s.replace(/_/g, ' ');
+}
+
 export function getStatusColor(status: string): string {
   const s = status?.toLowerCase();
   if (s === 'approved' || s === 'active' || s === 'verified') return 'text-blue-900 bg-blue-50 border-blue-200';

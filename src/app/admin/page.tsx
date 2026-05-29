@@ -5,8 +5,11 @@ import {
   Users, Baby, Building2, Wallet, HandCoins, UserCheck,
   ArrowUpRight, TrendingUp, TrendingDown,
 } from 'lucide-react';
+import Link from 'next/link';
 import StatsCard from '@/src/components/ui/StatsCard';
 import PageHeader from '@/src/components/ui/PageHeader';
+import PageSection from '@/src/components/ui/PageSection';
+import { btnSecondary } from '@/src/lib/uiClasses';
 import { registrationService } from '@/src/services/registration.service';
 import { childrenService } from '@/src/services/children.service';
 import { centerService } from '@/src/services/center.service';
@@ -146,8 +149,23 @@ export default function AdminDashboard() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center p-12">
-        <div className="h-8 w-8 animate-spin rounded-full border-4 border-blue-800 border-t-transparent" />
+      <div className="space-y-6">
+        <div className="h-10 w-64 animate-pulse rounded-lg bg-slate-200" />
+        <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <div key={i} className="h-24 animate-pulse rounded-xl border border-slate-200 bg-slate-100" />
+          ))}
+        </div>
+        <div className="grid grid-cols-2 gap-4 lg:grid-cols-5">
+          {Array.from({ length: 5 }).map((_, i) => (
+            <div key={i} className="h-20 animate-pulse rounded-xl border border-slate-200 bg-slate-100" />
+          ))}
+        </div>
+        <div className="h-80 animate-pulse rounded-xl border border-slate-200 bg-slate-100" />
+        <div className="grid gap-6 lg:grid-cols-2">
+          <div className="h-72 animate-pulse rounded-xl border border-slate-200 bg-slate-100" />
+          <div className="h-72 animate-pulse rounded-xl border border-slate-200 bg-slate-100" />
+        </div>
       </div>
     );
   }
@@ -158,6 +176,21 @@ export default function AdminDashboard() {
         title="Bảng điều khiển quản trị"
         description="Tổng quan hoạt động nền tảng AgroTrust"
       />
+
+      <div className="flex flex-wrap gap-2">
+        <Link href="/admin/treasury" className={btnSecondary}>
+          <Wallet className="h-4 w-4" />
+          Rút tiền & quỹ
+        </Link>
+        <Link href="/admin/accounts" className={btnSecondary}>
+          <Users className="h-4 w-4" />
+          Tài khoản & đăng ký
+        </Link>
+        <Link href="/admin/analytics" className={btnSecondary}>
+          <HandCoins className="h-4 w-4" />
+          Lịch sử giao dịch
+        </Link>
+      </div>
 
       {/* Stats Row 1 */}
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
@@ -176,10 +209,10 @@ export default function AdminDashboard() {
         <StatsCard label="Nhà hảo tâm" value={stats.donors} icon={Users} />
       </div>
 
-      {/* Transaction Volume Over Time */}
-      <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
-        <h2 className="mb-1 text-base font-semibold text-slate-900">Khối lượng giao dịch theo thời gian</h2>
-        <p className="mb-4 text-xs text-slate-500">Tổng số tiền giao dịch theo ngày</p>
+      <PageSection
+        title="Khối lượng giao dịch theo thời gian"
+        description="Tổng số tiền giao dịch theo ngày"
+      >
         {txByDate.length === 0 ? (
           <p className="py-8 text-center text-sm text-slate-400">Chưa có dữ liệu giao dịch</p>
         ) : (
@@ -199,12 +232,9 @@ export default function AdminDashboard() {
             </AreaChart>
           </ResponsiveContainer>
         )}
-      </div>
+      </PageSection>
 
-      {/* Transaction Count Over Time */}
-      <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
-        <h2 className="mb-1 text-base font-semibold text-slate-900">Số lượng giao dịch theo ngày</h2>
-        <p className="mb-4 text-xs text-slate-500">Số giao dịch mỗi ngày</p>
+      <PageSection title="Số lượng giao dịch theo ngày" description="Số giao dịch mỗi ngày">
         {txByDate.length === 0 ? (
           <p className="py-8 text-center text-sm text-slate-400">Chưa có dữ liệu giao dịch</p>
         ) : (
@@ -218,12 +248,10 @@ export default function AdminDashboard() {
             </BarChart>
           </ResponsiveContainer>
         )}
-      </div>
+      </PageSection>
 
-      {/* Row: Tx By Type + Withdrawal Status */}
       <div className="grid gap-6 lg:grid-cols-2">
-        <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
-          <h2 className="mb-4 text-base font-semibold text-slate-900">Giao dịch theo loại</h2>
+        <PageSection title="Giao dịch theo loại">
           {txByType.length === 0 ? (
             <p className="py-8 text-center text-sm text-slate-400">Chưa có dữ liệu</p>
           ) : (
@@ -237,10 +265,9 @@ export default function AdminDashboard() {
               </PieChart>
             </ResponsiveContainer>
           )}
-        </div>
+        </PageSection>
 
-        <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
-          <h2 className="mb-4 text-base font-semibold text-slate-900">Đề xuất rút tiền</h2>
+        <PageSection title="Đề xuất rút tiền">
           {withdrawByStatus.length === 0 ? (
             <p className="py-8 text-center text-sm text-slate-400">Chưa có dữ liệu</p>
           ) : (
@@ -257,13 +284,11 @@ export default function AdminDashboard() {
           <p className="mt-2 text-center text-xs text-slate-500">
             Tổng số tiền rút: <span className="font-semibold text-slate-700">{formatVND(totalWithdrawAmount)}</span>
           </p>
-        </div>
+        </PageSection>
       </div>
 
-      {/* Row: Registration Status + Center Status */}
       <div className="grid gap-6 lg:grid-cols-2">
-        <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
-          <h2 className="mb-4 text-base font-semibold text-slate-900">Yêu cầu đăng ký theo trạng thái</h2>
+        <PageSection title="Yêu cầu đăng ký theo trạng thái">
           {regByStatus.length === 0 ? (
             <p className="py-8 text-center text-sm text-slate-400">Chưa có dữ liệu</p>
           ) : (
@@ -277,10 +302,9 @@ export default function AdminDashboard() {
               </BarChart>
             </ResponsiveContainer>
           )}
-        </div>
+        </PageSection>
 
-        <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
-          <h2 className="mb-4 text-base font-semibold text-slate-900">Trung tâm hỗ trợ theo vùng</h2>
+        <PageSection title="Trung tâm hỗ trợ theo vùng">
           {centersByRegion.length === 0 ? (
             <p className="py-8 text-center text-sm text-slate-400">Chưa có dữ liệu</p>
           ) : (
@@ -294,13 +318,11 @@ export default function AdminDashboard() {
               </BarChart>
             </ResponsiveContainer>
           )}
-        </div>
+        </PageSection>
       </div>
 
-      {/* Row: Children by Region + Child Upload Status */}
       <div className="grid gap-6 lg:grid-cols-2">
-        <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
-          <h2 className="mb-4 text-base font-semibold text-slate-900">Trẻ em theo vùng</h2>
+        <PageSection title="Trẻ em theo vùng">
           {childrenByRegion.length === 0 ? (
             <p className="py-8 text-center text-sm text-slate-400">Chưa có dữ liệu</p>
           ) : (
@@ -314,10 +336,9 @@ export default function AdminDashboard() {
               </BarChart>
             </ResponsiveContainer>
           )}
-        </div>
+        </PageSection>
 
-        <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
-          <h2 className="mb-4 text-base font-semibold text-slate-900">Yêu cầu tải hồ sơ trẻ theo trạng thái</h2>
+        <PageSection title="Yêu cầu tải hồ sơ trẻ theo trạng thái">
           {uploadsByStatus.length === 0 ? (
             <p className="py-8 text-center text-sm text-slate-400">Chưa có dữ liệu</p>
           ) : (
@@ -331,12 +352,10 @@ export default function AdminDashboard() {
               </PieChart>
             </ResponsiveContainer>
           )}
-        </div>
+        </PageSection>
       </div>
 
-      {/* Tasks by Status */}
-      <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
-        <h2 className="mb-4 text-base font-semibold text-slate-900">Nhiệm vụ theo trạng thái</h2>
+      <PageSection title="Nhiệm vụ theo trạng thái">
         {tasksByStatus.length === 0 ? (
           <p className="py-8 text-center text-sm text-slate-400">Chưa có dữ liệu nhiệm vụ</p>
         ) : (
@@ -350,19 +369,18 @@ export default function AdminDashboard() {
             </BarChart>
           </ResponsiveContainer>
         )}
-      </div>
+      </PageSection>
 
-      {/* Recent Transactions Table */}
-      <div className="rounded-xl border border-slate-200 bg-white shadow-sm">
-        <div className="flex items-center justify-between border-b border-slate-200 px-5 py-4">
-          <div>
-            <h2 className="font-semibold text-slate-900">Giao dịch gần đây</h2>
-            <p className="text-xs text-slate-500">Hoạt động mới nhất trên nền tảng</p>
-          </div>
-          <a href="/admin/analytics" className="flex items-center gap-1 text-sm text-blue-800 hover:underline">
+      <PageSection
+        title="Giao dịch gần đây"
+        description="Hoạt động mới nhất trên nền tảng"
+        actions={
+          <Link href="/admin/analytics" className="flex items-center gap-1 text-sm text-blue-800 hover:underline">
             Xem tất cả <ArrowUpRight className="h-3.5 w-3.5" />
-          </a>
-        </div>
+          </Link>
+        }
+        noPadding
+      >
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
@@ -396,19 +414,18 @@ export default function AdminDashboard() {
             </tbody>
           </table>
         </div>
-      </div>
+      </PageSection>
 
-      {/* Recent Withdrawals Table */}
-      <div className="rounded-xl border border-slate-200 bg-white shadow-sm">
-        <div className="flex items-center justify-between border-b border-slate-200 px-5 py-4">
-          <div>
-            <h2 className="font-semibold text-slate-900">Đề xuất rút tiền gần đây</h2>
-            <p className="text-xs text-slate-500">Đề xuất mới nhất trên các quỹ</p>
-          </div>
-          <a href="/admin/treasury" className="flex items-center gap-1 text-sm text-blue-800 hover:underline">
+      <PageSection
+        title="Đề xuất rút tiền gần đây"
+        description="Đề xuất mới nhất trên các quỹ"
+        actions={
+          <Link href="/admin/treasury" className="flex items-center gap-1 text-sm text-blue-800 hover:underline">
             Xem tất cả <ArrowUpRight className="h-3.5 w-3.5" />
-          </a>
-        </div>
+          </Link>
+        }
+        noPadding
+      >
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
@@ -450,7 +467,7 @@ export default function AdminDashboard() {
             </tbody>
           </table>
         </div>
-      </div>
+      </PageSection>
     </div>
   );
 }

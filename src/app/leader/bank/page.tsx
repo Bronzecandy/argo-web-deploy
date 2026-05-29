@@ -7,6 +7,8 @@ import PageHeader from '@/src/components/ui/PageHeader';
 import { useAppSelector } from '@/src/store/hooks';
 import { bankService } from '@/src/services/bank.service';
 import type { BankProfile, CreateBankProfileRequest, UpdateBankProfileRequest } from '@/src/types/api.types';
+import PageSection from '@/src/components/ui/PageSection';
+import { btnPrimary, btnSecondary, inputClass } from '@/src/lib/uiClasses';
 
 function getErrorMessage(e: unknown, fallback: string) {
   if (e && typeof e === 'object' && 'response' in e) {
@@ -133,7 +135,7 @@ export default function LeaderBankPage() {
             <button
               type="button"
               onClick={() => setEditing(true)}
-              className="inline-flex items-center gap-2 rounded-lg bg-blue-800 px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-blue-900"
+              className={btnPrimary}
             >
               <Pencil className="h-4 w-4" />
               Sửa
@@ -143,7 +145,7 @@ export default function LeaderBankPage() {
       />
 
       {bank && !editing ? (
-        <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
+        <PageSection>
           <dl className="grid gap-4 sm:grid-cols-2">
             <div>
               <dt className="text-xs font-medium uppercase tracking-wide text-slate-500">Tổ chức ngân hàng</dt>
@@ -174,12 +176,10 @@ export default function LeaderBankPage() {
               </dd>
             </div>
           </dl>
-        </div>
+        </PageSection>
       ) : (
-        <form
-          onSubmit={handleSubmit}
-          className="space-y-5 rounded-xl border border-slate-200 bg-white p-6 shadow-sm"
-        >
+        <form onSubmit={handleSubmit} className="space-y-5">
+        <PageSection>
           <div className="flex items-center justify-between">
             <h2 className="text-lg font-semibold text-slate-900">{bank ? 'Sửa hồ sơ ngân hàng' : 'Tạo hồ sơ ngân hàng'}</h2>
             {bank && editing ? (
@@ -208,7 +208,7 @@ export default function LeaderBankPage() {
             <div>
               <label className="mb-1.5 block text-sm font-medium text-slate-700">Mã ngân hàng</label>
               <input
-                className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none ring-blue-800/20 transition focus:border-blue-800 focus:ring-2"
+                className={inputClass}
                 value={form.bank_code}
                 onChange={(ev) => updateField('bank_code', ev.target.value)}
                 required
@@ -217,7 +217,7 @@ export default function LeaderBankPage() {
             <div>
               <label className="mb-1.5 block text-sm font-medium text-slate-700">Tổ chức / chi nhánh</label>
               <input
-                className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none ring-blue-800/20 transition focus:border-blue-800 focus:ring-2"
+                className={inputClass}
                 value={form.bank_org}
                 onChange={(ev) => updateField('bank_org', ev.target.value)}
                 required
@@ -226,7 +226,7 @@ export default function LeaderBankPage() {
             <div className="sm:col-span-2">
               <label className="mb-1.5 block text-sm font-medium text-slate-700">Tên chủ tài khoản</label>
               <input
-                className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none ring-blue-800/20 transition focus:border-blue-800 focus:ring-2"
+                className={inputClass}
                 value={form.owner_name}
                 onChange={(ev) => updateField('owner_name', ev.target.value)}
                 required
@@ -235,7 +235,7 @@ export default function LeaderBankPage() {
             <div>
               <label className="mb-1.5 block text-sm font-medium text-slate-700">PayOS client ID (tùy chọn)</label>
               <input
-                className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none ring-blue-800/20 transition focus:border-blue-800 focus:ring-2"
+                className={inputClass}
                 value={form.payos_client_id}
                 onChange={(ev) => updateField('payos_client_id', ev.target.value)}
               />
@@ -245,7 +245,7 @@ export default function LeaderBankPage() {
               <input
                 type="password"
                 autoComplete="off"
-                className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none ring-blue-800/20 transition focus:border-blue-800 focus:ring-2"
+                className={inputClass}
                 value={form.payos_api_key}
                 onChange={(ev) => updateField('payos_api_key', ev.target.value)}
               />
@@ -255,20 +255,17 @@ export default function LeaderBankPage() {
               <input
                 type="password"
                 autoComplete="off"
-                className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none ring-blue-800/20 transition focus:border-blue-800 focus:ring-2"
+                className={inputClass}
                 value={form.payos_check_sum_key}
                 onChange={(ev) => updateField('payos_check_sum_key', ev.target.value)}
               />
             </div>
           </div>
 
-          <button
-            type="submit"
-            disabled={saving}
-            className="rounded-lg bg-blue-800 px-5 py-2.5 text-sm font-medium text-white shadow-sm transition hover:bg-blue-900 disabled:opacity-60"
-          >
+          <button type="submit" disabled={saving} className={btnPrimary}>
             {saving ? 'Đang lưu…' : bank ? 'Lưu thay đổi' : 'Tạo hồ sơ'}
           </button>
+        </PageSection>
         </form>
       )}
     </div>

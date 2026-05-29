@@ -1,14 +1,21 @@
 'use client';
 
-import { useCallback, useEffect, useState, type ReactNode } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import PageHeader from '@/src/components/ui/PageHeader';
 import DataTable from '@/src/components/ui/DataTable';
 import DetailModal from '@/src/components/ui/DetailModal';
+import DetailField from '@/src/components/ui/DetailField';
 import EntityBlobThumb from '@/src/components/ui/EntityBlobThumb';
 import StatusBadge from '@/src/components/ui/StatusBadge';
 import CopyableTruncated from '@/src/components/ui/CopyableTruncated';
+import AiInsightPanel from '@/src/components/ui/AiInsightPanel';
+import AiEvaluationBadge from '@/src/components/ui/AiEvaluationBadge';
+import FilterToolbar from '@/src/components/ui/FilterToolbar';
+import PageSection from '@/src/components/ui/PageSection';
+import TableIconButton from '@/src/components/ui/TableIconButton';
 import { collectBlobIdEntries, blobFieldDisplayLabel } from '@/src/lib/blobFields';
 import { formatDate, truncateAddress } from '@/src/lib/formatters';
+import { selectClass } from '@/src/lib/uiClasses';
 import { toast } from 'sonner';
 import { useAppSelector } from '@/src/store/hooks';
 import { taskProofService } from '@/src/services/task-proof.service';
@@ -58,15 +65,6 @@ function isProofActionable(status?: string | null) {
 /** Prefer API `review_status`, then legacy `status`. */
 function proofReviewStatus(r: TaskProof): string {
   return (r.review_status ?? r.status ?? '').trim();
-}
-
-function detailField(label: string, value: ReactNode) {
-  return (
-    <div className="border-b border-slate-100 py-2 last:border-0">
-      <div className="text-xs font-medium text-slate-500">{label}</div>
-      <div className="text-sm text-slate-900">{value}</div>
-    </div>
-  );
 }
 
 export default function LeaderTaskProofsPage() {
@@ -144,7 +142,7 @@ export default function LeaderTaskProofsPage() {
   };
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6">
       <PageHeader
         title="Bằng chứng nhiệm vụ"
         description={
@@ -154,9 +152,8 @@ export default function LeaderTaskProofsPage() {
         }
       />
 
-      <section className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
-        <h2 className="mb-4 text-lg font-semibold text-slate-900">Danh sách bằng chứng</h2>
-        <div className="mb-4">
+      <FilterToolbar>
+        <div>
           <label className="mb-1 block text-xs font-medium text-slate-500">Trạng thái duyệt</label>
           <select
             value={status}
@@ -164,7 +161,7 @@ export default function LeaderTaskProofsPage() {
               setStatus(e.target.value);
               setPage(0);
             }}
-            className="min-w-[200px] rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-blue-700 focus:outline-none focus:ring-1 focus:ring-blue-700"
+            className={`${selectClass} min-w-[200px]`}
           >
             {STATUS_OPTIONS.map((o) => (
               <option key={o.value || 'all'} value={o.value}>
@@ -173,6 +170,9 @@ export default function LeaderTaskProofsPage() {
             ))}
           </select>
         </div>
+      </FilterToolbar>
+
+      <PageSection title="Danh sách bằng chứng" noPadding>
         <DataTable<TaskProof>
           columns={[
             {
@@ -195,6 +195,11 @@ export default function LeaderTaskProofsPage() {
               },
             },
             {
+              key: 'ai_evaluation',
+              label: 'AI',
+              render: (r) => <AiEvaluationBadge record={r} />,
+            },
+            {
               key: 'review_status',
               label: 'Trạng thái',
               render: (r) => {
@@ -211,21 +216,19 @@ export default function LeaderTaskProofsPage() {
               render: (r) => {
                 const actionable = isProofActionable(proofReviewStatus(r));
                 return (
-                  <div className="flex flex-wrap gap-1">
-                    <button
-                      type="button"
+                  <div className="flex flex-nowrap items-center gap-1">
+                    <TableIconButton
                       onClick={(e) => {
                         e.stopPropagation();
                         setProofDetailRow(r);
                         setProofDetailId(r.id);
                         setProofDetailOpen(true);
                       }}
-                      className="rounded-lg border border-slate-200 bg-white px-2 py-1 text-xs font-medium text-slate-800 hover:bg-slate-50"
                     >
                       Chi tiết
-                    </button>
-                    <button
-                      type="button"
+                    </TableIconButton>
+                    <TableIconButton
+                      variant="primary"
                       disabled={!actionable}
                       title={actionable ? undefined : 'Bằng chứng này đã được duyệt'}
                       onClick={(e) => {
@@ -233,12 +236,11 @@ export default function LeaderTaskProofsPage() {
                         if (!actionable) return;
                         void handleApprove(r.id);
                       }}
-                      className="rounded-lg border border-blue-200 px-2 py-1 text-xs font-medium text-blue-900 hover:bg-blue-50 disabled:pointer-events-none disabled:opacity-40 disabled:grayscale"
                     >
                       Duyệt
-                    </button>
-                    <button
-                      type="button"
+                    </TableIconButton>
+                    <TableIconButton
+                      variant="danger"
                       disabled={!actionable}
                       title={actionable ? undefined : 'Bằng chứng này đã được duyệt'}
                       onClick={(e) => {
@@ -246,10 +248,9 @@ export default function LeaderTaskProofsPage() {
                         if (!actionable) return;
                         void handleRefuse(r.id);
                       }}
-                      className="rounded-lg border border-red-200 px-2 py-1 text-xs font-medium text-red-700 hover:bg-red-50 disabled:pointer-events-none disabled:opacity-40 disabled:grayscale"
                     >
                       Từ chối
-                    </button>
+                    </TableIconButton>
                   </div>
                 );
               },
@@ -262,7 +263,7 @@ export default function LeaderTaskProofsPage() {
           onPageChange={setPage}
           emptyMessage="Không có bằng chứng nào khớp bộ lọc"
         />
-      </section>
+      </PageSection>
 
       <DetailModal
         title="Chi tiết bằng chứng nhiệm vụ"
@@ -281,17 +282,21 @@ export default function LeaderTaskProofsPage() {
           const blobs = collectBlobIdEntries(p);
           const label = proofReviewStatus(p);
           return (
-            <div className="space-y-1">
-              {detailField('Mã', <CopyableTruncated value={p.id} chars={4} />)}
-              {detailField('ID nhiệm vụ', p.task_id ? <CopyableTruncated value={p.task_id} chars={4} /> : '—')}
-              {detailField('Người thực hiện', <CopyableTruncated value={p.actor_address} />)}
-              {detailField('Hồ sơ người thực hiện', p.actor_profile_id ? <CopyableTruncated value={p.actor_profile_id} /> : '—')}
-              {detailField('Trạng thái', label ? <StatusBadge status={label} /> : <span className="text-slate-400">—</span>)}
-              {detailField('Mô tả', p.description ?? '—')}
-              {detailField('Ngày gửi thô', p.raw_submit_date ? formatDate(p.raw_submit_date) : '—')}
-              {detailField('Người duyệt', p.reviewed_by ? <CopyableTruncated value={p.reviewed_by} /> : '—')}
-              {detailField('Ngày tạo', formatDate(p.created_at))}
-              {detailField('Cập nhật lúc', formatDate(p.updated_at))}
+            <div>
+              <DetailField label="Mã" value={<CopyableTruncated value={p.id} chars={4} />} />
+              <DetailField label="ID nhiệm vụ" value={p.task_id ? <CopyableTruncated value={p.task_id} chars={4} /> : '—'} />
+              <DetailField label="Người thực hiện" value={<CopyableTruncated value={p.actor_address} />} />
+              <DetailField label="Hồ sơ người thực hiện" value={p.actor_profile_id ? <CopyableTruncated value={p.actor_profile_id} /> : '—'} />
+              <DetailField label="Trạng thái" value={label ? <StatusBadge status={label} /> : <span className="text-slate-400">—</span>} />
+              <DetailField label="Mô tả" value={p.description ?? '—'} />
+              {p.is_child_task != null && (
+                <DetailField label="Nhiệm vụ theo trẻ" value={p.is_child_task ? 'Có' : 'Không'} />
+              )}
+              <AiInsightPanel record={p} className="my-3" />
+              <DetailField label="Ngày gửi thô" value={p.raw_submit_date ? formatDate(p.raw_submit_date) : '—'} />
+              <DetailField label="Người duyệt" value={p.reviewed_by ? <CopyableTruncated value={p.reviewed_by} /> : '—'} />
+              <DetailField label="Ngày tạo" value={formatDate(p.created_at)} />
+              <DetailField label="Cập nhật lúc" value={formatDate(p.updated_at)} />
               {blobs.length > 0 && (
                 <div className="border-t border-slate-100 pt-3">
                   <div className="mb-2 text-xs font-medium text-slate-600">Ảnh (Walrus)</div>

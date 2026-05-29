@@ -2,6 +2,7 @@
 
 import { useState, type ComponentProps } from 'react';
 import { formatInteger, parseDigitsToNumber } from '@/src/lib/formatters';
+import { inputClass } from '@/src/lib/uiClasses';
 
 type Props = Omit<ComponentProps<'input'>, 'type' | 'value' | 'onChange' | 'inputMode'> & {
   value: string;
@@ -15,7 +16,15 @@ type Props = Omit<ComponentProps<'input'>, 'type' | 'value' | 'onChange' | 'inpu
 /**
  * Text input with numeric keyboard; value is digits-only in state. Shows comma grouping when not focused.
  */
-export default function GroupedNumericInput({ value, onChange, min, max, onBlur, className, ...rest }: Props) {
+export default function GroupedNumericInput({
+  value,
+  onChange,
+  min,
+  max,
+  onBlur,
+  className = inputClass,
+  ...rest
+}: Props) {
   const [focused, setFocused] = useState(false);
 
   const digits = value.replace(/\D/g, '');

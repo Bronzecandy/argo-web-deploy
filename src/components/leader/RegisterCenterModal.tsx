@@ -6,9 +6,7 @@ import FileUploadInput from '@/src/components/ui/FileUploadInput';
 import { regionService } from '@/src/services/region.service';
 import { centerService } from '@/src/services/center.service';
 import type { CreateCenterRequest } from '@/src/types/api.types';
-
-const inputClass =
-  'w-full rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none ring-blue-800/20 transition focus:border-blue-800 focus:ring-2';
+import { btnPrimary, inputClass, selectClass } from '@/src/lib/uiClasses';
 
 function getErrorMessage(e: unknown, fallback: string) {
   if (e && typeof e === 'object' && 'response' in e) {
@@ -120,7 +118,7 @@ export default function RegisterCenterModal({
               />
             ) : (
               <select
-                className={inputClass}
+                className={`${selectClass} w-full`}
                 value={form.region}
                 onChange={(e) => setForm((f) => ({ ...f, region: e.target.value }))}
                 required
@@ -162,7 +160,7 @@ export default function RegisterCenterModal({
           <button
             type="submit"
             disabled={submitting}
-            className="rounded-lg bg-blue-800 px-5 py-2.5 text-sm font-medium text-white shadow-sm transition hover:bg-blue-900 disabled:opacity-60"
+            className={btnPrimary}
           >
             {submitting ? 'Đang gửi…' : 'Đăng ký trung tâm'}
           </button>

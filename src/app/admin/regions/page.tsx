@@ -2,12 +2,17 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import { toast } from 'sonner';
-import { X, Check } from 'lucide-react';
 import PageHeader from '@/src/components/ui/PageHeader';
 import DataTable from '@/src/components/ui/DataTable';
 import StatusBadge from '@/src/components/ui/StatusBadge';
 import DetailModal from '@/src/components/ui/DetailModal';
+import DetailField from '@/src/components/ui/DetailField';
+import FilterToolbar from '@/src/components/ui/FilterToolbar';
+import FormModal from '@/src/components/ui/FormModal';
+import PageSection from '@/src/components/ui/PageSection';
+import TableIconButton from '@/src/components/ui/TableIconButton';
 import CopyableTruncated from '@/src/components/ui/CopyableTruncated';
+import { btnPrimary, btnSecondary, inputClass } from '@/src/lib/uiClasses';
 import { formatDate } from '@/src/lib/formatters';
 import { regionService } from '@/src/services/region.service';
 import type { SupportedRegionSuggestion } from '@/src/types/api.types';
@@ -130,55 +135,54 @@ export default function AdminRegionsPage() {
         description="Xem đề xuất từ trưởng vùng — phê duyệt hoặc từ chối (có thể kèm lý do)."
       />
 
-      <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          <div>
-            <label className="mb-1 block text-xs font-medium text-slate-500">Từ khóa</label>
-            <input
-              value={keywordDraft}
-              onChange={(e) => setKeywordDraft(e.target.value)}
-              placeholder="Tìm vùng hoặc nội dung…"
-              className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-blue-700 focus:outline-none focus:ring-1 focus:ring-blue-700"
-            />
-          </div>
-          <div>
-            <label className="mb-1 block text-xs font-medium text-slate-500">Người tạo (địa chỉ ví)</label>
-            <input
-              value={createdByDraft}
-              onChange={(e) => setCreatedByDraft(e.target.value)}
-              placeholder="Địa chỉ ví"
-              className="w-full rounded-lg border border-slate-200 px-3 py-2 font-mono text-xs focus:border-blue-700 focus:outline-none focus:ring-1 focus:ring-blue-700"
-            />
-          </div>
-          <div className="flex items-end gap-2">
-            <button
-              type="button"
-              onClick={() => {
-                setAppliedKeyword(keywordDraft);
-                setAppliedCreatedBy(createdByDraft);
-                setPage(0);
-              }}
-              className="rounded-lg bg-blue-800 px-4 py-2 text-sm font-medium text-white hover:bg-blue-900"
-            >
-              Tìm kiếm
-            </button>
-            <button
-              type="button"
-              onClick={() => {
-                setKeywordDraft('');
-                setCreatedByDraft('');
-                setAppliedKeyword('');
-                setAppliedCreatedBy('');
-                setPage(0);
-              }}
-              className="rounded-lg border border-slate-200 px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-50"
-            >
-              Xóa bộ lọc
-            </button>
-          </div>
+      <FilterToolbar>
+        <div className="min-w-[200px] flex-1">
+          <label className="mb-1 block text-xs font-medium text-slate-500">Từ khóa</label>
+          <input
+            value={keywordDraft}
+            onChange={(e) => setKeywordDraft(e.target.value)}
+            placeholder="Tìm vùng hoặc nội dung…"
+            className={inputClass}
+          />
         </div>
-      </div>
+        <div className="min-w-[200px] flex-1">
+          <label className="mb-1 block text-xs font-medium text-slate-500">Người tạo (địa chỉ ví)</label>
+          <input
+            value={createdByDraft}
+            onChange={(e) => setCreatedByDraft(e.target.value)}
+            placeholder="Địa chỉ ví"
+            className={`${inputClass} font-mono text-xs`}
+          />
+        </div>
+        <div className="flex flex-wrap items-end gap-2">
+          <button
+            type="button"
+            onClick={() => {
+              setAppliedKeyword(keywordDraft);
+              setAppliedCreatedBy(createdByDraft);
+              setPage(0);
+            }}
+            className={btnPrimary}
+          >
+            Tìm kiếm
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              setKeywordDraft('');
+              setCreatedByDraft('');
+              setAppliedKeyword('');
+              setAppliedCreatedBy('');
+              setPage(0);
+            }}
+            className={btnSecondary}
+          >
+            Xóa bộ lọc
+          </button>
+        </div>
+      </FilterToolbar>
 
+      <PageSection title="Danh sách đề xuất" noPadding>
       <DataTable<SupportedRegionSuggestion>
         loading={loading}
         data={rows}
@@ -205,16 +209,14 @@ export default function AdminRegionsPage() {
             key: 'detail_btn',
             label: 'Chi tiết',
             render: (r) => (
-              <button
-                type="button"
+              <TableIconButton
                 onClick={(e) => {
                   e.stopPropagation();
                   setDetailId(r.id);
                 }}
-                className="rounded-lg border border-slate-200 px-2 py-1 text-xs font-medium text-slate-700 hover:bg-slate-50"
               >
                 Chi tiết
-              </button>
+              </TableIconButton>
             ),
           },
           {
@@ -225,28 +227,19 @@ export default function AdminRegionsPage() {
               const can = isPendingReview(r.status);
               return (
                 <div className="flex flex-wrap gap-1" onClick={(e) => e.stopPropagation()}>
-                  <button
-                    type="button"
-                    disabled={!can}
-                    onClick={() => void handleApprove(r.id)}
-                    className="rounded-lg border border-blue-200 px-2 py-1 text-xs font-medium text-blue-900 hover:bg-blue-50 disabled:cursor-not-allowed disabled:opacity-40"
-                  >
+                  <TableIconButton variant="primary" disabled={!can} onClick={() => void handleApprove(r.id)}>
                     Phê duyệt
-                  </button>
-                  <button
-                    type="button"
-                    disabled={!can}
-                    onClick={() => handleRefuse(r.id)}
-                    className="rounded-lg border border-red-200 px-2 py-1 text-xs font-medium text-red-700 hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-40"
-                  >
+                  </TableIconButton>
+                  <TableIconButton variant="danger" disabled={!can} onClick={() => handleRefuse(r.id)}>
                     Từ chối
-                  </button>
+                  </TableIconButton>
                 </div>
               );
             },
           },
         ]}
       />
+      </PageSection>
 
       <DetailModal
         title="Đề xuất vùng được hỗ trợ"
@@ -259,72 +252,35 @@ export default function AdminRegionsPage() {
           const r = detailRow ?? (detailId ? (rows.find((x) => x.id === detailId) ?? null) : null);
           if (!r) return null;
           return (
-            <div className="space-y-2 text-sm">
-              <p className="flex flex-wrap items-center gap-2">
-                <span className="text-slate-500">Mã:</span> <CopyableTruncated value={r.id} chars={6} />
-              </p>
-              <p>
-                <span className="text-slate-500">Vùng:</span> {r.region}
-              </p>
-              <p>
-                <span className="text-slate-500">Nội dung:</span> {r.content}
-              </p>
-              <p>
-                <span className="text-slate-500">Người tạo:</span>{' '}
-                <CopyableTruncated value={r.created_by} chars={6} />
-              </p>
-              <p>
-                <span className="text-slate-500">Trạng thái:</span> <StatusBadge status={r.status || 'pending'} />
-              </p>
-              <p>
-                <span className="text-slate-500">Ngày tạo:</span> {formatDate(r.created_at)}
-              </p>
+            <div>
+              <DetailField label="Mã" value={<CopyableTruncated value={r.id} chars={6} />} />
+              <DetailField label="Vùng" value={r.region} />
+              <DetailField label="Nội dung" value={r.content} />
+              <DetailField label="Người tạo" value={<CopyableTruncated value={r.created_by} chars={6} />} />
+              <DetailField label="Trạng thái" value={<StatusBadge status={r.status || 'pending'} />} />
+              <DetailField label="Ngày tạo" value={formatDate(r.created_at)} />
             </div>
           );
         })()}
       </DetailModal>
 
-      {refuseModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 p-4">
-          <div className="w-full max-w-md rounded-xl border border-slate-200 bg-white p-5 shadow-xl">
-            <div className="mb-3 flex items-center justify-between">
-              <h3 className="text-lg font-semibold text-slate-900">Từ chối đề xuất</h3>
-              <button
-                type="button"
-                onClick={() => setRefuseModal(null)}
-                className="rounded-lg p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-700"
-              >
-                <X className="h-5 w-5" />
-              </button>
-            </div>
-            <p className="mb-2 text-sm text-slate-600">Khi từ chối, bạn cần nhập lý do.</p>
-            <textarea
-              value={refuseReason}
-              onChange={(e) => setRefuseReason(e.target.value)}
-              rows={3}
-              className="mb-4 w-full rounded-lg border border-slate-200 p-2 text-sm outline-none ring-blue-800/20 focus:ring-2"
-              placeholder="Lý do…"
-            />
-            <div className="flex justify-end gap-2">
-              <button
-                type="button"
-                onClick={() => setRefuseModal(null)}
-                className="rounded-lg border border-slate-200 px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
-              >
-                Hủy
-              </button>
-              <button
-                type="button"
-                onClick={() => void submitRefuse()}
-                className="inline-flex items-center gap-1 rounded-lg bg-red-600 px-3 py-2 text-sm font-medium text-white hover:bg-red-700"
-              >
-                <Check className="h-4 w-4" />
-                Xác nhận từ chối
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      <FormModal
+        open={refuseModal !== null}
+        onClose={() => setRefuseModal(null)}
+        title="Từ chối đề xuất"
+        submitLabel="Xác nhận từ chối"
+        submitVariant="danger"
+        onSubmit={() => void submitRefuse()}
+      >
+        <p className="mb-2 text-sm text-slate-600">Khi từ chối, bạn cần nhập lý do.</p>
+        <textarea
+          value={refuseReason}
+          onChange={(e) => setRefuseReason(e.target.value)}
+          rows={3}
+          className={`${inputClass} resize-y`}
+          placeholder="Lý do…"
+        />
+      </FormModal>
     </div>
   );
 }

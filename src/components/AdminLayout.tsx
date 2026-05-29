@@ -22,16 +22,31 @@ import {
   CreditCard,
 } from 'lucide-react';
 
-const NAV_ITEMS = [
-  { label: 'Bảng điều khiển', href: '/admin', icon: LayoutDashboard },
-  { label: 'Quản lý tài khoản', href: '/admin/accounts', icon: Users },
-  { label: 'Hồ sơ trẻ', href: '/admin/children', icon: Baby },
-  { label: 'Trung tâm hỗ trợ', href: '/admin/centers', icon: Building2 },
-  { label: 'Nhà hảo tâm', href: '/admin/donors', icon: HandCoins },
-  { label: 'Thanh toán', href: '/admin/payments', icon: CreditCard },
-  { label: 'Đề xuất rút tiền', href: '/admin/treasury', icon: Wallet },
-  { label: 'Giao dịch', href: '/admin/analytics', icon: BarChart3 },
-  { label: 'Đề xuất vùng (admin)', href: '/admin/regions', icon: MapPin },
+type NavItem = { label: string; href: string; icon: typeof LayoutDashboard };
+
+const NAV_GROUPS: { title: string; items: NavItem[] }[] = [
+  {
+    title: 'Tổng quan',
+    items: [{ label: 'Bảng điều khiển', href: '/admin', icon: LayoutDashboard }],
+  },
+  {
+    title: 'Duyệt hồ sơ',
+    items: [
+      { label: 'Quản lý tài khoản', href: '/admin/accounts', icon: Users },
+      { label: 'Hồ sơ trẻ', href: '/admin/children', icon: Baby },
+      { label: 'Trung tâm hỗ trợ', href: '/admin/centers', icon: Building2 },
+      { label: 'Đề xuất vùng', href: '/admin/regions', icon: MapPin },
+    ],
+  },
+  {
+    title: 'Tài chính',
+    items: [
+      { label: 'Nhà hảo tâm', href: '/admin/donors', icon: HandCoins },
+      { label: 'Thanh toán', href: '/admin/payments', icon: CreditCard },
+      { label: 'Đề xuất rút tiền', href: '/admin/treasury', icon: Wallet },
+      { label: 'Giao dịch', href: '/admin/analytics', icon: BarChart3 },
+    ],
+  },
 ];
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
@@ -77,28 +92,35 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         </div>
 
         <nav className="flex-1 overflow-y-auto p-3">
-          <ul className="space-y-0.5">
-            {NAV_ITEMS.map((item) => {
-              const Icon = item.icon;
-              const active = isActive(item.href);
-              return (
-                <li key={item.href}>
-                  <Link
-                    href={item.href}
-                    onClick={() => setSidebarOpen(false)}
-                    className={`flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition ${
-                      active
-                        ? 'bg-blue-50 text-blue-900'
-                        : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
-                    }`}
-                  >
-                    <Icon className={`h-[18px] w-[18px] ${active ? 'text-blue-800' : 'text-slate-400'}`} />
-                    {item.label}
-                  </Link>
-                </li>
-              );
-            })}
-          </ul>
+          {NAV_GROUPS.map((group) => (
+            <div key={group.title} className="mb-4 last:mb-0">
+              <p className="mb-1.5 px-3 text-[10px] font-semibold uppercase tracking-wide text-slate-400">
+                {group.title}
+              </p>
+              <ul className="space-y-0.5">
+                {group.items.map((item) => {
+                  const Icon = item.icon;
+                  const active = isActive(item.href);
+                  return (
+                    <li key={item.href}>
+                      <Link
+                        href={item.href}
+                        onClick={() => setSidebarOpen(false)}
+                        className={`flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition ${
+                          active
+                            ? 'bg-blue-50 text-blue-900 shadow-sm ring-1 ring-blue-800/10'
+                            : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
+                        }`}
+                      >
+                        <Icon className={`h-[18px] w-[18px] ${active ? 'text-blue-800' : 'text-slate-400'}`} />
+                        {item.label}
+                      </Link>
+                    </li>
+                  );
+                })}
+              </ul>
+            </div>
+          ))}
         </nav>
 
         <div className="border-t border-slate-200 p-3">
@@ -118,17 +140,22 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
       {/* Main */}
       <div className="flex flex-1 flex-col overflow-hidden">
-        <header className="flex h-16 items-center gap-4 border-b border-slate-200 bg-white px-4 lg:px-6">
-          <button className="lg:hidden" onClick={() => setSidebarOpen(true)}>
-            <Menu className="h-5 w-5 text-slate-600" />
+        <header className="flex h-16 shrink-0 items-center gap-4 border-b border-slate-200 bg-white/95 px-4 backdrop-blur-sm lg:px-6">
+          <button
+            type="button"
+            className="rounded-lg p-2 text-slate-600 hover:bg-slate-100 lg:hidden"
+            onClick={() => setSidebarOpen(true)}
+            aria-label="Mở menu"
+          >
+            <Menu className="h-5 w-5" />
           </button>
           <div className="flex-1" />
-          <div className="flex items-center gap-2 text-sm text-slate-500">
-            <div className="h-2 w-2 rounded-full bg-blue-600" />
+          <div className="flex items-center gap-2 rounded-full border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs font-medium text-slate-600">
+            <span className="h-2 w-2 rounded-full bg-emerald-500" aria-hidden />
             Đã kết nối
           </div>
         </header>
-        <main className="flex-1 overflow-y-auto p-4 lg:p-6">{children}</main>
+        <main className="flex-1 overflow-y-auto bg-slate-50/50 p-4 lg:p-6">{children}</main>
       </div>
     </div>
   );

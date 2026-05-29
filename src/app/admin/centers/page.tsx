@@ -1,14 +1,20 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
-import { Building2, Check, ClipboardList, MapPin, ShieldCheck, ThumbsDown, ThumbsUp, X } from 'lucide-react';
+import { Building2, ClipboardList, MapPin, ShieldCheck, ThumbsDown, ThumbsUp } from 'lucide-react';
 import { toast } from 'sonner';
 import PageHeader from '@/src/components/ui/PageHeader';
 import DataTable from '@/src/components/ui/DataTable';
 import StatusBadge from '@/src/components/ui/StatusBadge';
 import DetailModal from '@/src/components/ui/DetailModal';
+import DetailField from '@/src/components/ui/DetailField';
 import BlobImage from '@/src/components/ui/BlobImage';
 import CopyableTruncated from '@/src/components/ui/CopyableTruncated';
+import TabBar from '@/src/components/ui/TabBar';
+import FilterToolbar from '@/src/components/ui/FilterToolbar';
+import FormModal from '@/src/components/ui/FormModal';
+import PageSection from '@/src/components/ui/PageSection';
+import { btnPrimary, btnTablePrimary, inputClass, selectClass } from '@/src/lib/uiClasses';
 import { formatDate, formatDateTimeSeconds, formatInteger, formatVND } from '@/src/lib/formatters';
 import { centerService } from '@/src/services/center.service';
 import { useExecuteTransaction } from '@/src/hooks/useExecuteTransaction';
@@ -59,7 +65,7 @@ const CENTER_REQUEST_COLUMNS = [
       <CopyableTruncated value={c.address || ''} chars={14} mono={false} className="max-w-[220px] text-slate-700" />
     ),
   },
-  { key: 'phone_number', label: 'Phone' },
+  { key: 'phone_number', label: 'Điện thoại' },
   {
     key: 'created_by',
     label: 'Người tạo',
@@ -258,7 +264,7 @@ export default function AdminCentersPage() {
           e.stopPropagation();
           setDetail({ type: 'center', row: c });
         }}
-        className="rounded-lg border border-slate-200 px-2 py-1 text-xs font-medium text-slate-700 hover:bg-slate-50"
+        className={btnTablePrimary}
       >
         Chi tiết
       </button>
@@ -276,7 +282,7 @@ export default function AdminCentersPage() {
           e.stopPropagation();
           setDetail({ type: 'request', row: c });
         }}
-        className="rounded-lg border border-slate-200 px-2 py-1 text-xs font-medium text-slate-700 hover:bg-slate-50"
+        className={btnTablePrimary}
       >
         Chi tiết
       </button>
@@ -296,7 +302,7 @@ export default function AdminCentersPage() {
             type="button"
             disabled={voteBusyId === c.id}
             onClick={() => handleVote(c.id, true)}
-            className="inline-flex items-center gap-1 rounded-md border border-blue-200 bg-blue-50 px-2 py-1 text-xs font-medium text-blue-900 hover:bg-blue-100 disabled:opacity-50"
+            className={btnTablePrimary}
             title="Phiếu đồng ý"
           >
             <ThumbsUp className="h-3.5 w-3.5" />
@@ -315,7 +321,7 @@ export default function AdminCentersPage() {
               type="button"
               disabled={confirmBusyId === c.id}
               onClick={() => handleConfirm(c.id)}
-              className="inline-flex items-center gap-1 rounded-md border border-slate-200 bg-white px-2 py-1 text-xs font-medium text-slate-800 hover:bg-slate-50 disabled:opacity-50"
+              className={btnTablePrimary}
             >
               <ShieldCheck className="h-3.5 w-3.5" />
               Xác nhận
@@ -345,35 +351,18 @@ export default function AdminCentersPage() {
         }
       />
 
-      <div className="mb-6 flex gap-1 rounded-lg border border-slate-200 bg-slate-50 p-1">
-        <button
-          type="button"
-          onClick={() => setTab('centers')}
-          className={`flex flex-1 items-center justify-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition ${
-            tab === 'centers'
-              ? 'bg-white text-blue-900 shadow-sm ring-1 ring-blue-800/20'
-              : 'text-slate-600 hover:text-slate-900'
-          }`}
-        >
-          <Building2 className="h-4 w-4 shrink-0" />
-          Trung tâm đã đăng ký
-        </button>
-        <button
-          type="button"
-          onClick={() => setTab('requests')}
-          className={`flex flex-1 items-center justify-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition ${
-            tab === 'requests'
-              ? 'bg-white text-blue-900 shadow-sm ring-1 ring-blue-800/20'
-              : 'text-slate-600 hover:text-slate-900'
-          }`}
-        >
-          <ClipboardList className="h-4 w-4 shrink-0" />
-          Yêu cầu trung tâm
-        </button>
-      </div>
+      <TabBar<CentersTab>
+        className="mb-6"
+        value={tab}
+        onChange={setTab}
+        items={[
+          { id: 'centers', label: 'Trung tâm đã đăng ký', icon: <Building2 className="h-4 w-4 shrink-0" /> },
+          { id: 'requests', label: 'Yêu cầu trung tâm', icon: <ClipboardList className="h-4 w-4 shrink-0" /> },
+        ]}
+      />
 
       {tab === 'centers' ? (
-        <>
+        <PageSection title="Trung tâm đã đăng ký" noPadding>
           <DataTable<SupportCenter>
             columns={[...SUPPORT_CENTER_COLUMNS, centerDetailsCol]}
             data={centers}
@@ -383,33 +372,35 @@ export default function AdminCentersPage() {
             onPageChange={(p) => setPage(p)}
             emptyMessage="Không tìm thấy trung tâm hỗ trợ."
           />
-        </>
+        </PageSection>
       ) : (
         <>
-          <div className="mb-4 flex flex-col gap-3 lg:flex-row lg:flex-wrap lg:items-end">
-            <div className="flex flex-wrap items-center gap-2">
-              <MapPin className="h-4 w-4 text-slate-400" />
-              <label htmlFor="req-status" className="text-sm text-slate-600">
-                Trạng thái
-              </label>
-              <select
-                id="req-status"
-                value={reqStatus}
-                onChange={(e) => {
-                  setReqStatus(e.target.value);
-                  setReqPage(0);
-                }}
-                className="rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none ring-blue-800/20 focus:ring-2"
-              >
-                {STATUS_OPTIONS.map((o) => (
-                  <option key={o.value || 'all-r'} value={o.value}>
-                    {o.label}
-                  </option>
-                ))}
-              </select>
+          <FilterToolbar>
+            <div className="flex flex-wrap items-end gap-2">
+              <MapPin className="mb-2 h-4 w-4 text-slate-400" />
+              <div>
+                <label htmlFor="req-status" className="mb-1 block text-xs font-medium text-slate-500">
+                  Trạng thái
+                </label>
+                <select
+                  id="req-status"
+                  value={reqStatus}
+                  onChange={(e) => {
+                    setReqStatus(e.target.value);
+                    setReqPage(0);
+                  }}
+                  className={selectClass}
+                >
+                  {STATUS_OPTIONS.map((o) => (
+                    <option key={o.value || 'all-r'} value={o.value}>
+                      {o.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
             </div>
-            <div className="flex min-w-[200px] flex-1 flex-col gap-1 sm:max-w-md">
-              <label htmlFor="req-keyword" className="text-sm text-slate-600">
+            <div className="min-w-[200px] flex-1 sm:max-w-md">
+              <label htmlFor="req-keyword" className="mb-1 block text-xs font-medium text-slate-500">
                 Từ khóa
               </label>
               <input
@@ -419,7 +410,7 @@ export default function AdminCentersPage() {
                 onChange={(e) => setReqKeywordDraft(e.target.value)}
                 onKeyDown={(e) => e.key === 'Enter' && (setReqKeyword(reqKeywordDraft), setReqPage(0))}
                 placeholder="Tìm kiếm…"
-                className="rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none ring-blue-800/20 focus:ring-2"
+                className={inputClass}
               />
             </div>
             <button
@@ -428,12 +419,13 @@ export default function AdminCentersPage() {
                 setReqKeyword(reqKeywordDraft);
                 setReqPage(0);
               }}
-              className="rounded-lg bg-blue-800 px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-blue-900"
+              className={btnPrimary}
             >
               Tìm
             </button>
-          </div>
+          </FilterToolbar>
 
+          <PageSection title="Yêu cầu trung tâm" noPadding>
           <DataTable<CenterRequest>
             columns={requestColumns}
             data={reqs}
@@ -443,6 +435,7 @@ export default function AdminCentersPage() {
             onPageChange={(p) => setReqPage(p)}
             emptyMessage="Không có yêu cầu trung tâm phù hợp bộ lọc."
           />
+          </PageSection>
         </>
       )}
 
@@ -454,108 +447,60 @@ export default function AdminCentersPage() {
         wide
       >
         {detailFetched && (
-          <div className="space-y-3 text-sm">
+          <div>
             {isSupportCenter(detailFetched) ? (
               <>
-                <p>
-                  <span className="text-slate-500">Vùng:</span> {detailFetched.region}
-                </p>
-                <p>
-                  <span className="text-slate-500">Địa chỉ:</span> {detailFetched.center_address}
-                </p>
-                <p>
-                  <span className="text-slate-500">Điện thoại:</span> {detailFetched.center_phone_number}
-                </p>
-                <p>
-                  <span className="text-slate-500">Ngày tải lên:</span> {formatDate(detailFetched.uploaded_at)}
-                </p>
-                <p>
-                  <span className="text-slate-500">Cập nhật:</span> {formatDate(detailFetched.updated_at)}
-                </p>
-                <p className="font-mono text-xs break-all">
-                  <span className="text-slate-500">Mã:</span> {detailFetched.id}
-                </p>
+                <DetailField label="Vùng" value={detailFetched.region} />
+                <DetailField label="Địa chỉ" value={detailFetched.center_address} />
+                <DetailField label="Điện thoại" value={detailFetched.center_phone_number} />
+                <DetailField label="Ngày tải lên" value={formatDate(detailFetched.uploaded_at)} />
+                <DetailField label="Cập nhật" value={formatDate(detailFetched.updated_at)} />
+                <DetailField label="Mã" value={<span className="font-mono text-xs break-all">{detailFetched.id}</span>} />
               </>
             ) : (
               <>
                 {detailFetched.image_blob_id && (
-                  <div>
-                    <p className="mb-1 text-xs font-medium text-slate-500">Hình ảnh</p>
-                    <BlobImage
-                      blobId={detailFetched.image_blob_id}
-                      source="api"
-                      className="max-h-56 max-w-full rounded-lg border border-slate-200 object-contain"
-                    />
+                  <div className="border-b border-slate-100 py-2.5">
+                    <div className="text-xs font-medium text-slate-500">Hình ảnh</div>
+                    <div className="mt-1">
+                      <BlobImage
+                        blobId={detailFetched.image_blob_id}
+                        source="api"
+                        className="max-h-56 max-w-full rounded-lg border border-slate-200 object-contain"
+                      />
+                    </div>
                   </div>
                 )}
-                <p>
-                  <span className="text-slate-500">Vùng:</span> {detailFetched.region}
-                </p>
-                <p>
-                  <span className="text-slate-500">Địa chỉ:</span> {detailFetched.address}
-                </p>
-                <p>
-                  <span className="text-slate-500">Điện thoại:</span> {detailFetched.phone_number}
-                </p>
-                <p>
-                  <span className="text-slate-500">Trạng thái:</span> <StatusBadge status={detailFetched.status} />
-                </p>
-                <p>
-                  <span className="text-slate-500">Thời gian đóng:</span>{' '}
-                  {formatDateTimeSeconds(detailFetched.closed_at)}
-                </p>
-                <p className="font-mono text-xs break-all">
-                  <span className="text-slate-500">Mã:</span> {detailFetched.id}
-                </p>
+                <DetailField label="Vùng" value={detailFetched.region} />
+                <DetailField label="Địa chỉ" value={detailFetched.address} />
+                <DetailField label="Điện thoại" value={detailFetched.phone_number} />
+                <DetailField label="Trạng thái" value={<StatusBadge status={detailFetched.status} />} />
+                <DetailField label="Thời gian đóng" value={formatDateTimeSeconds(detailFetched.closed_at)} />
+                <DetailField label="Mã" value={<span className="font-mono text-xs break-all">{detailFetched.id}</span>} />
               </>
             )}
           </div>
         )}
       </DetailModal>
 
-      {refuseModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 p-4">
-          <div className="w-full max-w-md rounded-xl border border-slate-200 bg-white p-5 shadow-xl">
-            <div className="mb-3 flex items-center justify-between">
-              <h3 className="text-lg font-semibold text-slate-900">Từ chối yêu cầu trung tâm</h3>
-              <button
-                type="button"
-                onClick={() => setRefuseModal(null)}
-                className="rounded-lg p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-700"
-                aria-label="Đóng"
-              >
-                <X className="h-5 w-5" />
-              </button>
-            </div>
-            <p className="mb-2 text-sm text-slate-600">Lý do từ chối (không bắt buộc).</p>
-            <textarea
-              value={refuseReason}
-              onChange={(e) => setRefuseReason(e.target.value)}
-              rows={3}
-              className="mb-4 w-full rounded-lg border border-slate-200 p-2 text-sm outline-none ring-blue-800/20 focus:ring-2"
-              placeholder="Lý do…"
-            />
-            <div className="flex justify-end gap-2">
-              <button
-                type="button"
-                onClick={() => setRefuseModal(null)}
-                className="rounded-lg border border-slate-200 px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
-              >
-                Hủy
-              </button>
-              <button
-                type="button"
-                disabled={voteBusyId === refuseModal.id}
-                onClick={() => void submitRefuseVote()}
-                className="inline-flex items-center gap-1 rounded-lg bg-red-600 px-3 py-2 text-sm font-medium text-white hover:bg-red-700 disabled:opacity-50"
-              >
-                <Check className="h-4 w-4" />
-                Gửi từ chối
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      <FormModal
+        open={refuseModal !== null}
+        onClose={() => setRefuseModal(null)}
+        title="Từ chối yêu cầu trung tâm"
+        submitLabel="Gửi từ chối"
+        submitVariant="danger"
+        submitDisabled={refuseModal != null && voteBusyId === refuseModal.id}
+        onSubmit={() => void submitRefuseVote()}
+      >
+        <p className="mb-2 text-sm text-slate-600">Lý do từ chối (không bắt buộc).</p>
+        <textarea
+          value={refuseReason}
+          onChange={(e) => setRefuseReason(e.target.value)}
+          rows={3}
+          className={`${inputClass} resize-y`}
+          placeholder="Lý do…"
+        />
+      </FormModal>
 
       <span className="sr-only">{formatVND(0)}</span>
     </div>

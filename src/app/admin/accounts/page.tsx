@@ -1,22 +1,23 @@
 'use client';
 
-import { useCallback, useEffect, useState, type ReactNode } from 'react';
-import {
-  Check,
-  Search,
-  ThumbsDown,
-  ThumbsUp,
-  Users,
-  UserPlus,
-  X,
-} from 'lucide-react';
+import { useCallback, useEffect, useState } from 'react';
+import { Search, ThumbsDown, ThumbsUp, Users, UserPlus } from 'lucide-react';
 import { toast } from 'sonner';
 import PageHeader from '@/src/components/ui/PageHeader';
 import DataTable from '@/src/components/ui/DataTable';
 import StatusBadge from '@/src/components/ui/StatusBadge';
 import DetailModal from '@/src/components/ui/DetailModal';
+import DetailField from '@/src/components/ui/DetailField';
 import CopyableTruncated from '@/src/components/ui/CopyableTruncated';
 import EntityBlobThumb from '@/src/components/ui/EntityBlobThumb';
+import AiInsightPanel from '@/src/components/ui/AiInsightPanel';
+import AiEvaluationBadge from '@/src/components/ui/AiEvaluationBadge';
+import TabBar from '@/src/components/ui/TabBar';
+import FilterToolbar from '@/src/components/ui/FilterToolbar';
+import FormModal from '@/src/components/ui/FormModal';
+import PageSection from '@/src/components/ui/PageSection';
+import TableIconButton from '@/src/components/ui/TableIconButton';
+import { btnPrimary, inputClass, selectClass } from '@/src/lib/uiClasses';
 import { collectBlobIdEntries, blobFieldDisplayLabel } from '@/src/lib/blobFields';
 import { formatDate, formatDateTimeSeconds, formatVND } from '@/src/lib/formatters';
 import { registrationService } from '@/src/services/registration.service';
@@ -50,15 +51,6 @@ type AdminRow = {
   email?: string;
   phone_number?: string;
 };
-
-function detailField(label: string, value: ReactNode) {
-  return (
-    <div className="border-b border-slate-100 py-2 last:border-0">
-      <div className="text-xs font-medium text-slate-500">{label}</div>
-      <div className="text-sm text-slate-900">{value}</div>
-    </div>
-  );
-}
 
 export default function AdminAccountsPage() {
   const [activeTab, setActiveTab] = useState<Tab>('registrations');
@@ -272,55 +264,40 @@ export default function AdminAccountsPage() {
         description="Duyệt yêu cầu đăng ký và quản lý danh bạ nhân sự"
       />
 
-      <div className="mb-6 flex gap-1 rounded-lg border border-slate-200 bg-slate-50 p-1">
-        <button
-          type="button"
-          onClick={() => setActiveTab('registrations')}
-          className={`flex flex-1 items-center justify-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition ${
-            activeTab === 'registrations'
-              ? 'bg-white text-blue-900 shadow-sm ring-1 ring-blue-800/20'
-              : 'text-slate-600 hover:text-slate-900'
-          }`}
-        >
-          <UserPlus className="h-4 w-4" />
-          Yêu cầu đăng ký
-        </button>
-        <button
-          type="button"
-          onClick={() => setActiveTab('staff')}
-          className={`flex flex-1 items-center justify-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition ${
-            activeTab === 'staff'
-              ? 'bg-white text-blue-900 shadow-sm ring-1 ring-blue-800/20'
-              : 'text-slate-600 hover:text-slate-900'
-          }`}
-        >
-          <Users className="h-4 w-4" />
-          Danh sách nhân sự
-        </button>
-      </div>
+      <TabBar<Tab>
+        className="mb-6"
+        value={activeTab}
+        onChange={setActiveTab}
+        items={[
+          { id: 'registrations', label: 'Yêu cầu đăng ký', icon: <UserPlus className="h-4 w-4" /> },
+          { id: 'staff', label: 'Danh sách nhân sự', icon: <Users className="h-4 w-4" /> },
+        ]}
+      />
 
       {activeTab === 'registrations' && (
         <div className="space-y-4">
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-            <div className="flex flex-1 flex-col gap-3 sm:flex-row sm:items-end">
-              <div className="relative min-w-[200px] flex-1">
-                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
-                <input
-                  type="search"
-                  placeholder="Tìm theo từ khóa…"
-                  value={regSearchDraft}
-                  onChange={(e) => setRegSearchDraft(e.target.value)}
-                  onKeyDown={(e) => e.key === 'Enter' && applyRegSearch()}
-                  className="w-full rounded-lg border border-slate-200 py-2 pl-9 pr-3 text-sm outline-none ring-blue-800/20 focus:ring-2"
-                />
-              </div>
+          <FilterToolbar>
+            <div className="relative min-w-[200px] flex-1">
+              <label className="mb-1 block text-xs font-medium text-slate-500">Từ khóa</label>
+              <Search className="pointer-events-none absolute left-3 top-[calc(50%+0.5rem)] h-4 w-4 -translate-y-1/2 text-slate-400" />
+              <input
+                type="search"
+                placeholder="Tìm theo từ khóa…"
+                value={regSearchDraft}
+                onChange={(e) => setRegSearchDraft(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && applyRegSearch()}
+                className={`${inputClass} pl-9`}
+              />
+            </div>
+            <div>
+              <label className="mb-1 block text-xs font-medium text-slate-500">Trạng thái</label>
               <select
                 value={regStatus}
                 onChange={(e) => {
                   setRegStatus(e.target.value);
                   setRegPage(0);
                 }}
-                className="rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none ring-blue-800/20 focus:ring-2 sm:w-48"
+                className={`${selectClass} sm:w-48`}
               >
                 {REG_STATUS_OPTIONS.map((o) => (
                   <option key={o.value || 'all'} value={o.value}>
@@ -328,19 +305,16 @@ export default function AdminAccountsPage() {
                   </option>
                 ))}
               </select>
-              <button
-                type="button"
-                onClick={applyRegSearch}
-                className="rounded-lg bg-blue-800 px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-blue-900"
-              >
-                Tìm
-              </button>
             </div>
-            <p className="text-xs text-slate-500">
+            <button type="button" onClick={applyRegSearch} className={btnPrimary}>
+              Tìm
+            </button>
+            <p className="w-full text-xs text-slate-500 sm:ml-auto sm:w-auto sm:self-end">
               Tổng bản ghi khớp: {regTotalAmount.toLocaleString('vi-VN')}
             </p>
-          </div>
+          </FilterToolbar>
 
+          <PageSection title="Yêu cầu đăng ký" noPadding>
           <DataTable<RegistrationRequest>
             columns={[
               {
@@ -353,8 +327,13 @@ export default function AdminAccountsPage() {
                 ),
               },
               { key: 'register_role', label: 'Vai trò', render: (r) => <span className="capitalize">{r.register_role}</span> },
-              { key: 'region', label: 'Region' },
+              { key: 'region', label: 'Vùng' },
               { key: 'status', label: 'Trạng thái', render: (r) => <StatusBadge status={r.status} /> },
+              {
+                key: 'ai_evaluation',
+                label: 'AI',
+                render: (r) => <AiEvaluationBadge record={r} />,
+              },
               { key: 'created_at', label: 'Ngày tạo', render: (r) => formatDate(r.created_at) },
               {
                 key: 'closed_at',
@@ -374,35 +353,31 @@ export default function AdminAccountsPage() {
                       className={`flex flex-wrap gap-1 ${approved ? 'pointer-events-none opacity-40' : ''}`}
                       onClick={(e) => e.stopPropagation()}
                     >
-                      <button
-                        type="button"
+                      <TableIconButton
                         onClick={() => {
                           setRegDetailListRow(r);
                           setRegDetailId(r.id);
                           setRegDetailOpen(true);
                         }}
-                        className="inline-flex items-center gap-1 rounded-md border border-slate-200 bg-white px-2 py-1 text-xs font-medium text-slate-800 hover:bg-slate-50"
                       >
                         Chi tiết
-                      </button>
-                      <button
-                        type="button"
+                      </TableIconButton>
+                      <TableIconButton
+                        variant="primary"
                         disabled={approved || voteBusyId === r.id}
                         onClick={() => handleVote(r.id, true)}
-                        className="inline-flex items-center gap-1 rounded-md border border-blue-200 bg-blue-50 px-2 py-1 text-xs font-medium text-blue-900 hover:bg-blue-100 disabled:cursor-not-allowed disabled:opacity-50"
                         title="Phiếu duyệt"
                       >
                         <ThumbsUp className="h-3.5 w-3.5" />
-                      </button>
-                      <button
-                        type="button"
+                      </TableIconButton>
+                      <TableIconButton
+                        variant="danger"
                         disabled={approved || voteBusyId === r.id}
                         onClick={() => handleVote(r.id, false)}
-                        className="inline-flex items-center gap-1 rounded-md border border-red-200 bg-red-50 px-2 py-1 text-xs font-medium text-red-800 hover:bg-red-100 disabled:cursor-not-allowed disabled:opacity-50"
                         title="Phiếu từ chối"
                       >
                         <ThumbsDown className="h-3.5 w-3.5" />
-                      </button>
+                      </TableIconButton>
                     </div>
                   );
                 },
@@ -415,34 +390,31 @@ export default function AdminAccountsPage() {
             onPageChange={(p) => setRegPage(p)}
             emptyMessage="Không có yêu cầu đăng ký phù hợp bộ lọc."
           />
+          </PageSection>
         </div>
       )}
 
       {activeTab === 'staff' && (
-        <div className="space-y-8">
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
+        <div className="space-y-6">
+          <FilterToolbar>
             <div className="relative min-w-[200px] flex-1">
-              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+              <label className="mb-1 block text-xs font-medium text-slate-500">Tìm kiếm</label>
+              <Search className="pointer-events-none absolute left-3 top-[calc(50%+0.5rem)] h-4 w-4 -translate-y-1/2 text-slate-400" />
               <input
                 type="search"
                 placeholder="Tìm nhân sự & quản trị…"
                 value={staffSearchDraft}
                 onChange={(e) => setStaffSearchDraft(e.target.value)}
                 onKeyDown={(e) => e.key === 'Enter' && applyStaffSearch()}
-                className="w-full rounded-lg border border-slate-200 py-2 pl-9 pr-3 text-sm outline-none ring-blue-800/20 focus:ring-2"
+                className={`${inputClass} pl-9`}
               />
             </div>
-            <button
-              type="button"
-              onClick={applyStaffSearch}
-              className="rounded-lg bg-blue-800 px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-blue-900"
-            >
+            <button type="button" onClick={applyStaffSearch} className={btnPrimary}>
               Tìm
             </button>
-          </div>
+          </FilterToolbar>
 
-          <section>
-            <h2 className="mb-3 text-sm font-semibold text-slate-800">Nhân sự</h2>
+          <PageSection title="Nhân sự" noPadding>
             <DataTable<Staff>
               columns={[
                 {
@@ -479,17 +451,16 @@ export default function AdminAccountsPage() {
                   label: 'Chi tiết',
                   className: 'whitespace-nowrap',
                   render: (s) => (
-                    <button
-                      type="button"
+                    <TableIconButton
+                      variant="primary"
                       onClick={() => {
                         setStaffDetailListRow(s);
                         setStaffDetailId(s.id);
                         setStaffDetailOpen(true);
                       }}
-                      className="rounded-md border border-blue-200 px-2 py-1 text-xs font-medium text-blue-900 hover:bg-blue-50"
                     >
                       Chi tiết
-                    </button>
+                    </TableIconButton>
                   ),
                 },
               ]}
@@ -500,23 +471,18 @@ export default function AdminAccountsPage() {
               onPageChange={(p) => setStaffPage(p)}
               emptyMessage="Không tìm thấy nhân sự."
             />
-          </section>
+          </PageSection>
 
-          <section>
-            <h2 className="mb-3 text-sm font-semibold text-slate-800">Quản trị viên</h2>
+          <PageSection title="Quản trị viên" noPadding>
             <DataTable<AdminRow>
               columns={[
                 {
                   key: 'details',
                   label: 'Chi tiết',
                   render: (a) => (
-                    <button
-                      type="button"
-                      onClick={() => setAdminDetailRow(a)}
-                      className="rounded-md border border-blue-200 px-2 py-1 text-xs font-medium text-blue-900 hover:bg-blue-50"
-                    >
+                    <TableIconButton variant="primary" onClick={() => setAdminDetailRow(a)}>
                       Chi tiết
-                    </button>
+                    </TableIconButton>
                   ),
                 },
                 {
@@ -539,53 +505,28 @@ export default function AdminAccountsPage() {
               onPageChange={(p) => setAdminPage(p)}
               emptyMessage="Không tìm thấy quản trị viên."
             />
-          </section>
+          </PageSection>
         </div>
       )}
 
-      {refuseModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 p-4">
-          <div className="w-full max-w-md rounded-xl border border-slate-200 bg-white p-5 shadow-xl">
-            <div className="mb-3 flex items-center justify-between">
-              <h3 className="text-lg font-semibold text-slate-900">Từ chối đăng ký</h3>
-              <button
-                type="button"
-                onClick={() => setRefuseModal(null)}
-                className="rounded-lg p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-700"
-                aria-label="Đóng"
-              >
-                <X className="h-5 w-5" />
-              </button>
-            </div>
-            <p className="mb-2 text-sm text-slate-600">Lý do (tùy chọn, hiển thị cho người duyệt).</p>
-            <textarea
-              value={refuseReason}
-              onChange={(e) => setRefuseReason(e.target.value)}
-              rows={3}
-              className="mb-4 w-full rounded-lg border border-slate-200 p-2 text-sm outline-none ring-blue-800/20 focus:ring-2"
-              placeholder="Lý do từ chối…"
-            />
-            <div className="flex justify-end gap-2">
-              <button
-                type="button"
-                onClick={() => setRefuseModal(null)}
-                className="rounded-lg border border-slate-200 px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
-              >
-                Hủy
-              </button>
-              <button
-                type="button"
-                disabled={voteBusyId === refuseModal.id}
-                onClick={() => void submitRefuseVote()}
-                className="inline-flex items-center gap-1 rounded-lg bg-red-600 px-3 py-2 text-sm font-medium text-white hover:bg-red-700 disabled:opacity-50"
-              >
-                <Check className="h-4 w-4" />
-                Gửi từ chối
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      <FormModal
+        open={refuseModal !== null}
+        onClose={() => setRefuseModal(null)}
+        title="Từ chối đăng ký"
+        submitLabel="Gửi từ chối"
+        submitVariant="danger"
+        submitDisabled={refuseModal != null && voteBusyId === refuseModal.id}
+        onSubmit={() => void submitRefuseVote()}
+      >
+        <p className="mb-2 text-sm text-slate-600">Lý do (tùy chọn, hiển thị cho người duyệt).</p>
+        <textarea
+          value={refuseReason}
+          onChange={(e) => setRefuseReason(e.target.value)}
+          rows={3}
+          className={`${inputClass} resize-y`}
+          placeholder="Lý do từ chối…"
+        />
+      </FormModal>
 
       <DetailModal
         title="Yêu cầu đăng ký"
@@ -603,24 +544,25 @@ export default function AdminAccountsPage() {
           if (!r) return null;
           const blobs = collectBlobIdEntries(r);
           return (
-            <div className="space-y-1">
-              {detailField('ID', <CopyableTruncated value={r.id} chars={8} />)}
-              {detailField('Tên', `${r.first_name} ${r.last_name}`)}
-              {detailField('Vai trò', <span className="capitalize">{r.register_role}</span>)}
-              {detailField('Vùng', r.region)}
-              {detailField('Trạng thái', <StatusBadge status={r.status} />)}
-              {detailField('Mã định danh', r.identity_code)}
-              {detailField('Email', r.email)}
-              {detailField('Điện thoại', r.phone_number)}
-              {detailField('Giới tính', r.gender)}
-              {detailField('Ngày sinh', formatDate(r.date_of_birth))}
-              {detailField('Người tạo', <CopyableTruncated value={r.created_by} chars={8} />)}
-              {detailField('Ngày tạo', formatDate(r.created_at))}
-              {detailField('Cập nhật', formatDate(r.updated_at))}
-              {detailField('Thời gian đóng', formatDateTimeSeconds(r.closed_at))}
+            <div>
+              <DetailField label="ID" value={<CopyableTruncated value={r.id} chars={8} />} />
+              <DetailField label="Tên" value={`${r.first_name} ${r.last_name}`} />
+              <DetailField label="Vai trò" value={<span className="capitalize">{r.register_role}</span>} />
+              <DetailField label="Vùng" value={r.region} />
+              <DetailField label="Trạng thái" value={<StatusBadge status={r.status} />} />
+              <DetailField label="Mã định danh" value={r.identity_code} />
+              <DetailField label="Email" value={r.email} />
+              <DetailField label="Điện thoại" value={r.phone_number} />
+              <DetailField label="Giới tính" value={r.gender} />
+              <DetailField label="Ngày sinh" value={formatDate(r.date_of_birth)} />
+              <DetailField label="Người tạo" value={<CopyableTruncated value={r.created_by} chars={8} />} />
+              <DetailField label="Ngày tạo" value={formatDate(r.created_at)} />
+              <DetailField label="Cập nhật" value={formatDate(r.updated_at)} />
+              <DetailField label="Thời gian đóng" value={formatDateTimeSeconds(r.closed_at)} />
+              <AiInsightPanel record={r} className="mt-4" />
               {blobs.length > 0 && (
                 <div className="border-t border-slate-100 pt-3">
-                  <div className="mb-2 text-xs font-medium text-slate-600">Images (Walrus)</div>
+                  <div className="mb-2 text-xs font-medium text-slate-600">Ảnh (Walrus)</div>
                   <div className="flex flex-wrap gap-4">
                     {blobs.map(({ key, blobId }) => (
                       <div key={key} className="text-center">
@@ -652,20 +594,20 @@ export default function AdminAccountsPage() {
           if (!s) return null;
           const staffBlobs = collectBlobIdEntries(s);
           return (
-            <div className="space-y-1">
-              {detailField('ID', <CopyableTruncated value={s.id} chars={8} />)}
-              {detailField('Người dùng', <CopyableTruncated value={s.user} chars={8} />)}
-              {detailField('Tên', `${s.first_name} ${s.last_name}`)}
-              {detailField('Vùng', s.region)}
-              {detailField('Email', s.email)}
-              {detailField('Điện thoại', s.phone_number)}
-              {detailField('Giới tính', s.gender)}
-              {detailField('Mã định danh', s.identity_code)}
-              {s.date_of_birth && detailField('Ngày sinh', formatDate(s.date_of_birth))}
-              {detailField('Tải lên', formatDate(s.uploaded_at))}
+            <div>
+              <DetailField label="ID" value={<CopyableTruncated value={s.id} chars={8} />} />
+              <DetailField label="Người dùng" value={<CopyableTruncated value={s.user} chars={8} />} />
+              <DetailField label="Tên" value={`${s.first_name} ${s.last_name}`} />
+              <DetailField label="Vùng" value={s.region} />
+              <DetailField label="Email" value={s.email} />
+              <DetailField label="Điện thoại" value={s.phone_number} />
+              <DetailField label="Giới tính" value={s.gender} />
+              <DetailField label="Mã định danh" value={s.identity_code} />
+              {s.date_of_birth && <DetailField label="Ngày sinh" value={formatDate(s.date_of_birth)} />}
+              <DetailField label="Tải lên" value={formatDate(s.uploaded_at)} />
               {staffBlobs.length > 0 && (
                 <div className="border-t border-slate-100 pt-3">
-                  <div className="mb-2 text-xs font-medium text-slate-600">Images (Walrus)</div>
+                  <div className="mb-2 text-xs font-medium text-slate-600">Ảnh (Walrus)</div>
                   <div className="flex flex-wrap gap-4">
                     {staffBlobs.map(({ key, blobId }) => (
                       <div key={key} className="text-center">
@@ -678,7 +620,7 @@ export default function AdminAccountsPage() {
               )}
               {Array.isArray(s.nfts) && s.nfts.length > 0 && (
                 <div className="border-t border-slate-100 pt-3">
-                  <div className="mb-2 text-xs font-medium text-slate-600">NFT-linked profiles</div>
+                  <div className="mb-2 text-xs font-medium text-slate-600">Hồ sơ liên kết NFT</div>
                   <ul className="space-y-3">
                     {s.nfts.map((nft) => (
                       <li key={nft.id} className="rounded-lg border border-slate-100 p-2 text-sm">
@@ -711,17 +653,17 @@ export default function AdminAccountsPage() {
         wide
       >
         {adminDetailRow && (
-          <div className="space-y-1">
-            {detailField('ID', <CopyableTruncated value={adminDetailRow.id} chars={8} />)}
-            {detailField(
-              'Name',
-              `${adminDetailRow.first_name ?? '—'} ${adminDetailRow.last_name ?? ''}`,
-            )}
-            {detailField('Vùng', adminDetailRow.region ?? '—')}
-            {detailField('Email', adminDetailRow.email ?? '—')}
-            {detailField('Điện thoại', adminDetailRow.phone_number ?? '—')}
+          <div>
+            <DetailField label="ID" value={<CopyableTruncated value={adminDetailRow.id} chars={8} />} />
+            <DetailField
+              label="Tên"
+              value={`${adminDetailRow.first_name ?? '—'} ${adminDetailRow.last_name ?? ''}`}
+            />
+            <DetailField label="Vùng" value={adminDetailRow.region ?? '—'} />
+            <DetailField label="Email" value={adminDetailRow.email ?? '—'} />
+            <DetailField label="Điện thoại" value={adminDetailRow.phone_number ?? '—'} />
             <p className="pt-2 text-xs text-slate-500">
-              No GET-by-id in API — details are from the list response only.
+              API không có GET theo mã — chi tiết lấy từ danh sách.
             </p>
           </div>
         )}

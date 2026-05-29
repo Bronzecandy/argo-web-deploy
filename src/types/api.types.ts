@@ -103,6 +103,7 @@ export interface RegistrationRequest {
   updated_at: string;
   closed_at: string;
   ai_evaluation?: string;
+  ai_reason?: string;
 }
 
 export interface CreateRegistrationRequest {
@@ -173,6 +174,7 @@ export interface UploadChildRequestEntity {
   first_guardian_profile?: ChildGuardianProfile;
   second_guardian_profile?: ChildGuardianProfile;
   ai_evaluation?: string;
+  ai_reason?: string;
   review_status?: string;
   reviewed_by?: string;
   approvers: string[];
@@ -334,6 +336,9 @@ export interface PendingWithdrawProposal {
   withdrawAmount: number;
   proofBlobID: string;
   aievaluation: string;
+  /** Snake_case variant from some API responses */
+  ai_evaluation?: string;
+  ai_reason?: string;
   status: string;
   reviewedBy: string;
   createdAt: string;
@@ -358,6 +363,7 @@ export interface PendingSpecialNeedProposal {
   proof_blob_id: string;
   region: string;
   ai_evaluation: string;
+  ai_reason?: string;
   review_status: string;
   reviewed_by: string;
   created_at: string;
@@ -576,6 +582,9 @@ export interface TaskProof {
   description?: string;
   actor_profile_id?: string;
   ai_evaluation?: string;
+  ai_reason?: string;
+  image_cloudinary_blob_id?: string;
+  is_child_task?: boolean;
   raw_submit_date?: string;
   reviewed_by?: string;
   created_at: string;

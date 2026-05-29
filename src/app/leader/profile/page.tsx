@@ -7,6 +7,8 @@ import { toast } from 'sonner';
 import { useAppSelector } from '@/src/store/hooks';
 import { profileService } from '@/src/services/profile.service';
 import type { PersonalProfile, UploadProfileRequest } from '@/src/types/api.types';
+import PageSection from '@/src/components/ui/PageSection';
+import { btnPrimary, btnSecondary, inputClass } from '@/src/lib/uiClasses';
 
 const emptyForm: UploadProfileRequest = {
   first_name: '',
@@ -104,9 +106,9 @@ export default function LeaderProfilePage() {
     return (
       <div>
         <PageHeader title="Hồ sơ" description="Hồ sơ trưởng vùng" />
-        <div className="flex items-center justify-center rounded-xl border border-slate-200 bg-white p-16">
+        <PageSection className="flex items-center justify-center p-16">
           <div className="h-8 w-8 animate-spin rounded-full border-4 border-blue-800 border-t-transparent" />
-        </div>
+        </PageSection>
       </div>
     );
   }
@@ -121,13 +123,13 @@ export default function LeaderProfilePage() {
       />
 
       {profile && !editMode ? (
-        <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
+        <PageSection>
           <div className="mb-6 flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
             <h2 className="text-lg font-semibold text-slate-900">Thông tin cá nhân</h2>
             <button
               type="button"
               onClick={() => setEditMode(true)}
-              className="rounded-lg border border-blue-200 px-4 py-2 text-sm font-medium text-blue-900 hover:bg-blue-50"
+              className={btnSecondary}
             >
               Chỉnh sửa
             </button>
@@ -166,9 +168,9 @@ export default function LeaderProfilePage() {
               <dd className="mt-1 text-sm text-slate-900">{profile.identity_code}</dd>
             </div>
           </dl>
-        </div>
+        </PageSection>
       ) : (
-        <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
+        <PageSection>
           <div className="mb-6 flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
             <h2 className="text-lg font-semibold text-slate-900">{profile ? 'Sửa hồ sơ' : 'Tạo hồ sơ'}</h2>
             {profile && (
@@ -178,7 +180,7 @@ export default function LeaderProfilePage() {
                   setEditMode(false);
                   void loadProfile();
                 }}
-                className="rounded-lg border border-slate-200 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
+                className={btnSecondary}
               >
                 Hủy
               </button>
@@ -192,7 +194,7 @@ export default function LeaderProfilePage() {
                   required
                   value={form.first_name}
                   onChange={(e) => updateField('first_name', e.target.value)}
-                  className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-blue-800 focus:outline-none focus:ring-1 focus:ring-blue-800"
+                  className={inputClass}
                 />
               </div>
               <div>
@@ -201,7 +203,7 @@ export default function LeaderProfilePage() {
                   required
                   value={form.last_name}
                   onChange={(e) => updateField('last_name', e.target.value)}
-                  className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-blue-800 focus:outline-none focus:ring-1 focus:ring-blue-800"
+                  className={inputClass}
                 />
               </div>
             </div>
@@ -211,7 +213,7 @@ export default function LeaderProfilePage() {
                 required
                 value={form.gender}
                 onChange={(e) => updateField('gender', e.target.value)}
-                className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-blue-800 focus:outline-none focus:ring-1 focus:ring-blue-800"
+                className={inputClass}
               />
             </div>
             <div>
@@ -221,7 +223,7 @@ export default function LeaderProfilePage() {
                 type="date"
                 value={form.date_of_birth?.slice(0, 10) || ''}
                 onChange={(e) => updateField('date_of_birth', e.target.value)}
-                className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-blue-800 focus:outline-none focus:ring-1 focus:ring-blue-800"
+                className={inputClass}
               />
             </div>
             <div>
@@ -230,7 +232,7 @@ export default function LeaderProfilePage() {
                 required
                 value={form.phone_number}
                 onChange={(e) => updateField('phone_number', e.target.value)}
-                className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-blue-800 focus:outline-none focus:ring-1 focus:ring-blue-800"
+                className={inputClass}
               />
             </div>
             <div>
@@ -240,7 +242,7 @@ export default function LeaderProfilePage() {
                 type="email"
                 value={form.email}
                 onChange={(e) => updateField('email', e.target.value)}
-                className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-blue-800 focus:outline-none focus:ring-1 focus:ring-blue-800"
+                className={inputClass}
               />
             </div>
             <div>
@@ -249,18 +251,18 @@ export default function LeaderProfilePage() {
                 required
                 value={form.identity_code}
                 onChange={(e) => updateField('identity_code', e.target.value)}
-                className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-blue-800 focus:outline-none focus:ring-1 focus:ring-blue-800"
+                className={inputClass}
               />
             </div>
             <button
               type="submit"
               disabled={saving}
-              className="rounded-lg bg-blue-800 px-4 py-2 text-sm font-medium text-white transition hover:bg-blue-900 disabled:opacity-50"
+              className={btnPrimary}
             >
               {saving ? 'Đang lưu…' : profile ? 'Lưu thay đổi' : 'Tải lên hồ sơ'}
             </button>
           </form>
-        </div>
+        </PageSection>
       )}
     </div>
   );

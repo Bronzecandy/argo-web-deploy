@@ -1,14 +1,18 @@
 'use client';
 
-import { useCallback, useEffect, useState, type ReactNode } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { toast } from 'sonner';
 import PageHeader from '@/src/components/ui/PageHeader';
 import DataTable from '@/src/components/ui/DataTable';
 import DetailModal from '@/src/components/ui/DetailModal';
+import DetailField from '@/src/components/ui/DetailField';
 import EntityBlobThumb from '@/src/components/ui/EntityBlobThumb';
 import RegisterCenterModal from '@/src/components/leader/RegisterCenterModal';
+import PageSection from '@/src/components/ui/PageSection';
+import TableIconButton from '@/src/components/ui/TableIconButton';
 import { collectBlobIdEntries, blobFieldDisplayLabel } from '@/src/lib/blobFields';
 import { formatDate } from '@/src/lib/formatters';
+import { btnPrimary } from '@/src/lib/uiClasses';
 import { useLeaderCenter } from '@/src/contexts/LeaderCenterContext';
 import { useAppSelector } from '@/src/store/hooks';
 import { centerService } from '@/src/services/center.service';
@@ -30,15 +34,6 @@ function normalizeCenterList(body: { data?: unknown }): SupportCenter[] {
   if (Array.isArray(raw)) return raw as SupportCenter[];
   if (raw && typeof raw === 'object') return [raw as SupportCenter];
   return [];
-}
-
-function detailField(label: string, value: ReactNode) {
-  return (
-    <div className="border-b border-slate-100 py-2 last:border-0">
-      <div className="text-xs font-medium text-slate-500">{label}</div>
-      <div className="text-sm text-slate-900">{value}</div>
-    </div>
-  );
 }
 
 export default function LeaderCentersPage() {
@@ -98,32 +93,26 @@ export default function LeaderCentersPage() {
       label: 'Thao tác',
       className: 'whitespace-nowrap',
       render: (row: SupportCenter) => (
-        <button
-          type="button"
+        <TableIconButton
           onClick={(e) => {
             e.stopPropagation();
             setCenterDetailRow(row);
             setCenterDetailOpen(true);
           }}
-          className="rounded-lg border border-slate-200 bg-white px-2 py-1 text-xs font-medium text-slate-800 hover:bg-slate-50"
         >
           Chi tiết
-        </button>
+        </TableIconButton>
       ),
     },
   ];
 
   return (
-    <div>
+    <div className="space-y-6">
       <PageHeader
         title="Trung tâm"
         description="Xem đăng ký trung tâm của bạn và gửi đăng ký mới"
         actions={
-          <button
-            type="button"
-            onClick={() => setCreateOpen(true)}
-            className="inline-flex items-center gap-2 rounded-lg bg-blue-800 px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-blue-900"
-          >
+          <button type="button" onClick={() => setCreateOpen(true)} className={btnPrimary}>
             <Plus className="h-4 w-4" />
             Tạo mới
           </button>
@@ -131,19 +120,21 @@ export default function LeaderCentersPage() {
       />
 
       {!user?.address ? (
-        <div className="rounded-xl border border-slate-200 bg-white p-8 text-center text-sm text-slate-500">
-          Kết nối ví để tải trung tâm của bạn.
-        </div>
+        <PageSection>
+          <p className="text-center text-sm text-slate-500">Kết nối ví để tải trung tâm của bạn.</p>
+        </PageSection>
       ) : (
-        <DataTable<SupportCenter>
-          columns={columns}
-          data={centers}
-          loading={loading}
-          page={page}
-          totalPages={totalPages}
-          onPageChange={setPage}
-          emptyMessage="Chưa có đăng ký trung tâm"
-        />
+        <PageSection title="Danh sách trung tâm" noPadding>
+          <DataTable<SupportCenter>
+            columns={columns}
+            data={centers}
+            loading={loading}
+            page={page}
+            totalPages={totalPages}
+            onPageChange={setPage}
+            emptyMessage="Chưa có đăng ký trung tâm"
+          />
+        </PageSection>
       )}
 
       <RegisterCenterModal
@@ -169,13 +160,13 @@ export default function LeaderCentersPage() {
             const c = centerDetailRow;
             const blobs = collectBlobIdEntries(c);
             return (
-              <div className="space-y-1">
-                {detailField('Mã', <span className="font-mono text-xs break-all">{c.id}</span>)}
-                {detailField('Vùng', c.region)}
-                {detailField('Địa chỉ', c.center_address)}
-                {detailField('Điện thoại', c.center_phone_number)}
-                {detailField('Ngày tải lên', formatDate(c.uploaded_at))}
-                {detailField('Cập nhật', formatDate(c.updated_at))}
+              <div>
+                <DetailField label="Mã" value={<span className="font-mono text-xs break-all">{c.id}</span>} />
+                <DetailField label="Vùng" value={c.region} />
+                <DetailField label="Địa chỉ" value={c.center_address} />
+                <DetailField label="Điện thoại" value={c.center_phone_number} />
+                <DetailField label="Ngày tải lên" value={formatDate(c.uploaded_at)} />
+                <DetailField label="Cập nhật lúc" value={formatDate(c.updated_at)} />
                 {blobs.length > 0 && (
                   <div className="border-t border-slate-100 pt-3">
                     <div className="mb-2 text-xs font-medium text-slate-600">Hình ảnh</div>

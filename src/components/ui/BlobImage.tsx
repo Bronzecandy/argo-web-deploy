@@ -1,6 +1,7 @@
 'use client';
 
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
+import { ImageOff } from 'lucide-react';
 import { BLOB_URL } from '@/src/lib/constants';
 import { blobService } from '@/src/services/blob.service';
 import WalrusFallbackImg from '@/src/components/ui/WalrusFallbackImg';
@@ -46,6 +47,19 @@ export default function BlobImage({
 
   const lb = useImageLightboxOptional();
   const canExpand = Boolean(expandable && lb && apiUrl);
+  const [failed, setFailed] = useState(false);
+
+  if (failed) {
+    return (
+      <div
+        className={`flex flex-col items-center justify-center gap-1 rounded-md border border-dashed border-slate-200 bg-slate-50 text-slate-400 ${className}`}
+        title="Không tải được ảnh"
+      >
+        <ImageOff className="h-5 w-5" aria-hidden />
+        <span className="text-[10px]">Không có ảnh</span>
+      </div>
+    );
+  }
 
   return (
     /* eslint-disable-next-line @next/next/no-img-element -- dynamic blob URLs */
@@ -53,6 +67,7 @@ export default function BlobImage({
       src={apiUrl}
       alt={alt}
       className={[className, canExpand ? 'cursor-pointer' : ''].filter(Boolean).join(' ')}
+      onError={() => setFailed(true)}
       onClick={(e) => {
         if (!canExpand) return;
         e.preventDefault();

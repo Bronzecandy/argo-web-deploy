@@ -3,6 +3,8 @@
 import { useEffect, useState } from 'react';
 import { Baby, Bell, Building2, Coins, ListChecks, MapPin, UserPlus, Wallet } from 'lucide-react';
 import PageHeader from '@/src/components/ui/PageHeader';
+import PageSection from '@/src/components/ui/PageSection';
+import ContextBanner from '@/src/components/ui/ContextBanner';
 import StatsCard from '@/src/components/ui/StatsCard';
 import { formatDate, formatVND } from '@/src/lib/formatters';
 import { useAppSelector } from '@/src/store/hooks';
@@ -170,16 +172,17 @@ export default function LeaderDashboardPage() {
       </div>
 
       {poolStatus === 'failed' && (
-        <p className="mt-4 rounded-lg border border-amber-200 bg-amber-50 px-4 py-2 text-sm text-amber-900">
+        <ContextBanner variant="warning" className="mt-4" title="Quỹ vùng chưa tải">
           Chỉ số theo vùng có thể chưa đầy đủ cho đến khi quỹ trưởng vùng tải thành công.
-        </p>
+        </ContextBanner>
       )}
 
-      <div className="mt-6 rounded-xl border border-slate-200 bg-white">
-        <div className="border-b border-slate-200 px-5 py-4">
-          <h2 className="font-semibold text-slate-900">Thông báo gần đây</h2>
-          <p className="mt-0.5 text-sm text-slate-500">Cập nhật mới cho ví của bạn</p>
-        </div>
+      <PageSection
+        className="mt-6"
+        title="Thông báo gần đây"
+        description="Cập nhật mới cho ví của bạn"
+        noPadding
+      >
         <div className="divide-y divide-slate-100">
           {!user?.address ? (
             <div className="px-5 py-8 text-center text-sm text-slate-400">
@@ -199,7 +202,7 @@ export default function LeaderDashboardPage() {
             ))
           )}
         </div>
-      </div>
+      </PageSection>
     </div>
   );
 }

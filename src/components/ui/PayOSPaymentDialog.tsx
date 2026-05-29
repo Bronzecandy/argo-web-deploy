@@ -6,6 +6,7 @@ import { toast } from 'sonner';
 import { paymentService } from '@/src/services/payment.service';
 import { isPaymentFailureStatus, isPaymentSuccessStatus } from '@/src/lib/paymentStatus';
 import type { PayOSDialogState } from '@/src/hooks/useWithdrawProposalConfirm';
+import { btnPrimary, btnSecondary } from '@/src/lib/uiClasses';
 
 const POLL_MS = 3000;
 const MAX_POLLS = 25;
@@ -180,7 +181,7 @@ export default function PayOSPaymentDialog({ state, onClose, onPaymentSuccess }:
           <button
             type="button"
             onClick={closeFromResult}
-            className="mt-6 w-full rounded-lg bg-blue-800 px-4 py-2.5 text-sm font-medium text-white hover:bg-blue-900 sm:w-auto"
+            className={`mt-6 w-full sm:w-auto ${btnPrimary}`}
           >
             Đóng
           </button>
@@ -202,7 +203,7 @@ export default function PayOSPaymentDialog({ state, onClose, onPaymentSuccess }:
           <button
             type="button"
             onClick={closeFromResult}
-            className="mt-6 w-full rounded-lg border border-slate-300 bg-white px-4 py-2.5 text-sm font-medium text-slate-800 hover:bg-slate-50 sm:w-auto"
+            className={`mt-6 w-full sm:w-auto ${btnSecondary}`}
           >
             Đóng
           </button>
@@ -224,7 +225,7 @@ export default function PayOSPaymentDialog({ state, onClose, onPaymentSuccess }:
           <button
             type="button"
             onClick={closeFromResult}
-            className="mt-6 w-full rounded-lg border border-slate-300 bg-white px-4 py-2.5 text-sm font-medium text-slate-800 hover:bg-slate-50 sm:w-auto"
+            className={`mt-6 w-full sm:w-auto ${btnSecondary}`}
           >
             Đóng
           </button>
@@ -270,7 +271,7 @@ export default function PayOSPaymentDialog({ state, onClose, onPaymentSuccess }:
           <button
             type="button"
             onClick={openPayOS}
-            className="rounded-lg bg-blue-800 px-4 py-2 text-sm font-medium text-white hover:bg-blue-900"
+            className={btnPrimary}
           >
             Mở PayOS
           </button>
@@ -278,14 +279,14 @@ export default function PayOSPaymentDialog({ state, onClose, onPaymentSuccess }:
             type="button"
             onClick={() => void manualCheck()}
             disabled={manualChecking || !hasPaymentId}
-            className="rounded-lg border border-slate-200 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-50"
+            className={btnSecondary}
           >
             {manualChecking ? 'Đang kiểm tra…' : 'Kiểm tra thanh toán'}
           </button>
           <button
             type="button"
             onClick={onClose}
-            className="rounded-lg px-4 py-2 text-sm text-slate-500 hover:bg-slate-50"
+            className={btnSecondary}
           >
             Đóng
           </button>

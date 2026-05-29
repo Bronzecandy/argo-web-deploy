@@ -1,15 +1,25 @@
 'use client';
 
-import { useCallback, useEffect, useState, type ReactNode } from 'react';
-import { Check, ClipboardCheck, Settings2, X } from 'lucide-react';
+import { useCallback, useEffect, useState } from 'react';
+import { ClipboardCheck, Settings2 } from 'lucide-react';
 import { toast } from 'sonner';
 import PageHeader from '@/src/components/ui/PageHeader';
 import DataTable from '@/src/components/ui/DataTable';
 import DetailModal from '@/src/components/ui/DetailModal';
+import DetailField from '@/src/components/ui/DetailField';
+import ContextBanner from '@/src/components/ui/ContextBanner';
+import FilterToolbar from '@/src/components/ui/FilterToolbar';
+import FormModal from '@/src/components/ui/FormModal';
+import PageSection from '@/src/components/ui/PageSection';
+import TabBar from '@/src/components/ui/TabBar';
+import TableIconButton from '@/src/components/ui/TableIconButton';
+import { inputClass, selectClass } from '@/src/lib/uiClasses';
 import EntityBlobThumb from '@/src/components/ui/EntityBlobThumb';
 import GroupedNumericInput from '@/src/components/ui/GroupedNumericInput';
 import StatusBadge from '@/src/components/ui/StatusBadge';
 import CopyableTruncated from '@/src/components/ui/CopyableTruncated';
+import AiInsightPanel from '@/src/components/ui/AiInsightPanel';
+import AiEvaluationBadge from '@/src/components/ui/AiEvaluationBadge';
 import { collectBlobIdEntries, blobFieldDisplayLabel } from '@/src/lib/blobFields';
 import { formatDate, formatDateTimeSeconds } from '@/src/lib/formatters';
 import { childUploadService } from '@/src/services/child-upload.service';
@@ -57,15 +67,6 @@ function getErrorMessage(e: unknown, fallback: string) {
     if (axErr.message) return axErr.message;
   }
   return fallback;
-}
-
-function detailField(label: string, value: ReactNode) {
-  return (
-    <div className="border-b border-slate-100 py-2 last:border-0">
-      <div className="text-xs font-medium text-slate-500">{label}</div>
-      <div className="text-sm text-slate-900">{value}</div>
-    </div>
-  );
 }
 
 function validateNeedAmounts(
@@ -449,33 +450,27 @@ export default function LeaderChildrenPage() {
       className: 'whitespace-nowrap',
       render: (row: Child) => (
         <div className="flex flex-wrap items-center gap-1" onClick={(e) => e.stopPropagation()}>
-          <button
-            type="button"
+          <TableIconButton
+            variant="primary"
             onClick={() => openNeedsConfigFromList(row)}
-            className="inline-flex items-center gap-0.5 rounded-lg border border-blue-200 bg-blue-50 px-2 py-1 text-xs font-medium text-blue-900 hover:bg-blue-100"
             title="Cấu hình bữa ăn / sách / bảo hiểm (chỉ cập nhật nhu cầu, không duyệt tải lên)"
           >
             <Settings2 className="h-3.5 w-3.5" />
             Cấu hình nhu cầu
-          </button>
-          <button
-            type="button"
+          </TableIconButton>
+          <TableIconButton
             onClick={() => {
               setChildDetailRow(row);
               setChildDetailId(row.id);
               setChildDetailOpen(true);
             }}
-            className="rounded-lg border border-slate-200 bg-white px-2 py-1 text-xs font-medium text-slate-800 hover:bg-slate-50"
           >
             Chi tiết
-          </button>
+          </TableIconButton>
         </div>
       ),
     },
   ];
-
-  const approveInputClass =
-    'w-full rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none ring-blue-800/20 focus:border-blue-800 focus:ring-2';
 
   return (
     <div>
@@ -485,55 +480,39 @@ export default function LeaderChildrenPage() {
       />
 
       {centerStatus === 'loading' && (
-        <div className="mb-4 rounded-lg border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-600">
-          Đang tải trung tâm trưởng vùng (vùng từ GET /centers/leader)…
-        </div>
+        <ContextBanner title="Đang tải trung tâm trưởng vùng">
+          Vùng từ GET /centers/leader…
+        </ContextBanner>
       )}
       {centerStatus === 'error' && centerError && (
-        <div className="mb-4 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
-          Không tải được trung tâm trưởng vùng: {centerError}. Các danh sách bên dưới cần vùng từ API này.
-        </div>
+        <ContextBanner variant="warning" title="Không tải được trung tâm trưởng vùng">
+          {centerError}. Các danh sách bên dưới cần vùng từ API này.
+        </ContextBanner>
       )}
       {centerStatus !== 'loading' && !leaderRegion && (
-        <div className="mb-4 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+        <ContextBanner variant="warning" title="Thiếu vùng từ API">
           Không có trường <code className="rounded bg-white px-1">region</code> từ GET /centers/leader — không lọc được yêu cầu và trẻ theo vùng.
-        </div>
+        </ContextBanner>
       )}
 
-      <div className="mb-6 flex flex-wrap gap-1 rounded-lg border border-slate-200 bg-slate-50 p-1 sm:flex-nowrap">
-        <button
-          type="button"
-          onClick={() => setTab('review')}
-          className={`flex min-w-0 flex-1 items-center justify-center gap-1 rounded-md px-2 py-2 text-sm font-medium transition sm:px-3 ${
-            tab === 'review'
-              ? 'bg-white text-blue-900 shadow-sm ring-1 ring-blue-800/20'
-              : 'text-slate-600 hover:text-slate-900'
-          }`}
-        >
-          <ClipboardCheck className="hidden h-4 w-4 shrink-0 sm:inline" />
-          <span className="truncate">Yêu cầu tải lên</span>
-        </button>
-        <button
-          type="button"
-          onClick={() => setTab('list')}
-          className={`flex min-w-0 flex-1 items-center justify-center rounded-md px-2 py-2 text-sm font-medium transition sm:px-3 ${
-            tab === 'list'
-              ? 'bg-white text-blue-900 shadow-sm ring-1 ring-blue-800/20'
-              : 'text-slate-600 hover:text-slate-900'
-          }`}
-        >
-          Danh sách trẻ
-        </button>
-      </div>
+      <TabBar
+        className="mb-6"
+        items={[
+          { id: 'review' as const, label: 'Yêu cầu tải lên', icon: <ClipboardCheck className="hidden h-4 w-4 shrink-0 sm:inline" /> },
+          { id: 'list' as const, label: 'Danh sách trẻ' },
+        ]}
+        value={tab}
+        onChange={setTab}
+      />
 
       {tab === 'review' && (
         <div className="space-y-4">
-          <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
-            <div className="flex flex-wrap items-center gap-3">
-              <span className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs text-slate-700">
-                Vùng (trưởng):{' '}
-                <strong className="text-slate-900">{leaderRegion ?? '—'}</strong>
-              </span>
+          <FilterToolbar>
+            <span className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs text-slate-700">
+              Vùng (trưởng): <strong className="text-slate-900">{leaderRegion ?? '—'}</strong>
+            </span>
+            <div>
+              <label className="mb-1 block text-xs font-medium text-slate-500">Giới tính</label>
               <select
                 value={uploadGender}
                 onChange={(e) => {
@@ -541,7 +520,7 @@ export default function LeaderChildrenPage() {
                   setUploadPage(0);
                 }}
                 disabled={!canLoad}
-                className="rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none ring-blue-800/20 focus:ring-2 disabled:opacity-50"
+                className={selectClass}
               >
                 {GENDER_OPTIONS.map((o) => (
                   <option key={o.value || 'all-g'} value={o.value}>
@@ -550,8 +529,9 @@ export default function LeaderChildrenPage() {
                 ))}
               </select>
             </div>
-          </div>
+          </FilterToolbar>
 
+          <PageSection title="Yêu cầu tải lên đang chờ" noPadding>
           <DataTable<UploadChildRequestEntity>
             columns={[
               {
@@ -566,6 +546,11 @@ export default function LeaderChildrenPage() {
               { key: 'gender', label: 'Giới tính', render: (u) => <span className="capitalize">{u.gender}</span> },
               { key: 'region', label: 'Vùng' },
               { key: 'status', label: 'Trạng thái', render: (u) => <StatusBadge status={u.status} /> },
+              {
+                key: 'ai_evaluation',
+                label: 'AI',
+                render: (u) => <AiEvaluationBadge record={u} />,
+              },
               { key: 'created_at', label: 'Ngày tạo', render: (u) => formatDate(u.created_at) },
               {
                 key: 'actions',
@@ -573,33 +558,29 @@ export default function LeaderChildrenPage() {
                 className: 'min-w-[120px]',
                 render: (u) => (
                   <div className="flex flex-wrap gap-1" onClick={(e) => e.stopPropagation()}>
-                    <button
-                      type="button"
+                    <TableIconButton
                       onClick={() => {
                         setUploadDetailRow(u);
                         setUploadDetailOpen(true);
                       }}
-                      className="inline-flex items-center gap-0.5 rounded border border-slate-200 bg-white px-1.5 py-0.5 text-[11px] font-medium text-slate-800 hover:bg-slate-50"
                     >
                       Chi tiết
-                    </button>
-                    <button
-                      type="button"
+                    </TableIconButton>
+                    <TableIconButton
+                      variant="primary"
                       disabled={busyId === u.id}
                       onClick={() => runReview(u, true)}
-                      className="inline-flex items-center gap-0.5 rounded border border-blue-200 bg-blue-50 px-1.5 py-0.5 text-[11px] font-medium text-blue-900 hover:bg-blue-100 disabled:opacity-50"
                     >
                       <ClipboardCheck className="h-3 w-3" />
                       Duyệt
-                    </button>
-                    <button
-                      type="button"
+                    </TableIconButton>
+                    <TableIconButton
+                      variant="danger"
                       disabled={busyId === u.id}
                       onClick={() => runReview(u, false)}
-                      className="inline-flex items-center gap-0.5 rounded border border-amber-200 bg-amber-50 px-1.5 py-0.5 text-[11px] font-medium text-amber-900 hover:bg-amber-100 disabled:opacity-50"
                     >
                       Từ chối
-                    </button>
+                    </TableIconButton>
                   </div>
                 ),
               },
@@ -615,10 +596,12 @@ export default function LeaderChildrenPage() {
                 : 'Không có vùng trưởng — không tải được yêu cầu tải lên.'
             }
           />
+          </PageSection>
         </div>
       )}
 
       {tab === 'list' && (
+        <PageSection title="Danh sách trẻ" noPadding>
         <DataTable<Child>
           columns={listColumns}
           data={children}
@@ -630,31 +613,26 @@ export default function LeaderChildrenPage() {
             canLoad ? 'Không tìm thấy trẻ em' : 'Không có vùng trưởng — không tải được danh sách trẻ.'
           }
         />
+        </PageSection>
       )}
 
-      {approveModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 p-4">
-          <div className="max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-xl border border-slate-200 bg-white p-5 shadow-xl">
-            <div className="mb-4 flex items-start justify-between gap-2">
-              <div>
-                <h3 className="text-lg font-semibold text-slate-900">Duyệt tải lên &amp; cấu hình nhu cầu</h3>
-                <p className="mt-1 text-sm text-slate-600">
-                  {approveModal.first_name} {approveModal.last_name} · {approveModal.region}
-                </p>
-                <p className="mt-0.5 font-mono text-[11px] text-slate-500">
-                  Mã định danh: {approveModal.identity_code || '—'}
-                </p>
-              </div>
-              <button
-                type="button"
-                onClick={() => !approveSubmitting && !executing && setApproveModal(null)}
-                className="shrink-0 rounded-lg p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-700 disabled:opacity-50"
-                aria-label="Đóng"
-              >
-                <X className="h-5 w-5" />
-              </button>
-            </div>
-
+      <FormModal
+        open={approveModal !== null}
+        onClose={() => !approveSubmitting && !executing && setApproveModal(null)}
+        title="Duyệt tải lên & cấu hình nhu cầu"
+        submitLabel={approveSubmitting || executing ? 'Đang xử lý…' : 'Xác nhận'}
+        submitDisabled={approveSubmitting || executing}
+        onSubmit={() => void submitApproveWithNeeds()}
+        maxWidth="lg"
+      >
+        {approveModal && (
+          <>
+            <p className="mb-2 text-sm text-slate-600">
+              {approveModal.first_name} {approveModal.last_name} · {approveModal.region}
+            </p>
+            <p className="mb-4 font-mono text-[11px] text-slate-500">
+              Mã định danh: {approveModal.identity_code || '—'}
+            </p>
             <p className="mb-4 rounded-lg border border-blue-100 bg-blue-50/80 px-3 py-2 text-xs text-slate-700">
               Chọn nhu cầu và nhập <strong>số tiền (VND)</strong>; <strong>mỗi nhu cầu đã chọn phải &gt; {MIN_NEED_VND.toLocaleString('vi-VN')} ₫</strong>. Khi xác nhận:
               hệ thống ghi nhận duyệt (nếu cần), rồi cập nhật nhu cầu trẻ. <strong>Sách:</strong> một ô tiền áp dụng cho <strong>cả hai</strong> học kỳ (
@@ -677,7 +655,7 @@ export default function LeaderChildrenPage() {
                   {needMeal && (
                     <GroupedNumericInput
                       min={MIN_NEED_VND + 1}
-                      className={`${approveInputClass} mt-2`}
+                      className={`${inputClass} mt-2`}
                       placeholder={`Ví dụ: ${(MIN_NEED_VND + 50_000).toString()}`}
                       value={mealValue}
                       onChange={setMealValue}
@@ -705,7 +683,7 @@ export default function LeaderChildrenPage() {
                   {needBooks && (
                     <GroupedNumericInput
                       min={MIN_NEED_VND + 1}
-                      className={`${approveInputClass} mt-2`}
+                      className={`${inputClass} mt-2`}
                       placeholder={`Ví dụ: ${(MIN_NEED_VND + 800_000).toString()}`}
                       value={booksValue}
                       onChange={setBooksValue}
@@ -729,7 +707,7 @@ export default function LeaderChildrenPage() {
                   {needHealth && (
                     <GroupedNumericInput
                       min={MIN_NEED_VND + 1}
-                      className={`${approveInputClass} mt-2`}
+                      className={`${inputClass} mt-2`}
                       placeholder={`Ví dụ: ${(MIN_NEED_VND + 1_200_000).toString()}`}
                       value={healthValue}
                       onChange={setHealthValue}
@@ -743,53 +721,27 @@ export default function LeaderChildrenPage() {
             <p className="mt-3 text-[11px] text-slate-400">
               Cập nhật nhu cầu dùng mã trẻ và số tiền. Bước on-chain (nếu có) sẽ được xử lý khi bạn xác nhận giao dịch trong ví.
             </p>
+          </>
+        )}
+      </FormModal>
 
-            <div className="mt-5 flex flex-wrap justify-end gap-2">
-              <button
-                type="button"
-                onClick={() => !approveSubmitting && !executing && setApproveModal(null)}
-                disabled={approveSubmitting || executing}
-                className="rounded-lg border border-slate-200 px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-50"
-              >
-                Hủy
-              </button>
-              <button
-                type="button"
-                disabled={approveSubmitting || executing}
-                onClick={() => void submitApproveWithNeeds()}
-                className="inline-flex items-center gap-1 rounded-lg bg-blue-800 px-3 py-2 text-sm font-medium text-white hover:bg-blue-900 disabled:opacity-50"
-              >
-                <Check className="h-4 w-4" />
-                {approveSubmitting || executing ? 'Đang xử lý…' : 'Xác nhận'}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {needsConfigChild && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 p-4">
-          <div className="max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-xl border border-slate-200 bg-white p-5 shadow-xl">
-            <div className="mb-4 flex items-start justify-between gap-2">
-              <div>
-                <h3 className="text-lg font-semibold text-slate-900">Cấu hình nhu cầu</h3>
-                <p className="mt-1 text-sm text-slate-600">
-                  {needsConfigChild.first_name} {needsConfigChild.last_name} · {needsConfigChild.region}
-                </p>
-                <p className="mt-0.5 font-mono text-[11px] text-slate-500">
-                  Mã trẻ: {needsConfigChild.id} · mã định danh: {needsConfigChild.identity_code || '—'}
-                </p>
-              </div>
-              <button
-                type="button"
-                onClick={() => !configNeedsSubmitting && !executing && setNeedsConfigChild(null)}
-                className="shrink-0 rounded-lg p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-700 disabled:opacity-50"
-                aria-label="Đóng"
-              >
-                <X className="h-5 w-5" />
-              </button>
-            </div>
-
+      <FormModal
+        open={needsConfigChild !== null}
+        onClose={() => !configNeedsSubmitting && !executing && setNeedsConfigChild(null)}
+        title="Cấu hình nhu cầu"
+        submitLabel={configNeedsSubmitting || executing ? 'Đang xử lý…' : 'Lưu nhu cầu'}
+        submitDisabled={configNeedsSubmitting || executing}
+        onSubmit={() => void submitNeedsConfig()}
+        maxWidth="lg"
+      >
+        {needsConfigChild && (
+          <>
+            <p className="mb-2 text-sm text-slate-600">
+              {needsConfigChild.first_name} {needsConfigChild.last_name} · {needsConfigChild.region}
+            </p>
+            <p className="mb-4 font-mono text-[11px] text-slate-500">
+              Mã trẻ: {needsConfigChild.id} · mã định danh: {needsConfigChild.identity_code || '—'}
+            </p>
             <p className="mb-4 rounded-lg border border-blue-100 bg-blue-50/80 px-3 py-2 text-xs text-slate-700">
               Chỉ cập nhật giá trị nhu cầu on-chain (không gọi duyệt upload).{' '}
               <strong>Mỗi nhu cầu đã chọn phải &gt; {MIN_NEED_VND.toLocaleString('vi-VN')} ₫</strong>. Dùng khi bước trước duyệt xong nhưng cập nhật need bị lỗi, hoặc
@@ -811,7 +763,7 @@ export default function LeaderChildrenPage() {
                   {cfgNeedMeal && (
                     <GroupedNumericInput
                       min={MIN_NEED_VND + 1}
-                      className={`${approveInputClass} mt-2`}
+                      className={`${inputClass} mt-2`}
                       placeholder={`Ví dụ: ${(MIN_NEED_VND + 50_000).toString()}`}
                       value={cfgMealValue}
                       onChange={setCfgMealValue}
@@ -838,7 +790,7 @@ export default function LeaderChildrenPage() {
                   {cfgNeedBooks && (
                     <GroupedNumericInput
                       min={MIN_NEED_VND + 1}
-                      className={`${approveInputClass} mt-2`}
+                      className={`${inputClass} mt-2`}
                       placeholder={`Ví dụ: ${(MIN_NEED_VND + 800_000).toString()}`}
                       value={cfgBooksValue}
                       onChange={setCfgBooksValue}
@@ -862,7 +814,7 @@ export default function LeaderChildrenPage() {
                   {cfgNeedHealth && (
                     <GroupedNumericInput
                       min={MIN_NEED_VND + 1}
-                      className={`${approveInputClass} mt-2`}
+                      className={`${inputClass} mt-2`}
                       placeholder={`Ví dụ: ${(MIN_NEED_VND + 1_200_000).toString()}`}
                       value={cfgHealthValue}
                       onChange={setCfgHealthValue}
@@ -873,71 +825,27 @@ export default function LeaderChildrenPage() {
               </label>
             </div>
 
-            <div className="mt-5 flex flex-wrap justify-end gap-2">
-              <button
-                type="button"
-                onClick={() => !configNeedsSubmitting && !executing && setNeedsConfigChild(null)}
-                disabled={configNeedsSubmitting || executing}
-                className="rounded-lg border border-slate-200 px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-50"
-              >
-                Đóng
-              </button>
-              <button
-                type="button"
-                disabled={configNeedsSubmitting || executing}
-                onClick={() => void submitNeedsConfig()}
-                className="inline-flex items-center gap-1 rounded-lg bg-blue-800 px-3 py-2 text-sm font-medium text-white hover:bg-blue-900 disabled:opacity-50"
-              >
-                <Check className="h-4 w-4" />
-                {configNeedsSubmitting || executing ? 'Đang xử lý…' : 'Lưu nhu cầu'}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+          </>
+        )}
+      </FormModal>
 
-      {refuseModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 p-4">
-          <div className="w-full max-w-md rounded-xl border border-slate-200 bg-white p-5 shadow-xl">
-            <div className="mb-3 flex items-center justify-between">
-              <h3 className="text-lg font-semibold text-slate-900">Từ chối duyệt</h3>
-              <button
-                type="button"
-                onClick={() => setRefuseModal(null)}
-                className="rounded-lg p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-700"
-                aria-label="Đóng"
-              >
-                <X className="h-5 w-5" />
-              </button>
-            </div>
-            <textarea
-              value={refuseReason}
-              onChange={(e) => setRefuseReason(e.target.value)}
-              rows={3}
-              className="mb-4 w-full rounded-lg border border-slate-200 p-2 text-sm outline-none ring-blue-800/20 focus:ring-2"
-              placeholder="Lý do (tùy chọn)…"
-            />
-            <div className="flex justify-end gap-2">
-              <button
-                type="button"
-                onClick={() => setRefuseModal(null)}
-                className="rounded-lg border border-slate-200 px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
-              >
-                Hủy
-              </button>
-              <button
-                type="button"
-                disabled={busyId === refuseModal.id}
-                onClick={() => void submitRefuseReview()}
-                className="inline-flex items-center gap-1 rounded-lg bg-red-600 px-3 py-2 text-sm font-medium text-white hover:bg-red-700 disabled:opacity-50"
-              >
-                <Check className="h-4 w-4" />
-                Gửi
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      <FormModal
+        open={refuseModal !== null}
+        onClose={() => setRefuseModal(null)}
+        title="Từ chối duyệt"
+        submitLabel="Gửi"
+        submitVariant="danger"
+        submitDisabled={refuseModal !== null && busyId === refuseModal.id}
+        onSubmit={() => void submitRefuseReview()}
+      >
+        <textarea
+          value={refuseReason}
+          onChange={(e) => setRefuseReason(e.target.value)}
+          rows={3}
+          className={`${inputClass} resize-y`}
+          placeholder="Lý do (tùy chọn)…"
+        />
+      </FormModal>
 
       <DetailModal
         title="Hồ sơ trẻ"
@@ -956,29 +864,33 @@ export default function LeaderChildrenPage() {
           const blobs = collectBlobIdEntries(c);
           const gallery = (c.image_blob_ids ?? []).filter((id) => typeof id === 'string' && id.trim());
           return (
-            <div className="space-y-1">
-              {detailField('ID', <CopyableTruncated value={c.id} chars={8} />)}
-              {detailField('Tên', `${c.first_name} ${c.last_name}`)}
-              {detailField('Giới tính', <span className="capitalize">{c.gender}</span>)}
-              {detailField('Vùng', c.region)}
-              {detailField('Ngày sinh', formatDate(c.date_of_birth))}
-              {detailField('Mã định danh', <CopyableTruncated value={c.identity_code} />)}
-              {detailField('Địa chỉ nhà', c.home_address || '—')}
-              {detailField('Nhu cầu bữa ăn', c.meal_need ? <CopyableTruncated value={c.meal_need} /> : '—')}
-              {detailField('Nhu cầu bảo hiểm y tế', c.health_insurance_need ? <CopyableTruncated value={c.health_insurance_need} /> : '—')}
-              {detailField(
-                'Nhu cầu sách',
-                c.books_needs?.length ? (
-                  <div className="flex flex-wrap gap-2">
-                    {c.books_needs.map((bid) => (
-                      <CopyableTruncated key={bid} value={bid} />
-                    ))}
-                  </div>
-                ) : '—',
-              )}
-              {detailField('Người tải lên', c.uploaded_by ? <CopyableTruncated value={c.uploaded_by} /> : '—')}
-              {detailField('Ngày tải lên', formatDate(c.uploaded_at))}
-              {detailField('Cập nhật', formatDate(c.updated_at))}
+            <div>
+              <DetailField label="Mã" value={<CopyableTruncated value={c.id} chars={8} />} />
+              <DetailField label="Tên" value={`${c.first_name} ${c.last_name}`} />
+              <DetailField label="Giới tính" value={<span className="capitalize">{c.gender}</span>} />
+              <DetailField label="Vùng" value={c.region} />
+              <DetailField label="Ngày sinh" value={formatDate(c.date_of_birth)} />
+              <DetailField label="Mã định danh" value={<CopyableTruncated value={c.identity_code} />} />
+              <DetailField label="Địa chỉ nhà" value={c.home_address || '—'} />
+              <DetailField label="Nhu cầu bữa ăn" value={c.meal_need ? <CopyableTruncated value={c.meal_need} /> : '—'} />
+              <DetailField label="Nhu cầu bảo hiểm y tế" value={c.health_insurance_need ? <CopyableTruncated value={c.health_insurance_need} /> : '—'} />
+              <DetailField
+                label="Nhu cầu sách"
+                value={
+                  c.books_needs?.length ? (
+                    <div className="flex flex-wrap gap-2">
+                      {c.books_needs.map((bid) => (
+                        <CopyableTruncated key={bid} value={bid} />
+                      ))}
+                    </div>
+                  ) : (
+                    '—'
+                  )
+                }
+              />
+              <DetailField label="Người tải lên" value={c.uploaded_by ? <CopyableTruncated value={c.uploaded_by} /> : '—'} />
+              <DetailField label="Ngày tải lên" value={formatDate(c.uploaded_at)} />
+              <DetailField label="Cập nhật lúc" value={formatDate(c.updated_at)} />
               {gallery.length > 0 && (
                 <div className="border-t border-slate-100 pt-3">
                   <div className="mb-2 text-xs font-medium text-slate-600">Thư viện ảnh (API)</div>
@@ -1021,23 +933,24 @@ export default function LeaderChildrenPage() {
             const u = uploadDetailRow;
             const blobs = uploadBlobEntries(u);
             return (
-              <div className="space-y-1">
-                {detailField('ID', <CopyableTruncated value={u.id} chars={8} />)}
-                {detailField('Mã hồ sơ', <CopyableTruncated value={u.profile_id} chars={8} />)}
-                {detailField('Tên', `${u.first_name} ${u.last_name}`)}
-                {detailField('Giới tính', <span className="capitalize">{u.gender}</span>)}
-                {detailField('Vùng', u.region)}
-                {detailField('Mã định danh', <CopyableTruncated value={u.identity_code} />)}
-                {detailField('Ngày sinh', formatDate(u.date_of_birth))}
-                {detailField('Địa chỉ nhà', u.home_address ?? '—')}
-                {detailField('Trạng thái', <StatusBadge status={u.status} />)}
-                {detailField('Trạng thái duyệt', u.review_status ? <StatusBadge status={u.review_status} /> : <span className="text-slate-400">—</span>)}
-                {detailField('Người duyệt', u.reviewed_by ? <CopyableTruncated value={u.reviewed_by} /> : '—')}
-                {detailField('Người tạo', <CopyableTruncated value={u.created_by} />)}
-                {detailField('Ngày tạo', formatDate(u.created_at))}
-                {detailField('Cập nhật', formatDate(u.updated_at))}
-                {detailField('Thời gian đóng', formatDateTimeSeconds(u.closed_at))}
-                {detailField('Xác nhận tải lên', u.is_confirm_upload ? 'Có' : 'Không')}
+              <div>
+                <DetailField label="Mã" value={<CopyableTruncated value={u.id} chars={8} />} />
+                <DetailField label="Mã hồ sơ" value={<CopyableTruncated value={u.profile_id} chars={8} />} />
+                <DetailField label="Tên" value={`${u.first_name} ${u.last_name}`} />
+                <DetailField label="Giới tính" value={<span className="capitalize">{u.gender}</span>} />
+                <DetailField label="Vùng" value={u.region} />
+                <DetailField label="Mã định danh" value={<CopyableTruncated value={u.identity_code} />} />
+                <DetailField label="Ngày sinh" value={formatDate(u.date_of_birth)} />
+                <DetailField label="Địa chỉ nhà" value={u.home_address ?? '—'} />
+                <DetailField label="Trạng thái" value={<StatusBadge status={u.status} />} />
+                <DetailField label="Trạng thái duyệt" value={u.review_status ? <StatusBadge status={u.review_status} /> : <span className="text-slate-400">—</span>} />
+                <DetailField label="Người duyệt" value={u.reviewed_by ? <CopyableTruncated value={u.reviewed_by} /> : '—'} />
+                <DetailField label="Người tạo" value={<CopyableTruncated value={u.created_by} />} />
+                <DetailField label="Ngày tạo" value={formatDate(u.created_at)} />
+                <DetailField label="Cập nhật lúc" value={formatDate(u.updated_at)} />
+                <DetailField label="Thời gian đóng" value={formatDateTimeSeconds(u.closed_at)} />
+                <DetailField label="Xác nhận tải lên" value={u.is_confirm_upload ? 'Có' : 'Không'} />
+                <AiInsightPanel record={u} className="my-4" />
                 {u.first_guardian_profile && (
                   <div className="border-t border-slate-100 py-2">
                     <div className="text-xs font-medium text-slate-500">Người giám hộ thứ nhất</div>

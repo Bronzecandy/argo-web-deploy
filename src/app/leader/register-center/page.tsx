@@ -5,7 +5,10 @@ import { useRouter } from 'next/navigation';
 import { Building2, CheckCircle2, Circle, Check } from 'lucide-react';
 import { toast } from 'sonner';
 import PageHeader from '@/src/components/ui/PageHeader';
+import PageSection from '@/src/components/ui/PageSection';
+import ContextBanner from '@/src/components/ui/ContextBanner';
 import RegisterCenterModal from '@/src/components/leader/RegisterCenterModal';
+import { btnPrimary } from '@/src/lib/uiClasses';
 import StatusBadge from '@/src/components/ui/StatusBadge';
 import CopyableTruncated from '@/src/components/ui/CopyableTruncated';
 import WalrusFallbackImg from '@/src/components/ui/WalrusFallbackImg';
@@ -138,21 +141,20 @@ export default function LeaderRegisterCenterPage() {
       />
 
       {centerStatus === 'loading' ? (
-        <p className="text-sm text-slate-600">Đang tải vùng từ trung tâm trưởng vùng (GET /centers/leader)…</p>
+        <ContextBanner title="Đang tải vùng">Từ GET /centers/leader…</ContextBanner>
       ) : !leaderRegion?.trim() ? (
-        <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+        <ContextBanner variant="warning" title="Thiếu vùng từ API">
           Không có trường <code className="rounded bg-white px-1">region</code> từ GET /centers/leader — không kiểm tra
           được điều kiện nhân sự theo vùng. Khi API trả về vùng được gán, trang sẽ tự cập nhật.
           {centerError ? <span className="mt-2 block text-xs opacity-90">{centerError}</span> : null}
-        </div>
+        </ContextBanner>
       ) : null}
 
       {canLoadCounts ? (
-      <section className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
-        <h2 className="mb-2 text-sm font-semibold text-slate-900">Minimum requirements</h2>
+      <PageSection title="Điều kiện tối thiểu">
         <p className="mb-4 text-sm text-slate-600">
-          At least {MIN_LOCAL_LEADERS_APPROVED} approved Local Leader registration(s) and{' '}
-          {MIN_VOLUNTEERS_APPROVED} approved Volunteer registration(s) in region{' '}
+          Cần ít nhất {MIN_LOCAL_LEADERS_APPROVED} đăng ký trưởng vùng đã duyệt và {MIN_VOLUNTEERS_APPROVED} đăng ký
+          tình nguyện viên đã duyệt trong vùng{' '}
           <span className="font-medium text-slate-800">{leaderRegion || '—'}</span>.
         </p>
         <ul className="space-y-3 text-sm">
@@ -165,12 +167,11 @@ export default function LeaderRegisterCenterPage() {
               <Circle className="mt-0.5 h-4 w-4 shrink-0 text-amber-500" />
             )}
             <span>
-              <span className="font-medium text-slate-800">Local Leaders</span> (approved in region):{' '}
-              {loading ? '…' : localLeaderApproved} — need {MIN_LOCAL_LEADERS_APPROVED}+
+              <span className="font-medium text-slate-800">Trưởng vùng</span> (đã duyệt trong vùng):{' '}
+              {loading ? '…' : localLeaderApproved} — cần {MIN_LOCAL_LEADERS_APPROVED}+
               {selfIsAssignedLeader && (
                 <span className="mt-1 block text-xs text-slate-500">
-                  You are assigned as a Local Leader for this app; that satisfies the leader requirement if the count
-                  above is still zero.
+                  Bạn được gán vai trò trưởng vùng trong ứng dụng; điều này đáp ứng yêu cầu trưởng vùng nếu số đếm trên vẫn bằng 0.
                 </span>
               )}
             </span>
@@ -184,8 +185,8 @@ export default function LeaderRegisterCenterPage() {
               <Circle className="mt-0.5 h-4 w-4 shrink-0 text-amber-500" />
             )}
             <span>
-              <span className="font-medium text-slate-800">Volunteers</span> (approved):{' '}
-              {loading ? '…' : volunteerApproved} — need {MIN_VOLUNTEERS_APPROVED}+
+              <span className="font-medium text-slate-800">Tình nguyện viên</span> (đã duyệt):{' '}
+              {loading ? '…' : volunteerApproved} — cần {MIN_VOLUNTEERS_APPROVED}+
             </span>
           </li>
         </ul>
@@ -195,26 +196,25 @@ export default function LeaderRegisterCenterPage() {
             type="button"
             disabled={!canPropose}
             onClick={() => setModalOpen(true)}
-            className="inline-flex items-center gap-2 rounded-lg bg-blue-800 px-4 py-2.5 text-sm font-medium text-white shadow-sm transition hover:bg-blue-900 disabled:cursor-not-allowed disabled:opacity-40"
+            className={btnPrimary}
           >
             <Building2 className="h-4 w-4" />
-            Create center establishment proposal
+            Tạo đề xuất thiết lập trung tâm
           </button>
           {!canPropose && canLoadCounts && !loading && (
             <p className="mt-2 text-xs text-slate-500">
-              Meet the counts above to enable this action.
+              Đáp ứng các điều kiện trên để bật thao tác này.
             </p>
           )}
         </div>
-      </section>
+      </PageSection>
       ) : null}
 
       {canLoadCounts ? (
-        <section className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
-          <h2 className="mb-1 text-sm font-semibold text-slate-900">Đề xuất trung tâm trong vùng</h2>
-          <p className="mb-4 text-xs text-slate-500">
-            Dữ liệu từ GET /center-reqs (lọc theo <span className="font-medium">{leaderRegion}</span>).
-          </p>
+        <PageSection
+          title="Đề xuất trung tâm trong vùng"
+          description={`Dữ liệu từ GET /center-reqs (lọc theo ${leaderRegion})`}
+        >
           {centerReqLoading ? (
             <div className="flex justify-center py-8">
               <div className="h-8 w-8 animate-spin rounded-full border-4 border-blue-800 border-t-transparent" />
@@ -285,7 +285,7 @@ export default function LeaderRegisterCenterPage() {
                             type="button"
                             disabled={executing || confirmBusyId === req.id}
                             onClick={() => void handleConfirmCenterReq(req.id)}
-                            className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-medium text-blue-900 hover:bg-blue-50 disabled:cursor-not-allowed disabled:opacity-50"
+                            className={`${btnPrimary} !px-3 !py-2 text-xs`}
                           >
                             <Check className="h-3.5 w-3.5" />
                             Xác nhận on-chain
@@ -300,7 +300,7 @@ export default function LeaderRegisterCenterPage() {
               })}
             </ul>
           )}
-        </section>
+        </PageSection>
       ) : null}
 
       <RegisterCenterModal

@@ -1,4 +1,5 @@
 import { API_BASE_URL } from '@/src/lib/constants';
+import { buildPaymentServerCallbackPath } from '@/src/lib/paymentCallback';
 import { apiService } from './api.service';
 import type {
   PaginationResponse,
@@ -34,6 +35,18 @@ class PaymentService {
   /** Poll PayOS / payment status (same as GET /payments/:id). */
   async getPaymentStatus(id: string | number) {
     return apiService.get<Payment>(`/payments/${id}`);
+  }
+
+  /**
+   * Trigger backend payment processing after PayOS browser return (not the PayOS IPN webhook).
+   * Default: GET `/payments/callback/{id}` — override path via NEXT_PUBLIC_PAYMENT_SERVER_CALLBACK_PATH.
+   */
+  async triggerServerCallback(paymentId: string) {
+    const path = buildPaymentServerCallbackPath(paymentId);
+    if (!path) {
+      throw new Error('Missing payment id for server callback');
+    }
+    return apiService.get<MessageResponse>(path);
   }
 
   async approve(id: string) {

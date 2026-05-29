@@ -1,14 +1,20 @@
 'use client';
 
-import { useCallback, useEffect, useState, type ReactNode } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import PageHeader from '@/src/components/ui/PageHeader';
 import DataTable from '@/src/components/ui/DataTable';
 import DetailModal from '@/src/components/ui/DetailModal';
+import DetailField from '@/src/components/ui/DetailField';
 import EntityBlobThumb from '@/src/components/ui/EntityBlobThumb';
 import StatusBadge from '@/src/components/ui/StatusBadge';
 import CopyableTruncated from '@/src/components/ui/CopyableTruncated';
+import ContextBanner from '@/src/components/ui/ContextBanner';
+import FormModal from '@/src/components/ui/FormModal';
+import PageSection from '@/src/components/ui/PageSection';
+import TableIconButton from '@/src/components/ui/TableIconButton';
 import { collectBlobIdEntries, blobFieldDisplayLabel } from '@/src/lib/blobFields';
 import { formatDate, toDDMMYYYY, truncateAddress } from '@/src/lib/formatters';
+import { btnPrimary, btnSecondary, inputClass, selectClass } from '@/src/lib/uiClasses';
 import { toast } from 'sonner';
 import { useAppSelector } from '@/src/store/hooks';
 import { useLeaderCenter } from '@/src/contexts/LeaderCenterContext';
@@ -22,15 +28,6 @@ const PAGE_SIZE = 20;
 const CHILD_LIST_PAGE_SIZE = 50;
 
 type TaskNeedKind = 'hk1' | 'hk2' | 'health' | '';
-
-function detailField(label: string, value: ReactNode) {
-  return (
-    <div className="border-b border-slate-100 py-2 last:border-0">
-      <div className="text-xs font-medium text-slate-500">{label}</div>
-      <div className="text-sm text-slate-900">{value}</div>
-    </div>
-  );
-}
 
 function childOptionLabel(c: Child) {
   return `${c.first_name} ${c.last_name} · ${truncateAddress(c.id)}`;
@@ -232,8 +229,7 @@ export default function LeaderTasksPage() {
 
   const resolvedNeedId = needIdFor(childDetail, needKind);
 
-  const handleCreate = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleCreate = async () => {
     if (!canUseRegion || !effectiveRegion) {
       toast.error('Vùng của bạn chưa tải xong. Vui lòng đợi hoặc thử lại sau.');
       return;
@@ -334,19 +330,26 @@ export default function LeaderTasksPage() {
             : 'Nhiệm vụ trong vùng được giao'
         }
         actions={
-          <button
-            type="button"
-            onClick={() => setCreateOpen(true)}
-            className="inline-flex items-center gap-2 rounded-lg bg-blue-800 px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-blue-900"
-          >
+          <button type="button" onClick={() => setCreateOpen(true)} className={btnPrimary}>
             <Plus className="h-4 w-4" />
             Tạo mới
           </button>
         }
       />
 
-      <section className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
-        <h2 className="mb-4 text-lg font-semibold text-slate-900">Nhiệm vụ trong vùng bạn</h2>
+      {!dataReady && (
+        <ContextBanner title="Đang tải thông tin vùng / pool">Vui lòng đợi trước khi tạo hoặc lọc nhiệm vụ.</ContextBanner>
+      )}
+      {dataReady && !effectiveRegion && (
+        <ContextBanner variant="warning" title="Chưa có mã vùng">
+          {poolError || 'Không xác định được vùng cho nhiệm vụ — cần pool hoặc trung tâm trả về vùng được gán.'}
+        </ContextBanner>
+      )}
+      {regionHint && (
+        <ContextBanner variant="info">{regionHint}</ContextBanner>
+      )}
+
+      <PageSection title="Nhiệm vụ trong vùng bạn" noPadding>
         <DataTable<Task>
           columns={[
             {
@@ -379,26 +382,23 @@ export default function LeaderTasksPage() {
                 const isAssigned = !!getTaskAssignedStaff(r);
                 return (
                   <div className="flex flex-wrap gap-1" onClick={(e) => e.stopPropagation()}>
-                    <button
-                      type="button"
+                    <TableIconButton
                       onClick={() => {
                         setTaskDetailRow(r);
                         setTaskDetailId(r.id);
                         setTaskDetailOpen(true);
                       }}
-                      className="inline-flex items-center gap-1 rounded-md border border-slate-200 bg-white px-2 py-1 text-xs font-medium text-slate-800 hover:bg-slate-50"
                     >
                       Chi tiết
-                    </button>
+                    </TableIconButton>
                     {!isAssigned && (s === 'pending' || s === 'open') && (
-                      <button
-                        type="button"
+                      <TableIconButton
+                        variant="primary"
                         disabled={busyId === r.id}
                         onClick={() => void handleClaim(r.id)}
-                        className="inline-flex items-center gap-1 rounded-md border border-blue-200 bg-blue-50 px-2 py-1 text-xs font-medium text-blue-800 hover:bg-blue-100 disabled:opacity-50"
                       >
                         <Hand className="h-3 w-3" /> Nhận
-                      </button>
+                      </TableIconButton>
                     )}
                   </div>
                 );
@@ -412,43 +412,23 @@ export default function LeaderTasksPage() {
           onPageChange={setPage}
           emptyMessage={emptyMsg}
         />
-      </section>
+      </PageSection>
 
-      {createOpen && (
-        <div
-          className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-slate-900/40 p-4 py-10"
-          onClick={() => setCreateOpen(false)}
-          role="presentation"
-        >
-          <div
-            className="relative w-full max-w-xl rounded-xl border border-slate-200 bg-white p-6 shadow-xl"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="mb-4 flex items-center justify-between gap-2">
-              <h2 className="text-lg font-semibold text-slate-900">Tạo nhiệm vụ mới</h2>
-              <button
-                type="button"
-                onClick={() => setCreateOpen(false)}
-                className="rounded-lg px-3 py-1.5 text-sm text-slate-600 hover:bg-slate-100"
-              >
-                Đóng
-              </button>
-            </div>
-            <p className="mb-4 rounded-lg border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700">
-              <span className="font-medium text-slate-900">Region</span> —{' '}
-              <span className="font-semibold text-blue-900">{canUseRegion ? effectiveRegion : '…'}</span>
-              {regionHint && <span className="mt-2 block text-xs text-slate-600">{regionHint}</span>}
-              {!dataReady && (
-                <span className="mt-2 block text-amber-800">Đang tải thông tin vùng / pool…</span>
-              )}
-              {dataReady && !effectiveRegion && (
-                <span className="mt-2 block text-red-700">
-                  Chưa có mã vùng — không thể tạo task cho tới khi pool hoặc trung tâm trả về vùng được gán.
-                </span>
-              )}
-            </p>
+      <FormModal
+        open={createOpen}
+        onClose={() => setCreateOpen(false)}
+        title="Tạo nhiệm vụ mới"
+        submitLabel={submitting ? 'Đang tạo…' : 'Tạo nhiệm vụ'}
+        submitDisabled={createDisabled}
+        onSubmit={() => void handleCreate()}
+        maxWidth="xl"
+      >
+        <p className="mb-4 rounded-lg border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700">
+          <span className="font-medium text-slate-900">Vùng</span> —{' '}
+          <span className="font-semibold text-blue-900">{canUseRegion ? effectiveRegion : '…'}</span>
+        </p>
 
-            <form onSubmit={handleCreate} className="max-w-xl space-y-4">
+        <div className="max-w-xl space-y-4">
               <fieldset className="space-y-2 rounded-lg border border-slate-200 p-3">
                 <legend className="px-1 text-xs font-medium text-slate-600">Loại task</legend>
                 <label className="flex cursor-pointer items-center gap-2 text-sm">
@@ -481,7 +461,7 @@ export default function LeaderTasksPage() {
                   <div>
                     <label className="mb-1 block text-xs font-medium text-slate-500">Trẻ</label>
                     <select
-                      className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-blue-800 focus:outline-none focus:ring-1 focus:ring-blue-800"
+                      className={`${selectClass} w-full`}
                       disabled={childSelectDisabled}
                       value={selectedChildId}
                       onChange={(e) => {
@@ -501,7 +481,7 @@ export default function LeaderTasksPage() {
                         <button
                           type="button"
                           disabled={childrenPage <= 0}
-                          className="rounded border border-slate-200 px-2 py-1 disabled:opacity-50"
+                          className={`${btnSecondary} !px-2 !py-1 text-xs`}
                           onClick={() => setChildrenPage((p) => Math.max(0, p - 1))}
                         >
                           Trước
@@ -512,7 +492,7 @@ export default function LeaderTasksPage() {
                         <button
                           type="button"
                           disabled={childrenPage >= childrenTotalPages - 1}
-                          className="rounded border border-slate-200 px-2 py-1 disabled:opacity-50"
+                          className={`${btnSecondary} !px-2 !py-1 text-xs`}
                           onClick={() => setChildrenPage((p) => p + 1)}
                         >
                           Sau
@@ -572,7 +552,7 @@ export default function LeaderTasksPage() {
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
                   rows={3}
-                  className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-blue-800 focus:outline-none focus:ring-1 focus:ring-blue-800"
+                  className={inputClass}
                 />
               </div>
               <div className="grid gap-4 sm:grid-cols-2">
@@ -585,7 +565,7 @@ export default function LeaderTasksPage() {
                     type="date"
                     value={startPeriod}
                     onChange={(e) => setStartPeriod(e.target.value)}
-                    className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-blue-800 focus:outline-none focus:ring-1 focus:ring-blue-800"
+                    className={inputClass}
                   />
                 </div>
                 <div>
@@ -597,24 +577,15 @@ export default function LeaderTasksPage() {
                     type="date"
                     value={endPeriod}
                     onChange={(e) => setEndPeriod(e.target.value)}
-                    className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-blue-800 focus:outline-none focus:ring-1 focus:ring-blue-800"
+                    className={inputClass}
                   />
                 </div>
               </div>
               <p className="text-[11px] text-slate-500">
                 Gửi API dạng <span className="font-medium">DD/MM/YYYY</span> (chuyển tự động từ ngày đã chọn).
               </p>
-              <button
-                type="submit"
-                disabled={createDisabled}
-                className="rounded-lg bg-blue-800 px-4 py-2 text-sm font-medium text-white transition hover:bg-blue-900 disabled:opacity-50"
-              >
-                {submitting ? 'Đang tạo…' : 'Tạo nhiệm vụ'}
-              </button>
-            </form>
-          </div>
         </div>
-      )}
+      </FormModal>
 
       <DetailModal
         title="Nhiệm vụ"
@@ -632,17 +603,17 @@ export default function LeaderTasksPage() {
           if (!t) return null;
           const blobs = collectBlobIdEntries(t);
           return (
-            <div className="space-y-1">
-              {detailField('ID', <CopyableTruncated value={t.id} chars={4} />)}
-              {detailField('Mô tả', t.description)}
-              {detailField('Vùng', t.region)}
-              {detailField('Bắt đầu', formatDate(t.start_period))}
-              {detailField('Kết thúc', formatDate(t.end_period))}
-              {detailField('Trạng thái', <StatusBadge status={t.status} />)}
-              {detailField('Nhân sự được giao', t.assigned_staff ? <CopyableTruncated value={t.assigned_staff} /> : '—')}
-              {detailField('Người duyệt', t.reviewed_by ? <CopyableTruncated value={t.reviewed_by} /> : '—')}
-              {detailField('Ngày tạo', formatDate(t.created_at))}
-              {detailField('Cập nhật', formatDate(t.updated_at))}
+            <div>
+              <DetailField label="Mã" value={<CopyableTruncated value={t.id} chars={4} />} />
+              <DetailField label="Mô tả" value={t.description} />
+              <DetailField label="Vùng" value={t.region} />
+              <DetailField label="Bắt đầu" value={formatDate(t.start_period)} />
+              <DetailField label="Kết thúc" value={formatDate(t.end_period)} />
+              <DetailField label="Trạng thái" value={<StatusBadge status={t.status} />} />
+              <DetailField label="Nhân sự được giao" value={t.assigned_staff ? <CopyableTruncated value={t.assigned_staff} /> : '—'} />
+              <DetailField label="Người duyệt" value={t.reviewed_by ? <CopyableTruncated value={t.reviewed_by} /> : '—'} />
+              <DetailField label="Ngày tạo" value={formatDate(t.created_at)} />
+              <DetailField label="Cập nhật lúc" value={formatDate(t.updated_at)} />
               {blobs.length > 0 && (
                 <div className="border-t border-slate-100 pt-3">
                   <div className="mb-2 text-xs font-medium text-slate-600">Hình ảnh</div>

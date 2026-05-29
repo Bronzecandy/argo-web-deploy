@@ -7,8 +7,14 @@ import PageHeader from '@/src/components/ui/PageHeader';
 import DataTable from '@/src/components/ui/DataTable';
 import StatusBadge from '@/src/components/ui/StatusBadge';
 import DetailModal from '@/src/components/ui/DetailModal';
+import DetailField from '@/src/components/ui/DetailField';
 import BlobImage from '@/src/components/ui/BlobImage';
 import CopyableTruncated from '@/src/components/ui/CopyableTruncated';
+import FilterToolbar from '@/src/components/ui/FilterToolbar';
+import FormModal from '@/src/components/ui/FormModal';
+import PageSection from '@/src/components/ui/PageSection';
+import TableIconButton from '@/src/components/ui/TableIconButton';
+import { btnPrimary, btnTablePrimary, inputClass, selectClass } from '@/src/lib/uiClasses';
 import { formatDateTime, formatVND } from '@/src/lib/formatters';
 import { paymentService } from '@/src/services/payment.service';
 import { useExecuteTransaction } from '@/src/hooks/useExecuteTransaction';
@@ -119,7 +125,7 @@ export default function AdminPaymentsPage() {
         }
       />
 
-      <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-end">
+      <FilterToolbar>
         <div>
           <label className="mb-1 block text-xs font-medium text-slate-500">Trạng thái</label>
           <select
@@ -128,7 +134,7 @@ export default function AdminPaymentsPage() {
               setStatusFilter(e.target.value);
               setPage(0);
             }}
-            className="rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none ring-blue-800/20 focus:ring-2"
+            className={selectClass}
           >
             <option value="">Tất cả</option>
             <option value="Pending">Chờ xử lý</option>
@@ -144,7 +150,7 @@ export default function AdminPaymentsPage() {
             onChange={(e) => setKeywordDraft(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && (setKeyword(keywordDraft), setPage(0))}
             placeholder="Tìm kiếm…"
-            className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none ring-blue-800/20 focus:ring-2"
+            className={inputClass}
           />
         </div>
         <button
@@ -153,89 +159,87 @@ export default function AdminPaymentsPage() {
             setKeyword(keywordDraft);
             setPage(0);
           }}
-          className="rounded-lg bg-blue-800 px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-blue-900"
+          className={btnPrimary}
         >
           Tìm
         </button>
-      </div>
+      </FilterToolbar>
 
-      <DataTable<Payment>
-        columns={[
-          { key: 'actor', label: 'Người thực hiện', render: (p) => <CopyableTruncated value={p.actor} chars={6} /> },
-          {
-            key: 'amount',
-            label: 'Số tiền',
-            render: (p) => (
-              <span className="font-semibold text-slate-900">
-                {typeof p.amount === 'number' ? formatVND(p.amount) : '—'}
-              </span>
-            ),
-          },
-          { key: 'currency', label: 'Tiền tệ', render: (p) => p.currency || '—' },
-          { key: 'method', label: 'Phương thức', render: (p) => p.method || '—' },
-          { key: 'status', label: 'Trạng thái', render: (p) => <StatusBadge status={p.status || '—'} /> },
-          {
-            key: 'review_status',
-            label: 'Duyệt',
-            render: (p) =>
-              p.review_status ? <StatusBadge status={p.review_status} /> : <span className="text-slate-400">—</span>,
-          },
-          { key: 'created_at', label: 'Ngày tạo', render: (p) => formatDateTime(p.created_at || '') },
-          {
-            key: 'detail_btn',
-            label: 'Chi tiết',
-            className: 'whitespace-nowrap',
-            render: (p) => (
-              <button
-                type="button"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setDetailId(p.id);
-                }}
-                className="rounded-lg border border-slate-200 px-2 py-1 text-xs font-medium text-slate-700 hover:bg-slate-50"
-              >
-                Chi tiết
-              </button>
-            ),
-          },
-          {
-            key: 'actions',
-            label: 'Thao tác',
-            className: 'whitespace-nowrap',
-            render: (p) => {
-              const done = isPaymentFinalized(p);
-              return (
-                <div className="flex flex-wrap gap-1" onClick={(e) => e.stopPropagation()}>
-                  <button
-                    type="button"
-                    disabled={done || busyId === p.id}
-                    onClick={() => void handleApprove(p.id)}
-                    className="inline-flex items-center gap-1 rounded-md border border-blue-200 bg-blue-50 px-2 py-1 text-xs font-medium text-blue-900 hover:bg-blue-100 disabled:cursor-not-allowed disabled:opacity-40"
-                  >
-                    <Check className="h-3.5 w-3.5" />
-                    Duyệt
-                  </button>
-                  <button
-                    type="button"
-                    disabled={done || busyId === p.id}
-                    onClick={() => setRefuseConfirm(p)}
-                    className="inline-flex items-center gap-1 rounded-md border border-red-200 bg-red-50 px-2 py-1 text-xs font-medium text-red-800 hover:bg-red-100 disabled:cursor-not-allowed disabled:opacity-40"
-                  >
-                    <X className="h-3.5 w-3.5" />
-                    Từ chối
-                  </button>
-                </div>
-              );
+      <PageSection title="Danh sách thanh toán" noPadding>
+        <DataTable<Payment>
+          columns={[
+            { key: 'actor', label: 'Người thực hiện', render: (p) => <CopyableTruncated value={p.actor} chars={6} /> },
+            {
+              key: 'amount',
+              label: 'Số tiền',
+              render: (p) => (
+                <span className="font-semibold text-slate-900">
+                  {typeof p.amount === 'number' ? formatVND(p.amount) : '—'}
+                </span>
+              ),
             },
-          },
-        ]}
-        data={rows}
-        loading={loading}
-        page={page}
-        totalPages={totalPages}
-        onPageChange={setPage}
-        emptyMessage="Không có thanh toán nào khớp bộ lọc."
-      />
+            { key: 'currency', label: 'Tiền tệ', render: (p) => p.currency || '—' },
+            { key: 'method', label: 'Phương thức', render: (p) => p.method || '—' },
+            { key: 'status', label: 'Trạng thái', render: (p) => <StatusBadge status={p.status || '—'} /> },
+            {
+              key: 'review_status',
+              label: 'Duyệt',
+              render: (p) =>
+                p.review_status ? <StatusBadge status={p.review_status} /> : <span className="text-slate-400">—</span>,
+            },
+            { key: 'created_at', label: 'Ngày tạo', render: (p) => formatDateTime(p.created_at || '') },
+            {
+              key: 'detail_btn',
+              label: 'Chi tiết',
+              className: 'whitespace-nowrap',
+              render: (p) => (
+                <TableIconButton
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setDetailId(p.id);
+                  }}
+                >
+                  Chi tiết
+                </TableIconButton>
+              ),
+            },
+            {
+              key: 'actions',
+              label: 'Thao tác',
+              className: 'whitespace-nowrap',
+              render: (p) => {
+                const done = isPaymentFinalized(p);
+                return (
+                  <div className="flex flex-wrap gap-1" onClick={(e) => e.stopPropagation()}>
+                    <TableIconButton
+                      variant="primary"
+                      disabled={done || busyId === p.id}
+                      onClick={() => void handleApprove(p.id)}
+                    >
+                      <Check className="h-3.5 w-3.5" />
+                      Duyệt
+                    </TableIconButton>
+                    <TableIconButton
+                      variant="danger"
+                      disabled={done || busyId === p.id}
+                      onClick={() => setRefuseConfirm(p)}
+                    >
+                      <X className="h-3.5 w-3.5" />
+                      Từ chối
+                    </TableIconButton>
+                  </div>
+                );
+              },
+            },
+          ]}
+          data={rows}
+          loading={loading}
+          page={page}
+          totalPages={totalPages}
+          onPageChange={setPage}
+          emptyMessage="Không có thanh toán nào khớp bộ lọc."
+        />
+      </PageSection>
 
       <DetailModal
         title="Chi tiết thanh toán"
@@ -245,59 +249,47 @@ export default function AdminPaymentsPage() {
         wide
       >
         {detailPayment && (
-          <div className="space-y-2 text-sm">
-            <p className="font-mono text-xs break-all">{detailPayment.id}</p>
-            <p>
-              <span className="text-slate-500">Người thực hiện:</span> <CopyableTruncated value={detailPayment.actor} chars={6} />
-            </p>
-            <p>
-              <span className="text-slate-500">Số tiền:</span>{' '}
-              {typeof detailPayment.amount === 'number' ? formatVND(detailPayment.amount) : '—'}
-            </p>
-            <p>
-              <span className="text-slate-500">Trạng thái:</span> <StatusBadge status={detailPayment.status || '—'} />
-            </p>
-            <p>
-              <span className="text-slate-500">Phương thức:</span> {detailPayment.method || '—'}
-            </p>
+          <div>
+            <DetailField label="Mã" value={<span className="font-mono text-xs break-all">{detailPayment.id}</span>} />
+            <DetailField
+              label="Người thực hiện"
+              value={<CopyableTruncated value={detailPayment.actor} chars={6} />}
+            />
+            <DetailField
+              label="Số tiền"
+              value={typeof detailPayment.amount === 'number' ? formatVND(detailPayment.amount) : '—'}
+            />
+            <DetailField label="Trạng thái" value={<StatusBadge status={detailPayment.status || '—'} />} />
+            <DetailField label="Phương thức" value={detailPayment.method || '—'} />
             {detailPayment.proof_blob_id && (
-              <div>
-                <p className="mb-1 text-xs text-slate-500">Chứng từ</p>
-                <BlobImage blobId={detailPayment.proof_blob_id} source="api" className="max-h-48 rounded-lg border" />
+              <div className="border-b border-slate-100 py-2.5 last:border-0">
+                <div className="text-xs font-medium text-slate-500">Chứng từ</div>
+                <div className="mt-1">
+                  <BlobImage blobId={detailPayment.proof_blob_id} source="api" className="max-h-48 rounded-lg border" />
+                </div>
               </div>
             )}
           </div>
         )}
       </DetailModal>
 
-      {refuseConfirm && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 p-4">
-          <div className="w-full max-w-md rounded-xl border border-slate-200 bg-white p-5 shadow-xl">
-            <h3 className="mb-2 text-lg font-semibold text-slate-900">Từ chối thanh toán?</h3>
-            <p className="mb-4 text-sm text-slate-600">
-              Thao tác này sẽ từ chối bản ghi thanh toán. Số tiền:{' '}
-              {typeof refuseConfirm.amount === 'number' ? formatVND(refuseConfirm.amount) : '—'}.
-            </p>
-            <div className="flex justify-end gap-2">
-              <button
-                type="button"
-                onClick={() => setRefuseConfirm(null)}
-                className="rounded-lg border border-slate-200 px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
-              >
-                Hủy
-              </button>
-              <button
-                type="button"
-                disabled={busyId === refuseConfirm.id}
-                onClick={() => void handleRefuse(refuseConfirm.id)}
-                className="rounded-lg bg-red-600 px-3 py-2 text-sm font-medium text-white hover:bg-red-700 disabled:opacity-50"
-              >
-                Xác nhận từ chối
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      <FormModal
+        open={refuseConfirm !== null}
+        onClose={() => setRefuseConfirm(null)}
+        title="Từ chối thanh toán?"
+        submitLabel="Xác nhận từ chối"
+        submitVariant="danger"
+        submitDisabled={refuseConfirm != null && busyId === refuseConfirm.id}
+        onSubmit={() => refuseConfirm && void handleRefuse(refuseConfirm.id)}
+      >
+        <p className="text-sm text-slate-600">
+          Thao tác này sẽ từ chối bản ghi thanh toán. Số tiền:{' '}
+          {refuseConfirm && typeof refuseConfirm.amount === 'number'
+            ? formatVND(refuseConfirm.amount)
+            : '—'}
+          .
+        </p>
+      </FormModal>
     </div>
   );
 }

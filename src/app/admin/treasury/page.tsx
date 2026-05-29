@@ -1,6 +1,6 @@
 'use client';
 
-import { Suspense, useCallback, useEffect, useState, type ReactNode } from 'react';
+import { Suspense, useCallback, useEffect, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { toast } from 'sonner';
 import PageHeader from '@/src/components/ui/PageHeader';
@@ -12,6 +12,15 @@ import FileUploadInput from '@/src/components/ui/FileUploadInput';
 import GroupedNumericInput from '@/src/components/ui/GroupedNumericInput';
 import PayOSPaymentDialog from '@/src/components/ui/PayOSPaymentDialog';
 import CopyableTruncated from '@/src/components/ui/CopyableTruncated';
+import AiInsightPanel from '@/src/components/ui/AiInsightPanel';
+import AiEvaluationBadge from '@/src/components/ui/AiEvaluationBadge';
+import DetailField from '@/src/components/ui/DetailField';
+import TabBar from '@/src/components/ui/TabBar';
+import FilterToolbar from '@/src/components/ui/FilterToolbar';
+import FormModal from '@/src/components/ui/FormModal';
+import PageSection from '@/src/components/ui/PageSection';
+import TableIconButton from '@/src/components/ui/TableIconButton';
+import { btnPrimary, btnSecondary } from '@/src/lib/uiClasses';
 import {
   formatDate,
   formatDateTimeSeconds,
@@ -43,15 +52,6 @@ import {
 const PAGE_SIZE = 20;
 
 type TabId = 'proposals' | 'pending' | 'special';
-
-function detailField(label: string, value: ReactNode) {
-  return (
-    <div className="border-b border-slate-100 py-2 last:border-0">
-      <div className="text-xs font-medium text-slate-500">{label}</div>
-      <div className="text-sm text-slate-900">{value}</div>
-    </div>
-  );
-}
 
 function TreasuryPageContent() {
   const searchParams = useSearchParams();
@@ -397,67 +397,16 @@ function TreasuryPageContent() {
     if (ok) refresh();
   };
 
-  const tabBtn = (id: TabId, label: string) => (
-    <button
-      type="button"
-      onClick={() => setTab(id)}
-      className={`rounded-lg px-4 py-2 text-sm font-medium transition ${
-        tab === id ? 'bg-blue-800 text-white shadow-sm' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-      }`}
+  const actionBtn = (label: string, onClick: () => void, variant: 'primary' | 'danger' | 'muted' = 'primary') => (
+    <TableIconButton
+      variant={variant === 'danger' ? 'danger' : variant === 'primary' ? 'primary' : 'default'}
+      onClick={(e) => {
+        e.stopPropagation();
+        onClick();
+      }}
     >
       {label}
-    </button>
-  );
-
-  const actionBtn = (label: string, onClick: () => void, variant: 'primary' | 'danger' | 'muted' = 'primary') => {
-    const styles =
-      variant === 'danger'
-        ? 'border-red-200 text-red-700 hover:bg-red-50'
-        : variant === 'muted'
-          ? 'border-slate-200 text-slate-600 hover:bg-slate-50'
-          : 'border-blue-200 text-blue-900 hover:bg-blue-50';
-    return (
-      <button
-        type="button"
-        onClick={(e) => {
-          e.stopPropagation();
-          onClick();
-        }}
-        className={`rounded-lg border px-2 py-1 text-xs font-medium ${styles}`}
-      >
-        {label}
-      </button>
-    );
-  };
-
-  const filterBar: ReactNode = (
-    <div className="flex flex-wrap items-end gap-3 rounded-xl border border-slate-200 bg-white p-4">
-      <div>
-        <label className="mb-1 block text-xs font-medium text-slate-500">Số tiền tối thiểu (VND)</label>
-        <GroupedNumericInput
-          value={minInput}
-          onChange={setMinInput}
-          className="w-36 rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-blue-700 focus:outline-none focus:ring-1 focus:ring-blue-700"
-          placeholder="Bất kỳ"
-        />
-      </div>
-      <div>
-        <label className="mb-1 block text-xs font-medium text-slate-500">Số tiền tối đa (VND)</label>
-        <GroupedNumericInput
-          value={maxInput}
-          onChange={setMaxInput}
-          className="w-36 rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-blue-700 focus:outline-none focus:ring-1 focus:ring-blue-700"
-          placeholder="Bất kỳ"
-        />
-      </div>
-      <button
-        type="button"
-        onClick={applyAmountFilter}
-        className="rounded-lg bg-blue-800 px-4 py-2 text-sm font-medium text-white hover:bg-blue-900"
-      >
-        Áp dụng bộ lọc
-      </button>
-    </div>
+    </TableIconButton>
   );
 
   const proposalColumns = (showLocalBadge: boolean) =>
@@ -535,16 +484,44 @@ function TreasuryPageContent() {
         description="Đề xuất rút tiền, yêu cầu rút chờ xử lý, nhu cầu đặc biệt chờ duyệt"
       />
 
-      <div className="mb-4 flex flex-wrap gap-2">
-        {tabBtn('proposals', 'Đề xuất rút')}
-        {tabBtn('pending', 'Rút tiền chờ duyệt')}
-        {tabBtn('special', 'Nhu cầu đặc biệt')}
-      </div>
+      <TabBar<TabId>
+        className="mb-4"
+        value={tab}
+        onChange={setTab}
+        items={[
+          { id: 'proposals', label: 'Đề xuất rút' },
+          { id: 'pending', label: 'Rút tiền chờ duyệt' },
+          { id: 'special', label: 'Nhu cầu đặc biệt' },
+        ]}
+      />
 
-      {filterBar}
+      <FilterToolbar>
+        <div>
+          <label className="mb-1 block text-xs font-medium text-slate-500">Số tiền tối thiểu (VND)</label>
+          <GroupedNumericInput
+            value={minInput}
+            onChange={setMinInput}
+            className="w-36 rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-blue-700 focus:outline-none focus:ring-1 focus:ring-blue-700"
+            placeholder="Bất kỳ"
+          />
+        </div>
+        <div>
+          <label className="mb-1 block text-xs font-medium text-slate-500">Số tiền tối đa (VND)</label>
+          <GroupedNumericInput
+            value={maxInput}
+            onChange={setMaxInput}
+            className="w-36 rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-blue-700 focus:outline-none focus:ring-1 focus:ring-blue-700"
+            placeholder="Bất kỳ"
+          />
+        </div>
+        <button type="button" onClick={applyAmountFilter} className={btnPrimary}>
+          Áp dụng bộ lọc
+        </button>
+      </FilterToolbar>
 
       <div className="mt-4">
         {tab === 'proposals' && (
+          <PageSection title="Đề xuất rút tiền" noPadding>
           <DataTable<WithdrawProposal>
             loading={loading}
             data={proposals}
@@ -554,9 +531,11 @@ function TreasuryPageContent() {
             emptyMessage="Không có đề xuất rút phù hợp bộ lọc"
             columns={proposalColumns(true) as any}
           />
+          </PageSection>
         )}
 
         {tab === 'pending' && (
+          <PageSection title="Rút tiền chờ duyệt" noPadding>
           <DataTable<PendingWithdrawProposal>
             loading={loading}
             data={pendingList}
@@ -578,6 +557,11 @@ function TreasuryPageContent() {
                 render: (r) => formatVND(r.withdrawAmount),
               },
               { key: 'status', label: 'Trạng thái', render: (r) => <StatusBadge status={r.status} /> },
+              {
+                key: 'ai',
+                label: 'AI',
+                render: (r) => <AiEvaluationBadge record={r} />,
+              },
               { key: 'createdAt', label: 'Ngày tạo', render: (r) => formatDate(r.createdAt) },
               {
                 key: 'actions',
@@ -593,9 +577,11 @@ function TreasuryPageContent() {
               },
             ]}
           />
+          </PageSection>
         )}
 
         {tab === 'special' && (
+          <PageSection title="Nhu cầu đặc biệt" noPadding>
           <DataTable<PendingSpecialNeedProposal>
             loading={loading}
             data={specialList}
@@ -617,6 +603,11 @@ function TreasuryPageContent() {
                 label: 'Duyệt',
                 render: (r) => <StatusBadge status={r.review_status} />,
               },
+              {
+                key: 'ai_evaluation',
+                label: 'AI',
+                render: (r) => <AiEvaluationBadge record={r} />,
+              },
               { key: 'created_at', label: 'Ngày tạo', render: (r) => formatDate(r.created_at) },
               {
                 key: 'actions',
@@ -632,6 +623,7 @@ function TreasuryPageContent() {
               },
             ]}
           />
+          </PageSection>
         )}
       </div>
 
@@ -650,30 +642,33 @@ function TreasuryPageContent() {
         wide
       >
         {wd && (
-          <div className="space-y-1">
-            {detailField('ID', <span className="font-mono text-xs break-all">{wd.id}</span>)}
-            {detailField('Người tạo', <CopyableTruncated value={wd.creator} chars={6} />)}
-            {detailField('Quỹ', wd.pool_name)}
-            {detailField('Số tiền', formatVND(wd.withdraw_amount))}
-            {detailField('Mô tả', wd.description || '—')}
-            {detailField(
-              'Quỹ leader địa phương',
-              wd.is_from_local_pool ? (
-                <span className="text-amber-700">Có</span>
-              ) : (
-                <span className="text-slate-600">Không</span>
-              ),
-            )}
-            {detailField('Trạng thái', <StatusBadge status={getWithdrawProposalUiStatus(wd)} />)}
-            {detailField('Thời gian đóng', formatDateTimeSeconds(wd.closed_at))}
-            {detailField('Ngày tạo', formatDate(wd.created_at))}
-            {wd.proof_blob_id &&
-              detailField(
-                'Chứng từ',
+          <div>
+            <DetailField label="ID" value={<span className="font-mono text-xs break-all">{wd.id}</span>} />
+            <DetailField label="Người tạo" value={<CopyableTruncated value={wd.creator} chars={6} />} />
+            <DetailField label="Quỹ" value={wd.pool_name} />
+            <DetailField label="Số tiền" value={formatVND(wd.withdraw_amount)} />
+            <DetailField label="Mô tả" value={wd.description || '—'} />
+            <DetailField
+              label="Quỹ leader địa phương"
+              value={
+                wd.is_from_local_pool ? (
+                  <span className="text-amber-700">Có</span>
+                ) : (
+                  <span className="text-slate-600">Không</span>
+                )
+              }
+            />
+            <DetailField label="Trạng thái" value={<StatusBadge status={getWithdrawProposalUiStatus(wd)} />} />
+            <DetailField label="Thời gian đóng" value={formatDateTimeSeconds(wd.closed_at)} />
+            <DetailField label="Ngày tạo" value={formatDate(wd.created_at)} />
+            {wd.proof_blob_id && (
+              <div className="border-b border-slate-100 py-2.5 last:border-0">
+                <div className="text-xs font-medium text-slate-500">Chứng từ</div>
                 <div className="mt-1">
                   <BlobImage blobId={wd.proof_blob_id} className="max-h-64 rounded-lg border border-slate-200 object-contain" />
-                </div>,
-              )}
+                </div>
+              </div>
+            )}
             {!wd.is_executed && (
               <div className="mt-4 space-y-3 border-t border-slate-100 pt-4">
                 <p className="text-xs font-medium text-slate-600">Xác nhận chuyển tiền</p>
@@ -686,7 +681,7 @@ function TreasuryPageContent() {
                     type="button"
                     disabled={busy}
                     onClick={() => wd.id && openWithdrawConfirmModal(wd.id)}
-                    className="rounded-lg bg-blue-800 px-3 py-2 text-sm font-medium text-white hover:bg-blue-900 disabled:opacity-50"
+                    className={`${btnPrimary} disabled:opacity-50`}
                   >
                     {busy ? 'Đang xử lý…' : 'Xác nhận chuyển tiền…'}
                   </button>
@@ -702,7 +697,7 @@ function TreasuryPageContent() {
                     type="button"
                     disabled={busy || !mainPoolBlobId.trim()}
                     onClick={() => void handleMainPoolSubmit()}
-                    className="mt-2 rounded-lg border border-slate-300 px-3 py-2 text-sm font-medium text-slate-800 hover:bg-white disabled:opacity-50"
+                    className={`${btnSecondary} mt-2 disabled:opacity-50`}
                   >
                     Gửi chứng từ và xác nhận
                   </button>
@@ -722,22 +717,26 @@ function TreasuryPageContent() {
         wide
       >
         {pendingDetailData && (
-          <div className="space-y-1">
-            {detailField('ID', <span className="font-mono text-xs break-all">{pendingDetailData.id}</span>)}
-            {detailField('Quỹ', pendingDetailData.poolName)}
-            {detailField('Người tạo', <CopyableTruncated value={pendingDetailData.creator} chars={6} />)}
-            {detailField('Mô tả', pendingDetailData.description || '—')}
-            {detailField('Số tiền', formatVND(pendingDetailData.withdrawAmount))}
-            {detailField('Trạng thái', pendingDetailData.status)}
-            {pendingDetailData.proofBlobID &&
-              detailField(
-                'Chứng từ',
-                <BlobImage
-                  blobId={pendingDetailData.proofBlobID}
-                  className="max-h-64 rounded-lg border border-slate-200 object-contain"
-                />,
-              )}
-            {detailField('Ngày tạo', formatDate(pendingDetailData.createdAt))}
+          <div>
+            <DetailField label="ID" value={<span className="font-mono text-xs break-all">{pendingDetailData.id}</span>} />
+            <DetailField label="Quỹ" value={pendingDetailData.poolName} />
+            <DetailField label="Người tạo" value={<CopyableTruncated value={pendingDetailData.creator} chars={6} />} />
+            <DetailField label="Mô tả" value={pendingDetailData.description || '—'} />
+            <DetailField label="Số tiền" value={formatVND(pendingDetailData.withdrawAmount)} />
+            <DetailField label="Trạng thái" value={pendingDetailData.status} />
+            {pendingDetailData.proofBlobID && (
+              <div className="border-b border-slate-100 py-2.5 last:border-0">
+                <div className="text-xs font-medium text-slate-500">Chứng từ</div>
+                <div className="mt-1">
+                  <BlobImage
+                    blobId={pendingDetailData.proofBlobID}
+                    className="max-h-64 rounded-lg border border-slate-200 object-contain"
+                  />
+                </div>
+              </div>
+            )}
+            <AiInsightPanel record={pendingDetailData} className="mt-4" />
+            <DetailField label="Ngày tạo" value={formatDate(pendingDetailData.createdAt)} />
           </div>
         )}
       </DetailModal>
@@ -751,125 +750,111 @@ function TreasuryPageContent() {
         wide
       >
         {specialDetailData && (
-          <div className="space-y-1">
-            {detailField('ID', <span className="font-mono text-xs break-all">{specialDetailData.id}</span>)}
-            {detailField('Trẻ', <CopyableTruncated value={specialDetailData.child_id} chars={4} />)}
-            {detailField('Vùng', specialDetailData.region)}
-            {detailField('Mô tả', specialDetailData.description || '—')}
-            {detailField('Mục tiêu', formatVND(specialDetailData.target))}
-            {detailField('Duyệt', specialDetailData.review_status)}
-            {specialDetailData.proof_blob_id &&
-              detailField(
-                'Chứng từ',
-                <BlobImage
-                  blobId={specialDetailData.proof_blob_id}
-                  className="max-h-64 rounded-lg border border-slate-200 object-contain"
-                />,
-              )}
-            {detailField('Ngày tạo', formatDate(specialDetailData.created_at))}
+          <div>
+            <DetailField label="ID" value={<span className="font-mono text-xs break-all">{specialDetailData.id}</span>} />
+            <DetailField label="Trẻ" value={<CopyableTruncated value={specialDetailData.child_id} chars={4} />} />
+            <DetailField label="Vùng" value={specialDetailData.region} />
+            <DetailField label="Mô tả" value={specialDetailData.description || '—'} />
+            <DetailField label="Mục tiêu" value={formatVND(specialDetailData.target)} />
+            <DetailField label="Duyệt" value={specialDetailData.review_status} />
+            <AiInsightPanel record={specialDetailData} className="my-4" />
+            {specialDetailData.proof_blob_id && (
+              <div className="border-b border-slate-100 py-2.5 last:border-0">
+                <div className="text-xs font-medium text-slate-500">Chứng từ</div>
+                <div className="mt-1">
+                  <BlobImage
+                    blobId={specialDetailData.proof_blob_id}
+                    className="max-h-64 rounded-lg border border-slate-200 object-contain"
+                  />
+                </div>
+              </div>
+            )}
+            <DetailField label="Ngày tạo" value={formatDate(specialDetailData.created_at)} />
           </div>
         )}
       </DetailModal>
 
-      {withdrawConfirmModal.open && (
-        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-slate-900/40 p-4">
-          <div className="max-h-[90vh] w-full max-w-md overflow-y-auto rounded-xl border border-slate-200 bg-white p-5 shadow-xl">
-            <h3 className="text-lg font-semibold text-slate-900">Xác nhận rút tiền</h3>
-            {!manualBankInfo ? (
-              <>
-                <p className="mt-2 text-xs leading-relaxed text-slate-600">
-                  Bước 1: Lấy thông tin chuyển khoản. Với PayOS hoặc giao dịch on-chain, hệ thống sẽ mở bước tiếp theo ngay.
-                  Với chuyển khoản thủ công, sau bước này bạn sẽ thấy tài khoản nhận và tải ảnh chứng từ.
-                </p>
-                <div className="mt-5 flex flex-wrap justify-end gap-2">
-                  <button
-                    type="button"
-                    disabled={busy}
-                    onClick={closeWithdrawConfirmModal}
-                    className="rounded-lg border border-slate-200 px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-50"
-                  >
-                    Hủy
-                  </button>
-                  <button
-                    type="button"
-                    disabled={busy}
-                    onClick={() => void handleWithdrawConfirmStep1()}
-                    className="rounded-lg bg-blue-800 px-3 py-2 text-sm font-medium text-white hover:bg-blue-900 disabled:opacity-50"
-                  >
-                    {busy ? 'Đang xử lý…' : 'Lấy thông tin chuyển khoản'}
-                  </button>
-                </div>
-              </>
-            ) : (
-              <>
-                <p className="mt-2 text-xs font-medium text-slate-700">Thông tin chuyển khoản</p>
-                <div className="mt-3 space-y-2 rounded-lg border border-slate-200 bg-slate-50 p-3 text-sm">
-                  <div>
-                    <span className="text-xs text-slate-500">Tên ngân hàng</span>
-                    <p className="font-medium text-slate-900">{manualBankInfo.bank_org || '—'}</p>
-                  </div>
-                  <div>
-                    <span className="text-xs text-slate-500">Số tài khoản</span>
-                    <p className="font-mono font-medium text-slate-900">{manualBankInfo.bank_code || '—'}</p>
-                  </div>
-                  <div>
-                    <span className="text-xs text-slate-500">Chủ tài khoản</span>
-                    <p className="font-medium text-slate-900">{manualBankInfo.owner || '—'}</p>
-                  </div>
-                  <div>
-                    <span className="text-xs text-slate-500">Số tiền</span>
-                    <p className="font-medium text-slate-900">
-                      {(() => {
-                        const raw = manualBankInfo.amount?.replace(/[^\d]/g, '') ?? '';
-                        const n = raw ? Number(raw) : NaN;
-                        return Number.isFinite(n) ? formatVND(n) : manualBankInfo.amount || '—';
-                      })()}
-                    </p>
-                  </div>
-                  {manualBankInfo.description ? (
-                    <div>
-                      <span className="text-xs text-slate-500">Nội dung</span>
-                      <p className="text-slate-800">{manualBankInfo.description}</p>
-                    </div>
-                  ) : null}
-                </div>
-                <p className="mt-3 text-xs text-slate-600">
-                  Bước 2: Sau khi chuyển khoản, tải ảnh chứng từ (blob Walrus) và gửi xác nhận.
-                </p>
-                <div className="mt-4">
-                  <FileUploadInput
-                    label="Ảnh chứng từ (blob Walrus)"
-                    value={withdrawConfirmProofBlob}
-                    onChange={setWithdrawConfirmProofBlob}
-                    accept="image/*"
-                  />
-                </div>
-                <div className="mt-5 flex flex-wrap justify-end gap-2">
-                  <button
-                    type="button"
-                    disabled={busy}
-                    onClick={() => {
-                      setManualBankInfo(null);
-                      setWithdrawConfirmProofBlob('');
-                    }}
-                    className="rounded-lg border border-slate-200 px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-50"
-                  >
-                    Quay lại
-                  </button>
-                  <button
-                    type="button"
-                    disabled={busy || !withdrawConfirmProofBlob.trim()}
-                    onClick={() => void handleWithdrawConfirmStep2()}
-                    className="rounded-lg bg-blue-800 px-3 py-2 text-sm font-medium text-white hover:bg-blue-900 disabled:opacity-50"
-                  >
-                    {busy ? 'Đang gửi…' : 'Gửi bằng chứng'}
-                  </button>
-                </div>
-              </>
-            )}
-          </div>
-        </div>
-      )}
+      <FormModal
+        open={withdrawConfirmModal.open}
+        onClose={closeWithdrawConfirmModal}
+        title="Xác nhận rút tiền"
+        hideFooter
+        maxWidth="md"
+      >
+        {!manualBankInfo ? (
+          <>
+            <p className="text-xs leading-relaxed text-slate-600">
+              Bước 1: Lấy thông tin chuyển khoản. Với PayOS hoặc giao dịch on-chain, hệ thống sẽ mở bước tiếp theo ngay.
+              Với chuyển khoản thủ công, sau bước này bạn sẽ thấy tài khoản nhận và tải ảnh chứng từ.
+            </p>
+            <div className="mt-5 flex flex-wrap justify-end gap-2">
+              <button type="button" disabled={busy} onClick={closeWithdrawConfirmModal} className={btnSecondary}>
+                Hủy
+              </button>
+              <button
+                type="button"
+                disabled={busy}
+                onClick={() => void handleWithdrawConfirmStep1()}
+                className={btnPrimary}
+              >
+                {busy ? 'Đang xử lý…' : 'Lấy thông tin chuyển khoản'}
+              </button>
+            </div>
+          </>
+        ) : (
+          <>
+            <p className="text-xs font-medium text-slate-700">Thông tin chuyển khoản</p>
+            <div className="mt-3 space-y-2 rounded-lg border border-slate-200 bg-slate-50 p-3 text-sm">
+              <DetailField label="Tên ngân hàng" value={manualBankInfo.bank_org || '—'} />
+              <DetailField label="Số tài khoản" value={<span className="font-mono">{manualBankInfo.bank_code || '—'}</span>} />
+              <DetailField label="Chủ tài khoản" value={manualBankInfo.owner || '—'} />
+              <DetailField
+                label="Số tiền"
+                value={(() => {
+                  const raw = manualBankInfo.amount?.replace(/[^\d]/g, '') ?? '';
+                  const n = raw ? Number(raw) : NaN;
+                  return Number.isFinite(n) ? formatVND(n) : manualBankInfo.amount || '—';
+                })()}
+              />
+              {manualBankInfo.description ? (
+                <DetailField label="Nội dung" value={manualBankInfo.description} />
+              ) : null}
+            </div>
+            <p className="mt-3 text-xs text-slate-600">
+              Bước 2: Sau khi chuyển khoản, tải ảnh chứng từ (blob Walrus) và gửi xác nhận.
+            </p>
+            <div className="mt-4">
+              <FileUploadInput
+                label="Ảnh chứng từ (blob Walrus)"
+                value={withdrawConfirmProofBlob}
+                onChange={setWithdrawConfirmProofBlob}
+                accept="image/*"
+              />
+            </div>
+            <div className="mt-5 flex flex-wrap justify-end gap-2">
+              <button
+                type="button"
+                disabled={busy}
+                onClick={() => {
+                  setManualBankInfo(null);
+                  setWithdrawConfirmProofBlob('');
+                }}
+                className={btnSecondary}
+              >
+                Quay lại
+              </button>
+              <button
+                type="button"
+                disabled={busy || !withdrawConfirmProofBlob.trim()}
+                onClick={() => void handleWithdrawConfirmStep2()}
+                className={btnPrimary}
+              >
+                {busy ? 'Đang gửi…' : 'Gửi bằng chứng'}
+              </button>
+            </div>
+          </>
+        )}
+      </FormModal>
 
       <PayOSPaymentDialog
         state={payOS}

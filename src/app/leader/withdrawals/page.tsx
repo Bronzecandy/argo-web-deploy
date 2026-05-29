@@ -6,7 +6,13 @@ import PageHeader from '@/src/components/ui/PageHeader';
 import DataTable from '@/src/components/ui/DataTable';
 import StatusBadge from '@/src/components/ui/StatusBadge';
 import DetailModal from '@/src/components/ui/DetailModal';
+import DetailField from '@/src/components/ui/DetailField';
 import BlobImage from '@/src/components/ui/BlobImage';
+import ContextBanner from '@/src/components/ui/ContextBanner';
+import FormModal from '@/src/components/ui/FormModal';
+import PageSection from '@/src/components/ui/PageSection';
+import TableIconButton from '@/src/components/ui/TableIconButton';
+import { btnPrimary, inputClass } from '@/src/lib/uiClasses';
 import {
   formatDate,
   formatDateTimeSeconds,
@@ -109,8 +115,7 @@ export default function LeaderWithdrawalsPage() {
 
   const canSubmit = withdrawMode === 'pool' ? poolFlowReady : canUseRegion;
 
-  async function handleCreate(e: React.FormEvent) {
-    e.preventDefault();
+  async function handleCreate() {
     const proof = proofBlobId.trim() || undefined;
 
     if (withdrawMode === 'child_quick') {
@@ -181,17 +186,15 @@ export default function LeaderWithdrawalsPage() {
       key: 'details',
       label: 'Chi tiết',
       render: (row: WithdrawProposal) => (
-        <button
-          type="button"
+        <TableIconButton
           onClick={(e) => {
             e.stopPropagation();
             setProposalDetailId(row.id);
             setProposalDetailOpen(true);
           }}
-          className="rounded-lg border border-slate-200 px-2 py-1 text-xs font-medium text-slate-700 hover:bg-slate-50"
         >
           Chi tiết
-        </button>
+        </TableIconButton>
       ),
     },
   ];
@@ -200,9 +203,6 @@ export default function LeaderWithdrawalsPage() {
   const poolFieldsDisabled = regionBlocked || !poolId?.trim();
 
   const showPoolProofUpload = withdrawMode === 'pool' && canUseRegion && !!poolId?.trim();
-
-  const inputClass =
-    'w-full rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none ring-blue-800/20 transition focus:border-blue-800 focus:ring-2';
 
   return (
     <div>
@@ -213,7 +213,7 @@ export default function LeaderWithdrawalsPage() {
           <button
             type="button"
             onClick={() => setCreateOpen(true)}
-            className="inline-flex items-center gap-2 rounded-lg bg-blue-800 px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-blue-900"
+            className={btnPrimary}
           >
             <Plus className="h-4 w-4" />
             Tạo
@@ -222,10 +222,11 @@ export default function LeaderWithdrawalsPage() {
       />
 
       {!user?.address ? (
-        <div className="rounded-xl border border-slate-200 bg-white p-8 text-center text-sm text-slate-500">
-          Kết nối ví để xem đề xuất rút tiền của bạn.
-        </div>
+        <PageSection>
+          <p className="text-center text-sm text-slate-500">Kết nối ví để xem đề xuất rút tiền của bạn.</p>
+        </PageSection>
       ) : (
+        <PageSection title="Đề xuất rút tiền" noPadding>
         <DataTable<WithdrawProposal>
           columns={columns}
           data={rows}
@@ -235,41 +236,28 @@ export default function LeaderWithdrawalsPage() {
           onPageChange={setPage}
           emptyMessage="Chưa có đề xuất"
         />
+        </PageSection>
       )}
-      {createOpen && (
-        <div
-          className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-slate-900/40 p-4 py-10"
-          onClick={() => setCreateOpen(false)}
-          role="presentation"
-        >
-          <div
-            className="relative w-full max-w-2xl rounded-xl border border-slate-200 bg-white p-6 shadow-xl"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="mb-4 flex items-center justify-between gap-2">
-              <h2 className="text-lg font-semibold text-slate-900">Tạo đề xuất rút</h2>
-              <button
-                type="button"
-                onClick={() => setCreateOpen(false)}
-                className="rounded-lg px-3 py-1.5 text-sm text-slate-600 hover:bg-slate-100"
-              >
-                Đóng
-              </button>
-            </div>
-            <form onSubmit={handleCreate} className="space-y-4">
+      <FormModal
+        open={createOpen}
+        onClose={() => setCreateOpen(false)}
+        title="Tạo đề xuất rút"
+        submitLabel={submitting ? 'Đang gửi…' : 'Gửi'}
+        submitDisabled={submitting || !canSubmit}
+        onSubmit={() => void handleCreate()}
+        wide
+      >
+        <div className="space-y-4">
               {poolStatus === 'failed' && (
-                <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
-                  Không tải được vùng: {poolError || 'quỹ không khả dụng'}
-                </div>
+                <ContextBanner variant="error" title="Không tải được vùng">
+                  {poolError || 'Quỹ không khả dụng'}
+                </ContextBanner>
               )}
               {canUseRegion && (
-                <div className="rounded-lg border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700">
-                  <p className="font-medium text-slate-900">Vùng của bạn</p>
-                  <p className="mt-1">{poolName}</p>
-                </div>
+                <ContextBanner title="Vùng của bạn">{poolName}</ContextBanner>
               )}
               {(poolStatus === 'loading' || poolStatus === 'idle') && (
-                <p className="text-sm text-slate-500">Đang tải vùng trưởng…</p>
+                <ContextBanner title="Đang tải vùng trưởng">Vui lòng đợi…</ContextBanner>
               )}
 
               <fieldset className="space-y-2" disabled={regionBlocked}>
@@ -354,17 +342,8 @@ export default function LeaderWithdrawalsPage() {
                 />
               )}
 
-              <button
-                type="submit"
-                disabled={submitting || !canSubmit}
-                className="rounded-lg bg-blue-800 px-5 py-2.5 text-sm font-medium text-white shadow-sm transition hover:bg-blue-900 disabled:opacity-60"
-              >
-                {submitting ? 'Đang gửi…' : 'Gửi'}
-              </button>
-            </form>
-          </div>
         </div>
-      )}
+      </FormModal>
 
       <DetailModal
         title="Đề xuất rút tiền"
@@ -377,29 +356,16 @@ export default function LeaderWithdrawalsPage() {
         wide
       >
         {proposalDetail && (
-          <div className="space-y-2 text-sm">
-            <p className="font-mono text-xs break-all">{proposalDetail.id}</p>
-            <p>
-              <span className="text-slate-500">Quỹ:</span> {proposalDetail.pool_name}
-            </p>
-            <p>
-              <span className="text-slate-500">Số tiền:</span> {formatVND(proposalDetail.withdraw_amount)}
-            </p>
-            <p className="flex flex-wrap items-center gap-2">
-              <span className="text-slate-500">Trạng thái:</span>
-              <StatusBadge status={getWithdrawProposalUiStatus(proposalDetail)} />
-            </p>
-            <p>
-              <span className="text-slate-500">Mô tả:</span> {proposalDetail.description}
-            </p>
-            <p>
-              <span className="text-slate-500">Thời gian đóng:</span> {formatDateTimeSeconds(proposalDetail.closed_at)}
-            </p>
-            <p>
-              <span className="text-slate-500">Ngày tạo:</span> {formatDate(proposalDetail.created_at)}
-            </p>
+          <div>
+            <DetailField label="Mã" value={<span className="font-mono text-xs break-all">{proposalDetail.id}</span>} />
+            <DetailField label="Quỹ" value={proposalDetail.pool_name} />
+            <DetailField label="Số tiền" value={formatVND(proposalDetail.withdraw_amount)} />
+            <DetailField label="Trạng thái" value={<StatusBadge status={getWithdrawProposalUiStatus(proposalDetail)} />} />
+            <DetailField label="Mô tả" value={proposalDetail.description} />
+            <DetailField label="Thời gian đóng" value={formatDateTimeSeconds(proposalDetail.closed_at)} />
+            <DetailField label="Ngày tạo" value={formatDate(proposalDetail.created_at)} />
             {proposalDetail.proof_blob_id && (
-              <BlobImage blobId={proposalDetail.proof_blob_id} className="max-h-56 rounded-lg border object-contain" />
+              <BlobImage blobId={proposalDetail.proof_blob_id} className="mt-3 max-h-56 rounded-lg border object-contain" />
             )}
           </div>
         )}

@@ -7,6 +7,7 @@ import { BLOB_URL } from '@/src/lib/constants';
 import WalrusFallbackImg from '@/src/components/ui/WalrusFallbackImg';
 import ExpandableImage from '@/src/components/ui/ExpandableImage';
 import { toast } from 'sonner';
+import { inputClass } from '@/src/lib/uiClasses';
 
 interface FileUploadInputProps {
   label?: string;
@@ -24,7 +25,7 @@ export default function FileUploadInput({
   value,
   onChange,
   accept = 'image/*',
-  placeholder = 'Upload file or paste blob ID',
+  placeholder = 'Tải file hoặc dán mã blob',
   disabled = false,
   previewSource = 'walrus',
 }: FileUploadInputProps) {
@@ -52,10 +53,10 @@ export default function FileUploadInput({
       try {
         const blobId = await blobService.upload(file);
         onChange(blobId);
-        toast.success('File uploaded');
+        toast.success('Đã tải file lên');
       } catch (err) {
         console.error(err);
-        toast.error(err instanceof Error ? err.message : 'Upload failed');
+        toast.error(err instanceof Error ? err.message : 'Tải file thất bại');
       } finally {
         setUploading(false);
         if (fileRef.current) fileRef.current.value = '';
@@ -67,7 +68,12 @@ export default function FileUploadInput({
   return (
     <div>
       {label && <label className="mb-1 block text-xs font-medium text-slate-500">{label}</label>}
-      <div className="flex items-center gap-2">
+      <div
+        className={`rounded-xl border-2 border-dashed p-3 transition ${
+          uploading ? 'border-blue-200 bg-blue-50/50' : 'border-slate-200 bg-slate-50/30 hover:border-slate-300'
+        }`}
+      >
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
         <div className="relative flex-1">
           <input
             type="text"
@@ -75,7 +81,7 @@ export default function FileUploadInput({
             onChange={(e) => onChange(e.target.value)}
             placeholder={placeholder}
             disabled={disabled || uploading}
-            className="w-full rounded-lg border border-slate-200 px-3 py-2 pr-8 text-sm focus:border-blue-800 focus:outline-none focus:ring-1 focus:ring-blue-800 disabled:opacity-50"
+            className={`${inputClass} pr-8`}
           />
           {value && (
             <button
@@ -100,8 +106,9 @@ export default function FileUploadInput({
           ) : (
             <Upload className="h-3.5 w-3.5" />
           )}
-          {uploading ? 'Uploading...' : 'Browse'}
+          {uploading ? 'Đang tải…' : 'Chọn file'}
         </button>
+      </div>
       </div>
       <input
         ref={fileRef}
@@ -112,7 +119,7 @@ export default function FileUploadInput({
       />
       {showWalrusPreview && (
         <div className="mt-3 rounded-lg border border-slate-200 bg-slate-50 p-2">
-          <p className="mb-2 text-[10px] font-medium uppercase tracking-wide text-slate-500">Preview</p>
+          <p className="mb-2 text-[10px] font-medium uppercase tracking-wide text-slate-500">Xem trước</p>
           <WalrusFallbackImg
             blobId={value.trim()}
             alt=""
@@ -122,7 +129,7 @@ export default function FileUploadInput({
       )}
       {previewUrlApi && (
         <div className="mt-3 rounded-lg border border-slate-200 bg-slate-50 p-2">
-          <p className="mb-2 text-[10px] font-medium uppercase tracking-wide text-slate-500">Preview</p>
+          <p className="mb-2 text-[10px] font-medium uppercase tracking-wide text-slate-500">Xem trước</p>
           <ExpandableImage src={previewUrlApi} alt="" className="max-h-48 max-w-full rounded-md object-contain" />
         </div>
       )}
