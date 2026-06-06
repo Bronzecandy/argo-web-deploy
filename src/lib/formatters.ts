@@ -59,7 +59,26 @@ export function formatDateTimeSeconds(dateString: string | null | undefined): st
   }).format(date);
 }
 
+/** Ngưỡng trọng số duyệt / số tiền rút để đề xuất được chấp nhận (on-chain). */
+export const WITHDRAW_APPROVAL_THRESHOLD = 0.7;
+
 export type WithdrawProposalUiStatusLabel = 'Đang bỏ phiếu' | 'Chờ nhận tiền' | 'Từ chối' | 'đã nhận tiền';
+
+export function getWithdrawApprovalPercent(r: {
+  approve_weight: number;
+  withdraw_amount: number;
+}): number {
+  if (!(r.withdraw_amount > 0)) return 0;
+  return Math.min(100, Math.round((r.approve_weight / r.withdraw_amount) * 100));
+}
+
+export function getWithdrawRefusePercent(r: {
+  refuse_weight: number;
+  withdraw_amount: number;
+}): number {
+  if (!(r.withdraw_amount > 0)) return 0;
+  return Math.min(100, Math.round((r.refuse_weight / r.withdraw_amount) * 100));
+}
 
 export function getWithdrawProposalUiStatus(r: {
   is_executed: boolean;
@@ -75,7 +94,7 @@ export function getWithdrawProposalUiStatus(r: {
   if (Date.now() < end) return 'Đang bỏ phiếu';
   if (!(r.withdraw_amount > 0)) return 'Từ chối';
   const ratio = r.approve_weight / r.withdraw_amount;
-  if (ratio > 0.7) return 'Chờ nhận tiền';
+  if (ratio > WITHDRAW_APPROVAL_THRESHOLD) return 'Chờ nhận tiền';
   return 'Từ chối';
 }
 

@@ -3,21 +3,25 @@
 import { useCallback, useEffect, useState } from 'react';
 import { toast } from 'sonner';
 import PageHeader from '@/src/components/ui/PageHeader';
-import DataTable from '@/src/components/ui/DataTable';
 import StatusBadge from '@/src/components/ui/StatusBadge';
 import DetailModal from '@/src/components/ui/DetailModal';
 import DetailField from '@/src/components/ui/DetailField';
 import BlobImage from '@/src/components/ui/BlobImage';
 import ContextBanner from '@/src/components/ui/ContextBanner';
+import EmptyState from '@/src/components/ui/EmptyState';
 import FormModal from '@/src/components/ui/FormModal';
+import ListPagination from '@/src/components/ui/ListPagination';
 import PageSection from '@/src/components/ui/PageSection';
-import TableIconButton from '@/src/components/ui/TableIconButton';
+import VoteProgressBar from '@/src/components/ui/VoteProgressBar';
+import WithdrawProposalCard from '@/src/components/leader/WithdrawProposalCard';
 import { btnPrimary, inputClass } from '@/src/lib/uiClasses';
 import {
   formatDate,
   formatDateTimeSeconds,
   formatVND,
+  getWithdrawApprovalPercent,
   getWithdrawProposalUiStatus,
+  getWithdrawRefusePercent,
 } from '@/src/lib/formatters';
 import { useAppSelector } from '@/src/store/hooks';
 import { withdrawService } from '@/src/services/withdraw.service';
@@ -155,49 +159,10 @@ export default function LeaderWithdrawalsPage() {
     setSubmitting(false);
   }
 
-  const columns = [
-    { key: 'description', label: 'Mô tả' },
-    { key: 'pool_name', label: 'Quỹ' },
-    {
-      key: 'withdraw_amount',
-      label: 'Số tiền',
-      render: (row: WithdrawProposal) => formatVND(row.withdraw_amount),
-    },
-    { key: 'approve_weight', label: 'Trọng số duyệt' },
-    { key: 'refuse_weight', label: 'Trọng số từ chối' },
-    {
-      key: 'status_ui',
-      label: 'Trạng thái',
-      render: (row: WithdrawProposal) => <StatusBadge status={getWithdrawProposalUiStatus(row)} />,
-    },
-    {
-      key: 'created_at',
-      label: 'Ngày tạo',
-      render: (row: WithdrawProposal) => formatDate(row.created_at),
-    },
-    {
-      key: 'closed_at',
-      label: 'Thời gian đóng',
-      render: (row: WithdrawProposal) => (
-        <span className="whitespace-nowrap text-xs text-slate-700">{formatDateTimeSeconds(row.closed_at)}</span>
-      ),
-    },
-    {
-      key: 'details',
-      label: 'Chi tiết',
-      render: (row: WithdrawProposal) => (
-        <TableIconButton
-          onClick={(e) => {
-            e.stopPropagation();
-            setProposalDetailId(row.id);
-            setProposalDetailOpen(true);
-          }}
-        >
-          Chi tiết
-        </TableIconButton>
-      ),
-    },
-  ];
+  const openProposalDetail = (id: string) => {
+    setProposalDetailId(id);
+    setProposalDetailOpen(true);
+  };
 
   const regionBlocked = !canUseRegion;
   const poolFieldsDisabled = regionBlocked || !poolId?.trim();
@@ -227,15 +192,33 @@ export default function LeaderWithdrawalsPage() {
         </PageSection>
       ) : (
         <PageSection title="Đề xuất rút tiền" noPadding>
-        <DataTable<WithdrawProposal>
-          columns={columns}
-          data={rows}
-          loading={listLoading}
-          page={page}
-          totalPages={totalPages}
-          onPageChange={setPage}
-          emptyMessage="Chưa có đề xuất"
-        />
+          {listLoading ? (
+            <div className="grid gap-4 p-4 sm:grid-cols-2 sm:p-5 xl:grid-cols-3">
+              {Array.from({ length: 3 }).map((_, i) => (
+                <div key={i} className="animate-pulse rounded-xl border border-slate-200 p-5">
+                  <div className="mb-3 h-6 w-24 rounded bg-slate-100" />
+                  <div className="mb-2 h-5 w-full rounded bg-slate-100" />
+                  <div className="mb-4 h-4 w-2/3 rounded bg-slate-100" />
+                  <div className="h-2.5 w-full rounded-full bg-slate-100" />
+                </div>
+              ))}
+            </div>
+          ) : rows.length === 0 ? (
+            <EmptyState message="Chưa có đề xuất" hint="Nhấn «Tạo» để gửi đề xuất rút tiền mới." />
+          ) : (
+            <div className="grid gap-4 p-4 sm:grid-cols-2 sm:p-5 xl:grid-cols-3">
+              {rows.map((row) => (
+                <WithdrawProposalCard
+                  key={row.id}
+                  proposal={row}
+                  onDetail={() => openProposalDetail(row.id)}
+                />
+              ))}
+            </div>
+          )}
+          {!listLoading && rows.length > 0 && (
+            <ListPagination page={page} totalPages={totalPages} onPageChange={setPage} />
+          )}
         </PageSection>
       )}
       <FormModal
@@ -362,6 +345,16 @@ export default function LeaderWithdrawalsPage() {
             <DetailField label="Số tiền" value={formatVND(proposalDetail.withdraw_amount)} />
             <DetailField label="Trạng thái" value={<StatusBadge status={getWithdrawProposalUiStatus(proposalDetail)} />} />
             <DetailField label="Mô tả" value={proposalDetail.description} />
+            <div className="border-b border-slate-100 py-2.5">
+              <VoteProgressBar
+                approvePercent={getWithdrawApprovalPercent(proposalDetail)}
+                refusePercent={getWithdrawRefusePercent(proposalDetail)}
+              />
+            </div>
+            <DetailField
+              label="Trọng số"
+              value={`Đồng ý ${proposalDetail.approve_weight} · Từ chối ${proposalDetail.refuse_weight}`}
+            />
             <DetailField label="Thời gian đóng" value={formatDateTimeSeconds(proposalDetail.closed_at)} />
             <DetailField label="Ngày tạo" value={formatDate(proposalDetail.created_at)} />
             {proposalDetail.proof_blob_id && (
