@@ -8,6 +8,7 @@ import GroupedNumericInput from '@/src/components/ui/GroupedNumericInput';
 import { formatVND, parseDigitsToNumber } from '@/src/lib/formatters';
 import { toast } from 'sonner';
 import { HandCoins, ExternalLink } from 'lucide-react';
+import { savePendingPayOSPayment } from '@/src/lib/paymentSessionStorage';
 
 const PRESET_AMOUNTS = [50000, 100000, 200000, 500000, 1000000, 2000000];
 
@@ -42,7 +43,11 @@ export default function DonorDonatePage() {
         message: message.trim() || undefined,
       });
       if (res.data.url) {
-        window.open(res.data.url, '_blank');
+        const paymentId = res.data.payment_id ?? res.data.id ?? res.data.order_code;
+        if (paymentId !== undefined && paymentId !== null && paymentId !== '') {
+          savePendingPayOSPayment({ paymentId: String(paymentId), source: 'donate' });
+        }
+        window.open(res.data.url, '_blank', 'noopener,noreferrer');
         toast.success('Đã mở trang thanh toán trong tab mới');
       } else {
         toast.success('Quyên góp thành công');

@@ -16,6 +16,6 @@ export function isPublicPath(pathname: string): boolean {
   if (p.startsWith('/children/')) return true;
   if (p.startsWith('/campaigns/')) return true;
   if (p.startsWith('/donor/payment/')) return true;
-  if (p === '/payment/result') return true;
+  if (p === '/payment/result' || p === '/payment/callback') return true;
   return false;
 }

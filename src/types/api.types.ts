@@ -748,6 +748,9 @@ export interface TaskQueryParams extends PaginationParams {
 
 export interface TaskProofQueryParams extends PaginationParams {
   actor_address?: string;
+  is_child_task?: boolean;
+  keyword?: string;
+  region?: string;
   status?: string;
   review_status?: string;
   reviewed_by?: string;

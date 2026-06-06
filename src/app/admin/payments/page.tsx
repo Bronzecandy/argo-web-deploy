@@ -180,10 +180,9 @@ export default function AdminPaymentsPage() {
             },
             { key: 'currency', label: 'Tiền tệ', render: (p) => p.currency || '—' },
             { key: 'method', label: 'Phương thức', render: (p) => p.method || '—' },
-            { key: 'status', label: 'Trạng thái', render: (p) => <StatusBadge status={p.status || '—'} /> },
             {
               key: 'review_status',
-              label: 'Duyệt',
+              label: 'Trạng thái duyệt',
               render: (p) =>
                 p.review_status ? <StatusBadge status={p.review_status} /> : <span className="text-slate-400">—</span>,
             },

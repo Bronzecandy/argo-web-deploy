@@ -10,6 +10,7 @@ import StatusBadge from '@/src/components/ui/StatusBadge';
 import CopyableTruncated from '@/src/components/ui/CopyableTruncated';
 import AiInsightPanel from '@/src/components/ui/AiInsightPanel';
 import AiEvaluationBadge from '@/src/components/ui/AiEvaluationBadge';
+import ContextBanner from '@/src/components/ui/ContextBanner';
 import FilterToolbar from '@/src/components/ui/FilterToolbar';
 import PageSection from '@/src/components/ui/PageSection';
 import TableIconButton from '@/src/components/ui/TableIconButton';
@@ -18,6 +19,7 @@ import { formatDate, truncateAddress } from '@/src/lib/formatters';
 import { selectClass } from '@/src/lib/uiClasses';
 import { toast } from 'sonner';
 import { useAppSelector } from '@/src/store/hooks';
+import { useLeaderCenter } from '@/src/contexts/LeaderCenterContext';
 import { taskProofService } from '@/src/services/task-proof.service';
 import { blobService } from '@/src/services/blob.service';
 import WalrusFallbackImg from '@/src/components/ui/WalrusFallbackImg';
@@ -69,6 +71,14 @@ function proofReviewStatus(r: TaskProof): string {
 
 export default function LeaderTaskProofsPage() {
   const { user } = useAppSelector((state) => state.auth);
+  const { poolName, status: poolStatus, error: poolError } = useAppSelector((state) => state.leaderPool);
+  const { status: centerStatus, leaderRegion } = useLeaderCenter();
+
+  const effectiveRegion = poolName?.trim() || leaderRegion?.trim() || '';
+  const dataReady =
+    centerStatus !== 'loading' && poolStatus !== 'loading' && poolStatus !== 'idle';
+  const canUseRegion = dataReady && !!effectiveRegion;
+
   const [page, setPage] = useState(0);
   const [status, setStatus] = useState('');
   const [rows, setRows] = useState<TaskProof[]>([]);
@@ -82,12 +92,25 @@ export default function LeaderTaskProofsPage() {
   const [proofDetailLoading, setProofDetailLoading] = useState(false);
 
   const load = useCallback(async () => {
+    if (!dataReady) {
+      setLoading(true);
+      setRows([]);
+      return;
+    }
+    if (!canUseRegion) {
+      setLoading(false);
+      setRows([]);
+      setTotalPages(1);
+      return;
+    }
+
     setLoading(true);
     try {
       const res = await taskProofService.list({
         page,
         page_size: PAGE_SIZE,
         sort_order: 'desc',
+        region: effectiveRegion,
         review_status: status || undefined,
       });
       setRows(res.data.data ?? []);
@@ -99,7 +122,7 @@ export default function LeaderTaskProofsPage() {
     } finally {
       setLoading(false);
     }
-  }, [page, status]);
+  }, [page, status, effectiveRegion, dataReady, canUseRegion]);
 
   useEffect(() => {
     void load();
@@ -152,6 +175,23 @@ export default function LeaderTaskProofsPage() {
         }
       />
 
+      {poolStatus === 'failed' && (
+        <ContextBanner variant="error" title="Không tải được vùng">
+          {poolError || 'Không xác định được quỹ vùng trưởng.'}
+        </ContextBanner>
+      )}
+      {(poolStatus === 'loading' || poolStatus === 'idle' || centerStatus === 'loading') && (
+        <ContextBanner title="Đang tải vùng trưởng">Vui lòng đợi…</ContextBanner>
+      )}
+      {dataReady && canUseRegion && (
+        <ContextBanner title="Vùng của bạn">{effectiveRegion}</ContextBanner>
+      )}
+      {dataReady && !canUseRegion && poolStatus !== 'failed' && (
+        <ContextBanner variant="warning" title="Chưa có vùng">
+          Không tải được vùng trưởng — danh sách bằng chứng chỉ hiển thị trong phạm vi vùng của bạn.
+        </ContextBanner>
+      )}
+
       <FilterToolbar>
         <div>
           <label className="mb-1 block text-xs font-medium text-slate-500">Trạng thái duyệt</label>
@@ -161,6 +201,7 @@ export default function LeaderTaskProofsPage() {
               setStatus(e.target.value);
               setPage(0);
             }}
+            disabled={!canUseRegion}
             className={`${selectClass} min-w-[200px]`}
           >
             {STATUS_OPTIONS.map((o) => (
@@ -261,7 +302,11 @@ export default function LeaderTaskProofsPage() {
           page={page}
           totalPages={totalPages}
           onPageChange={setPage}
-          emptyMessage="Không có bằng chứng nào khớp bộ lọc"
+          emptyMessage={
+            canUseRegion
+              ? 'Không có bằng chứng nào trong vùng của bạn khớp bộ lọc.'
+              : 'Chưa có vùng trưởng — không tải được bằng chứng nhiệm vụ.'
+          }
         />
       </PageSection>
 

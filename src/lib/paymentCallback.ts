@@ -1,10 +1,13 @@
+import { loadPendingPayOSPayment } from '@/src/lib/paymentSessionStorage';
+
 /**
- * PayOS return URL lands on the web app; FE then triggers the backend
- * "server callback" (cook on-chain, update DB) without pointing PayOS at the API host.
+ * PayOS return URL → trang web (không trỏ thẳng API). Trang web gọi GET server callback rồi poll status.
  *
- * BE when creating PayOS link should set returnUrl to:
- *   `${NEXT_PUBLIC_APP_URL}/payment/result?payment_id={paymentId}`
- * (or append payment_id to whatever query PayOS allows)
+ * BE khi tạo link PayOS — set returnUrl:
+ *   `${NEXT_PUBLIC_APP_URL}${NEXT_PUBLIC_PAYMENT_CALLBACK_PATH}?payment_id={paymentId}`
+ * Ví dụ production: https://argo-web-deploy.vercel.app/payment/callback?payment_id=abc-123
+ *
+ * FE cũng lưu payment_id vào sessionStorage lúc bấm «Mở PayOS» (phòng redirect thiếu query).
  */
 
 /** Relative API path template; `{id}` = payment id. Override via env if BE uses another route. */
@@ -45,4 +48,11 @@ export function isPayOSCancelled(params: URLSearchParams): boolean {
   if (cancel === 'true' || cancel === '1') return true;
   const status = (params.get('status') || '').toLowerCase();
   return status === 'cancelled' || status === 'canceled';
+}
+
+/** URL query trước, sau đó sessionStorage (lúc bấm thanh toán). */
+export function resolvePaymentIdForCallback(params: URLSearchParams): string | null {
+  const fromUrl = parsePaymentIdFromSearchParams(params);
+  if (fromUrl) return fromUrl;
+  return loadPendingPayOSPayment()?.paymentId?.trim() || null;
 }

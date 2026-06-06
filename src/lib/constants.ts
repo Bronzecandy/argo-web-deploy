@@ -11,22 +11,31 @@ export const STORAGE_KEYS = {
 export const BLOB_URL = (blobId: string) => `${API_BASE_URL}/blobs/${blobId}`;
 
 /**
- * Path for PayOS `returnUrl` (full URL = `NEXT_PUBLIC_APP_URL` + this path).
- * Backend should append `?payment_id={id}` so the web can call server callback then poll status.
+ * Trang web PayOS redirect về (cấu hình returnUrl trên BE / PayOS).
+ * Full URL: `NEXT_PUBLIC_APP_URL` + `PAYMENT_CALLBACK_PATH` + `?payment_id={id}`
  */
-export const PAYMENT_RESULT_PATH = '/payment/result';
+export const PAYMENT_CALLBACK_PATH =
+  process.env.NEXT_PUBLIC_PAYMENT_CALLBACK_PATH?.trim() || '/payment/callback';
+
+/** @deprecated Dùng PAYMENT_CALLBACK_PATH — giữ alias cho link cũ */
+export const PAYMENT_RESULT_PATH = PAYMENT_CALLBACK_PATH;
 
 export const APP_URL =
   (typeof window !== 'undefined' ? window.location.origin : '') ||
   process.env.NEXT_PUBLIC_APP_URL?.replace(/\/+$/, '') ||
   '';
 
-export function paymentResultUrl(paymentId?: string): string {
-  const base = APP_URL || '';
-  const path = PAYMENT_RESULT_PATH;
+export function paymentCallbackUrl(paymentId?: string): string {
+  const base = (process.env.NEXT_PUBLIC_APP_URL?.replace(/\/+$/, '') || APP_URL || '').trim();
+  const path = PAYMENT_CALLBACK_PATH.startsWith('/') ? PAYMENT_CALLBACK_PATH : `/${PAYMENT_CALLBACK_PATH}`;
   const url = base ? `${base}${path}` : path;
   if (!paymentId?.trim()) return url;
   return `${url}?payment_id=${encodeURIComponent(paymentId.trim())}`;
+}
+
+/** @deprecated Alias — dùng paymentCallbackUrl */
+export function paymentResultUrl(paymentId?: string): string {
+  return paymentCallbackUrl(paymentId);
 }
 
 export const ROLES = {

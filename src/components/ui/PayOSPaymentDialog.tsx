@@ -7,6 +7,7 @@ import { paymentService } from '@/src/services/payment.service';
 import { isPaymentFailureStatus, isPaymentSuccessStatus } from '@/src/lib/paymentStatus';
 import type { PayOSDialogState } from '@/src/hooks/useWithdrawProposalConfirm';
 import { btnPrimary, btnSecondary } from '@/src/lib/uiClasses';
+import { savePendingPayOSPayment } from '@/src/lib/paymentSessionStorage';
 
 const POLL_MS = 3000;
 const MAX_POLLS = 25;
@@ -140,8 +141,26 @@ export default function PayOSPaymentDialog({ state, onClose, onPaymentSuccess }:
     };
   }, [state.open, state.paymentId, pollOnce, finalizeTimeout]);
 
+  useEffect(() => {
+    const pid = state.paymentId;
+    if (!state.open || pid === undefined || pid === null || pid === '') return;
+    savePendingPayOSPayment({
+      paymentId: String(pid),
+      source: 'treasury',
+      proposalId: state.proposalId ?? undefined,
+    });
+  }, [state.open, state.paymentId, state.proposalId]);
+
   const openPayOS = () => {
     if (!state.url) return;
+    const pid = state.paymentId;
+    if (pid !== undefined && pid !== null && pid !== '') {
+      savePendingPayOSPayment({
+        paymentId: String(pid),
+        source: 'treasury',
+        proposalId: state.proposalId ?? undefined,
+      });
+    }
     window.open(state.url, '_blank', 'noopener,noreferrer');
   };
 
