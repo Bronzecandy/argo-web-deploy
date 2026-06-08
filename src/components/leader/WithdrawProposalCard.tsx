@@ -17,9 +17,15 @@ import type { WithdrawProposal } from '@/src/types/api.types';
 type WithdrawProposalCardProps = {
   proposal: WithdrawProposal;
   onDetail: () => void;
+  /** Admin list: highlight proposals from local leader pools. */
+  showSourceBadge?: boolean;
 };
 
-export default function WithdrawProposalCard({ proposal, onDetail }: WithdrawProposalCardProps) {
+export default function WithdrawProposalCard({
+  proposal,
+  onDetail,
+  showSourceBadge = false,
+}: WithdrawProposalCardProps) {
   const status = getWithdrawProposalUiStatus(proposal);
   const approvePct = getWithdrawApprovalPercent(proposal);
   const refusePct = getWithdrawRefusePercent(proposal);
@@ -28,7 +34,14 @@ export default function WithdrawProposalCard({ proposal, onDetail }: WithdrawPro
   return (
     <article className="flex flex-col rounded-xl border border-slate-200 bg-white p-4 shadow-sm transition hover:border-slate-300 hover:shadow-md sm:p-5">
       <div className="mb-3 flex flex-wrap items-start justify-between gap-2">
-        <StatusBadge status={status} />
+        <div className="flex flex-wrap items-center gap-2">
+          <StatusBadge status={status} />
+          {showSourceBadge && proposal.is_from_local_pool ? (
+            <span className="rounded bg-amber-100 px-1.5 py-0.5 text-[10px] font-semibold text-amber-800">
+              Leader địa phương
+            </span>
+          ) : null}
+        </div>
         <button type="button" onClick={onDetail} className={`shrink-0 ${btnSecondary} !px-3 !py-1.5 text-xs`}>
           Chi tiết
         </button>

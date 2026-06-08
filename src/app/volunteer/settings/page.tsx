@@ -270,7 +270,7 @@ export default function VolunteerSettingsPage() {
 
         <p className="border-t border-slate-100 px-4 py-2 text-xs text-slate-500">
 
-          Công tắc chỉ hiển thị trên giao diện cho đến khi có API cài đặt thông báo.
+          Công tắc chỉ dùng tạm trên giao diện — tính năng cài đặt thông báo sẽ được bổ sung sau.
 
         </p>
 

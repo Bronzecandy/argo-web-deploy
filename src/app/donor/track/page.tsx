@@ -60,7 +60,7 @@ export default function DonorTrackPage() {
         title="Trẻ tôi hỗ trợ"
         description={
           user?.address
-            ? `Trẻ bạn đang hỗ trợ — ${formatInteger(totalAmount)} (theo API)`
+            ? `Trẻ bạn đang hỗ trợ — ${formatInteger(totalAmount)}`
             : 'Đăng nhập để xem các trẻ bạn đã hỗ trợ'
         }
       />

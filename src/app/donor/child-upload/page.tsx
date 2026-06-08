@@ -132,7 +132,7 @@ export default function DonorChildUploadPage() {
     <div className="mx-auto max-w-2xl space-y-6">
       <PageHeader
         title="Yêu cầu tải hồ sơ trẻ"
-        description="Đề xuất hồ sơ trẻ mới để được xem xét (tương đương mobile). Bỏ phiếu và xác nhận theo quy tắc API."
+        description="Đề xuất hồ sơ trẻ mới để được xem xét và bỏ phiếu duyệt."
       />
 
       <form onSubmit={handleSubmit} className="space-y-6 rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
@@ -181,7 +181,7 @@ export default function DonorChildUploadPage() {
                 required
               />
               <p className="mt-1 text-[11px] text-slate-500">
-                Gửi lên API dạng <span className="font-medium">DD/MM/YYYY</span> (giống mobile).
+                Ngày sinh gửi theo định dạng ngày/tháng/năm.
               </p>
             </div>
           </div>

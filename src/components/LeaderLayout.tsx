@@ -48,7 +48,6 @@ const FULL_NAV_GROUPS: { title: string; items: NavItem[] }[] = [
     items: [
       { label: 'Tài khoản ngân hàng', href: '/leader/bank', icon: Landmark },
       { label: 'Rút tiền', href: '/leader/withdrawals', icon: Wallet },
-      { label: 'Chiến dịch đặc biệt', href: '/leader/campaigns', icon: Building2 },
       { label: 'Đề xuất vùng', href: '/leader/regions', icon: MapPin },
     ],
   },
@@ -77,8 +76,11 @@ export default function LeaderLayout({ children }: { children: React.ReactNode }
   const router = useRouter();
   const dispatch = useAppDispatch();
   const { user } = useAppSelector((state) => state.auth);
-  const { status: centerStatus, errorMessage } = useLeaderCenter();
+  const { status: centerStatus, errorMessage, leaderRegion } = useLeaderCenter();
+  const { poolName } = useAppSelector((state) => state.leaderPool);
   const [sidebarOpen, setSidebarOpen] = useState(false);
+
+  const effectiveRegion = poolName?.trim() || leaderRegion?.trim() || '';
 
   const restrictedNav = centerStatus === 'no_center';
 
@@ -200,7 +202,14 @@ export default function LeaderLayout({ children }: { children: React.ReactNode }
 
         <div className="border-t border-slate-200 p-3">
           <div className="mb-2 rounded-lg bg-slate-50 px-3 py-2">
-            <p className="text-xs font-medium text-slate-700">Trưởng vùng</p>
+            <p className="text-xs font-medium text-slate-700">
+              Trưởng vùng
+              {effectiveRegion ? (
+                <span className="font-semibold text-blue-800"> · {effectiveRegion}</span>
+              ) : centerStatus === 'loading' ? (
+                <span className="font-normal text-slate-400"> · đang tải…</span>
+              ) : null}
+            </p>
             <p className="text-xs text-slate-400">{truncateAddress(user?.address || '')}</p>
           </div>
           <button
@@ -228,6 +237,12 @@ export default function LeaderLayout({ children }: { children: React.ReactNode }
             <Menu className="h-5 w-5" />
           </button>
           <div className="flex-1" />
+          {effectiveRegion ? (
+            <div className="hidden items-center gap-1.5 rounded-full border border-blue-100 bg-blue-50 px-3 py-1.5 text-xs font-medium text-blue-900 sm:flex">
+              <MapPin className="h-3.5 w-3.5 shrink-0 text-blue-700" aria-hidden />
+              <span className="max-w-[200px] truncate">{effectiveRegion}</span>
+            </div>
+          ) : null}
           <div className="flex items-center gap-2 rounded-full border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs font-medium text-slate-600">
             <span className="h-2 w-2 rounded-full bg-emerald-500" aria-hidden />
             Đã kết nối

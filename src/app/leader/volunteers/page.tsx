@@ -20,6 +20,7 @@ import TableIconButton from '@/src/components/ui/TableIconButton';
 import { collectBlobIdEntries, blobFieldDisplayLabel } from '@/src/lib/blobFields';
 import { formatDate, formatDateTimeSeconds } from '@/src/lib/formatters';
 import { btnPrimary, inputClass, selectClass } from '@/src/lib/uiClasses';
+import { hasUserCastVote, isVoteActionsLocked } from '@/src/lib/voteFields';
 import { registrationService } from '@/src/services/registration.service';
 import { useAppSelector } from '@/src/store/hooks';
 import { useLeaderCenter } from '@/src/contexts/LeaderCenterContext';
@@ -42,6 +43,7 @@ const REG_STATUS_OPTIONS = [
 ];
 
 export default function LeaderVolunteersPage() {
+  const { user } = useAppSelector((s) => s.auth);
   const { poolId, status: poolStatus } = useAppSelector((s) => s.leaderPool);
   const { status: centerStatus, leaderRegion, errorMessage: centerError } = useLeaderCenter();
 
@@ -173,17 +175,17 @@ export default function LeaderVolunteersPage() {
 
       {centerStatus === 'loading' && (
         <ContextBanner title="Đang tải trung tâm trưởng vùng">
-          Vùng được lấy từ GET /centers/leader…
+          Đang xác định vùng được giao…
         </ContextBanner>
       )}
       {centerStatus === 'error' && centerError && (
         <ContextBanner variant="warning" title="Không tải được trung tâm trưởng vùng">
-          {centerError}. Danh sách TNV cần vùng từ API này.
+          {centerError}. Danh sách TNV cần biết vùng của bạn để lọc đúng.
         </ContextBanner>
       )}
       {centerStatus !== 'loading' && !leaderRegion && (
-        <ContextBanner variant="warning" title="Thiếu vùng từ API">
-          Không có trường <code className="rounded bg-white px-1">region</code> từ GET /centers/leader — không lọc được đăng ký TNV.
+        <ContextBanner variant="warning" title="Chưa xác định được vùng">
+          Không tải được vùng được giao — không lọc được đăng ký TNV. Thử tải lại trang.
         </ContextBanner>
       )}
       {poolStatus === 'succeeded' && poolId && (
@@ -264,12 +266,10 @@ export default function LeaderVolunteersPage() {
               label: 'Thao tác',
               className: 'whitespace-nowrap',
               render: (r) => {
-                const approved = isRegistrationApproved(r.status);
+                const voteLocked = isVoteActionsLocked(r, user, r.status);
+                const userVoted = hasUserCastVote(r, user);
                 return (
-                  <div
-                    className={`flex flex-wrap gap-1 ${approved ? 'pointer-events-none opacity-40' : ''}`}
-                    onClick={(e) => e.stopPropagation()}
-                  >
+                  <div className="flex flex-wrap gap-1" onClick={(e) => e.stopPropagation()}>
                     <TableIconButton
                       onClick={() => {
                         setRegDetailListRow(r);
@@ -279,22 +279,27 @@ export default function LeaderVolunteersPage() {
                     >
                       Chi tiết
                     </TableIconButton>
-                    <TableIconButton
-                      variant="primary"
-                      disabled={approved || voteBusyId === r.id || !canLoad}
-                      onClick={() => handleVote(r.id, true)}
-                      title="Phiếu duyệt"
+                    <div
+                      className={`flex flex-wrap gap-1 ${voteLocked ? 'pointer-events-none opacity-40' : ''}`}
+                      title={userVoted ? 'Bạn đã bỏ phiếu' : undefined}
                     >
-                      <ThumbsUp className="h-3.5 w-3.5" />
-                    </TableIconButton>
-                    <TableIconButton
-                      variant="danger"
-                      disabled={approved || voteBusyId === r.id || !canLoad}
-                      onClick={() => handleVote(r.id, false)}
-                      title="Phiếu từ chối"
-                    >
-                      <ThumbsDown className="h-3.5 w-3.5" />
-                    </TableIconButton>
+                      <TableIconButton
+                        variant="primary"
+                        disabled={voteLocked || voteBusyId === r.id || !canLoad}
+                        onClick={() => handleVote(r.id, true)}
+                        title="Phiếu duyệt"
+                      >
+                        <ThumbsUp className="h-3.5 w-3.5" />
+                      </TableIconButton>
+                      <TableIconButton
+                        variant="danger"
+                        disabled={voteLocked || voteBusyId === r.id || !canLoad}
+                        onClick={() => handleVote(r.id, false)}
+                        title="Phiếu từ chối"
+                      >
+                        <ThumbsDown className="h-3.5 w-3.5" />
+                      </TableIconButton>
+                    </div>
                   </div>
                 );
               },

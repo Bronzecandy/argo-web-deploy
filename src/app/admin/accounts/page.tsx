@@ -20,7 +20,9 @@ import TableIconButton from '@/src/components/ui/TableIconButton';
 import { btnPrimary, inputClass, selectClass } from '@/src/lib/uiClasses';
 import { collectBlobIdEntries, blobFieldDisplayLabel } from '@/src/lib/blobFields';
 import { formatDate, formatDateTimeSeconds, formatVND } from '@/src/lib/formatters';
+import { hasUserCastVote, isVoteActionsLocked } from '@/src/lib/voteFields';
 import { registrationService } from '@/src/services/registration.service';
+import { useAppSelector } from '@/src/store/hooks';
 import { staffService } from '@/src/services/staff.service';
 import { adminService } from '@/src/services/admin.service';
 import type { RegistrationRequest, Staff } from '@/src/types/api.types';
@@ -53,6 +55,7 @@ type AdminRow = {
 };
 
 export default function AdminAccountsPage() {
+  const { user } = useAppSelector((state) => state.auth);
   const [activeTab, setActiveTab] = useState<Tab>('registrations');
 
   const [regLoading, setRegLoading] = useState(true);
@@ -347,12 +350,10 @@ export default function AdminAccountsPage() {
                 label: 'Thao tác',
                 className: 'whitespace-nowrap',
                 render: (r) => {
-                  const approved = isRegistrationApproved(r.status);
+                  const voteLocked = isVoteActionsLocked(r, user, r.status);
+                  const userVoted = hasUserCastVote(r, user);
                   return (
-                    <div
-                      className={`flex flex-wrap gap-1 ${approved ? 'pointer-events-none opacity-40' : ''}`}
-                      onClick={(e) => e.stopPropagation()}
-                    >
+                    <div className="flex flex-wrap gap-1" onClick={(e) => e.stopPropagation()}>
                       <TableIconButton
                         onClick={() => {
                           setRegDetailListRow(r);
@@ -362,22 +363,27 @@ export default function AdminAccountsPage() {
                       >
                         Chi tiết
                       </TableIconButton>
-                      <TableIconButton
-                        variant="primary"
-                        disabled={approved || voteBusyId === r.id}
-                        onClick={() => handleVote(r.id, true)}
-                        title="Phiếu duyệt"
+                      <div
+                        className={`flex flex-wrap gap-1 ${voteLocked ? 'pointer-events-none opacity-40' : ''}`}
+                        title={userVoted ? 'Bạn đã bỏ phiếu' : undefined}
                       >
-                        <ThumbsUp className="h-3.5 w-3.5" />
-                      </TableIconButton>
-                      <TableIconButton
-                        variant="danger"
-                        disabled={approved || voteBusyId === r.id}
-                        onClick={() => handleVote(r.id, false)}
-                        title="Phiếu từ chối"
-                      >
-                        <ThumbsDown className="h-3.5 w-3.5" />
-                      </TableIconButton>
+                        <TableIconButton
+                          variant="primary"
+                          disabled={voteLocked || voteBusyId === r.id}
+                          onClick={() => handleVote(r.id, true)}
+                          title="Phiếu duyệt"
+                        >
+                          <ThumbsUp className="h-3.5 w-3.5" />
+                        </TableIconButton>
+                        <TableIconButton
+                          variant="danger"
+                          disabled={voteLocked || voteBusyId === r.id}
+                          onClick={() => handleVote(r.id, false)}
+                          title="Phiếu từ chối"
+                        >
+                          <ThumbsDown className="h-3.5 w-3.5" />
+                        </TableIconButton>
+                      </div>
                     </div>
                   );
                 },
@@ -663,7 +669,7 @@ export default function AdminAccountsPage() {
             <DetailField label="Email" value={adminDetailRow.email ?? '—'} />
             <DetailField label="Điện thoại" value={adminDetailRow.phone_number ?? '—'} />
             <p className="pt-2 text-xs text-slate-500">
-              API không có GET theo mã — chi tiết lấy từ danh sách.
+              Không tải được chi tiết theo mã — thông tin hiển thị từ danh sách.
             </p>
           </div>
         )}

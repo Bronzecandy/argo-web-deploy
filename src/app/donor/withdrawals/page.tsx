@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback } from 'react';
 import { withdrawService } from '@/src/services/withdraw.service';
+import { hasUserCastVote } from '@/src/lib/voteFields';
 import { useAppSelector } from '@/src/store/hooks';
 import { useExecuteTransaction } from '@/src/hooks/useExecuteTransaction';
 import { formatVND, formatDateTime, formatDateTimeSeconds } from '@/src/lib/formatters';
@@ -72,10 +73,7 @@ export default function DonorWithdrawalsPage() {
     setVoting(false);
   };
 
-  const hasVoted = (proposal: WithdrawProposal) => {
-    if (!user?.address) return false;
-    return proposal.approvers?.includes(user.address) || proposal.refusers?.includes(user.address);
-  };
+  const hasVoted = (proposal: WithdrawProposal) => hasUserCastVote(proposal, user);
 
   const columns = [
     {

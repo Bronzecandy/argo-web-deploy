@@ -22,10 +22,13 @@ import AiInsightPanel from '@/src/components/ui/AiInsightPanel';
 import AiEvaluationBadge from '@/src/components/ui/AiEvaluationBadge';
 import { collectBlobIdEntries, blobFieldDisplayLabel } from '@/src/lib/blobFields';
 import { formatDate, formatDateTimeSeconds } from '@/src/lib/formatters';
+import { childNeedsService } from '@/src/services/child-needs.service';
 import { childUploadService } from '@/src/services/child-upload.service';
 import { childrenService } from '@/src/services/children.service';
 import { useExecuteTransaction } from '@/src/hooks/useExecuteTransaction';
+import { hasUserCastVote, isVoteActionsLocked } from '@/src/lib/voteFields';
 import { useLeaderCenter } from '@/src/contexts/LeaderCenterContext';
+import { useAppSelector } from '@/src/store/hooks';
 import type { Child, UploadChildRequestEntity } from '@/src/types/api.types';
 
 type Tab = 'review' | 'list';
@@ -105,6 +108,7 @@ function uploadBlobEntries(u: UploadChildRequestEntity): { key: string; blobId: 
 }
 
 export default function LeaderChildrenPage() {
+  const { user } = useAppSelector((state) => state.auth);
   const { execute, executing } = useExecuteTransaction();
   const { status: centerStatus, leaderRegion, errorMessage: centerError } = useLeaderCenter();
   const canLoad = centerStatus !== 'loading' && !!leaderRegion;
@@ -154,6 +158,7 @@ export default function LeaderChildrenPage() {
   const [cfgBooksValue, setCfgBooksValue] = useState('');
   const [cfgHealthValue, setCfgHealthValue] = useState('');
   const [configNeedsSubmitting, setConfigNeedsSubmitting] = useState(false);
+  const [needsConfigLoading, setNeedsConfigLoading] = useState(false);
 
   const loadList = useCallback(async () => {
     if (!canLoad || !leaderRegion) {
@@ -250,7 +255,7 @@ export default function LeaderChildrenPage() {
       const booksNeeds = (child.books_needs || []).map((id) => id.trim());
       if (needBooks && (!booksNeeds[0] || !booksNeeds[1])) {
         toast.error(
-          'Books: hồ sơ trẻ cần đủ books_needs[0] và books_needs[1] sau khi duyệt — hiện thiếu một hoặc cả hai need_id',
+          'Hồ sơ trẻ cần đủ mã nhu cầu sách cho cả hai học kỳ sau khi duyệt — hiện đang thiếu.',
         );
         return false;
       }
@@ -382,7 +387,7 @@ export default function LeaderChildrenPage() {
     }
   }
 
-  function openNeedsConfigFromList(row: Child) {
+  async function openNeedsConfigFromList(row: Child) {
     setNeedsConfigChild(row);
     setCfgNeedMeal(false);
     setCfgNeedBooks(false);
@@ -390,6 +395,73 @@ export default function LeaderChildrenPage() {
     setCfgMealValue('');
     setCfgBooksValue('');
     setCfgHealthValue('');
+    setNeedsConfigLoading(true);
+
+    try {
+      let child = row;
+      try {
+        const res = await childrenService.getById(row.id);
+        if (res.data) child = res.data;
+      } catch {
+        /* dùng bản ghi từ danh sách */
+      }
+      setNeedsConfigChild(child);
+
+      const fetches: Promise<void>[] = [];
+
+      const mealId = child.meal_need?.trim();
+      if (mealId) {
+        fetches.push(
+          childNeedsService
+            .getMealNeed(mealId)
+            .then((r) => {
+              if (r.data?.value != null && r.data.value > 0) {
+                setCfgNeedMeal(true);
+                setCfgMealValue(String(r.data.value));
+              }
+            })
+            .catch(() => {}),
+        );
+      }
+
+      const healthId = child.health_insurance_need?.trim();
+      if (healthId) {
+        fetches.push(
+          childNeedsService
+            .getHealthInsuranceNeed(healthId)
+            .then((r) => {
+              if (r.data?.value != null && r.data.value > 0) {
+                setCfgNeedHealth(true);
+                setCfgHealthValue(String(r.data.value));
+              }
+            })
+            .catch(() => {}),
+        );
+      }
+
+      const bookIds = (child.books_needs ?? []).map((id) => id.trim()).filter(Boolean);
+      if (bookIds.length > 0) {
+        fetches.push(
+          Promise.all(bookIds.map((id) => childNeedsService.getBooksNeed(id).catch(() => null))).then(
+            (results) => {
+              const values = results
+                .map((r) => r?.data?.value)
+                .filter((v): v is number => v != null && v > 0);
+              if (values.length > 0) {
+                setCfgNeedBooks(true);
+                setCfgBooksValue(String(values[0]));
+              }
+            },
+          ),
+        );
+      }
+
+      await Promise.all(fetches);
+    } catch {
+      toast.error('Không tải được mức nhu cầu hiện tại — bạn vẫn có thể nhập thủ công.');
+    } finally {
+      setNeedsConfigLoading(false);
+    }
   }
 
   async function submitNeedsConfig() {
@@ -452,7 +524,7 @@ export default function LeaderChildrenPage() {
         <div className="flex flex-wrap items-center gap-1" onClick={(e) => e.stopPropagation()}>
           <TableIconButton
             variant="primary"
-            onClick={() => openNeedsConfigFromList(row)}
+            onClick={() => void openNeedsConfigFromList(row)}
             title="Cấu hình bữa ăn / sách / bảo hiểm (chỉ cập nhật nhu cầu, không duyệt tải lên)"
           >
             <Settings2 className="h-3.5 w-3.5" />
@@ -481,17 +553,17 @@ export default function LeaderChildrenPage() {
 
       {centerStatus === 'loading' && (
         <ContextBanner title="Đang tải trung tâm trưởng vùng">
-          Vùng từ GET /centers/leader…
+          Đang xác định vùng được giao…
         </ContextBanner>
       )}
       {centerStatus === 'error' && centerError && (
         <ContextBanner variant="warning" title="Không tải được trung tâm trưởng vùng">
-          {centerError}. Các danh sách bên dưới cần vùng từ API này.
+          {centerError}. Các danh sách bên dưới cần biết vùng của bạn để lọc đúng.
         </ContextBanner>
       )}
       {centerStatus !== 'loading' && !leaderRegion && (
-        <ContextBanner variant="warning" title="Thiếu vùng từ API">
-          Không có trường <code className="rounded bg-white px-1">region</code> từ GET /centers/leader — không lọc được yêu cầu và trẻ theo vùng.
+        <ContextBanner variant="warning" title="Chưa xác định được vùng">
+          Không tải được vùng được giao — không lọc được yêu cầu tải lên và danh sách trẻ. Thử tải lại trang.
         </ContextBanner>
       )}
 
@@ -556,7 +628,10 @@ export default function LeaderChildrenPage() {
                 key: 'actions',
                 label: 'Thao tác',
                 className: 'min-w-[120px]',
-                render: (u) => (
+                render: (u) => {
+                  const voteLocked = isVoteActionsLocked(u, user, u.status ?? u.review_status);
+                  const userVoted = hasUserCastVote(u, user);
+                  return (
                   <div className="flex flex-wrap gap-1" onClick={(e) => e.stopPropagation()}>
                     <TableIconButton
                       onClick={() => {
@@ -566,23 +641,29 @@ export default function LeaderChildrenPage() {
                     >
                       Chi tiết
                     </TableIconButton>
-                    <TableIconButton
-                      variant="primary"
-                      disabled={busyId === u.id}
-                      onClick={() => runReview(u, true)}
+                    <div
+                      className={`flex flex-wrap gap-1 ${voteLocked ? 'pointer-events-none opacity-40' : ''}`}
+                      title={userVoted ? 'Bạn đã bỏ phiếu' : undefined}
                     >
-                      <ClipboardCheck className="h-3 w-3" />
-                      Duyệt
-                    </TableIconButton>
-                    <TableIconButton
-                      variant="danger"
-                      disabled={busyId === u.id}
-                      onClick={() => runReview(u, false)}
-                    >
-                      Từ chối
-                    </TableIconButton>
+                      <TableIconButton
+                        variant="primary"
+                        disabled={voteLocked || busyId === u.id}
+                        onClick={() => runReview(u, true)}
+                      >
+                        <ClipboardCheck className="h-3 w-3" />
+                        Duyệt
+                      </TableIconButton>
+                      <TableIconButton
+                        variant="danger"
+                        disabled={voteLocked || busyId === u.id}
+                        onClick={() => runReview(u, false)}
+                      >
+                        Từ chối
+                      </TableIconButton>
+                    </div>
                   </div>
-                ),
+                  );
+                },
               },
             ]}
             data={uploads}
@@ -634,10 +715,9 @@ export default function LeaderChildrenPage() {
               Mã định danh: {approveModal.identity_code || '—'}
             </p>
             <p className="mb-4 rounded-lg border border-blue-100 bg-blue-50/80 px-3 py-2 text-xs text-slate-700">
-              Chọn nhu cầu và nhập <strong>số tiền (VND)</strong>; <strong>mỗi nhu cầu đã chọn phải &gt; {MIN_NEED_VND.toLocaleString('vi-VN')} ₫</strong>. Khi xác nhận:
-              hệ thống ghi nhận duyệt (nếu cần), rồi cập nhật nhu cầu trẻ. <strong>Sách:</strong> một ô tiền áp dụng cho <strong>cả hai</strong> học kỳ (
-              <code className="rounded bg-white px-1">books_needs[0]</code> và <code className="rounded bg-white px-1">books_needs[1]</code>)
-              sau khi duyệt. Mã <code className="rounded bg-white px-1">child_id</code> được tra theo <code className="rounded bg-white px-1">identity_code</code> trên hồ sơ trẻ.
+              Chọn nhu cầu và nhập <strong>số tiền (VND)</strong>; <strong>mỗi nhu cầu đã chọn phải &gt; {MIN_NEED_VND.toLocaleString('vi-VN')} ₫</strong>. Khi xác nhận,
+              hệ thống ghi nhận duyệt (nếu cần), rồi cập nhật nhu cầu trẻ. <strong>Sách:</strong> một ô tiền áp dụng cho <strong>cả hai học kỳ</strong> sau khi duyệt.
+              Hệ thống tìm hồ sơ trẻ theo mã định danh trên đơn tải lên.
             </p>
 
             <div className="space-y-4 text-sm">
@@ -676,9 +756,7 @@ export default function LeaderChildrenPage() {
                 <span className="flex-1">
                   <span className="font-medium text-slate-900">Nhu cầu sách</span>
                   <span className="mt-0.5 block text-xs text-slate-500">
-                    Một mức tiền (VND/kỳ). Sau khi duyệt, hệ thống áp dụng cùng mức cho cả hai mã nhu cầu sách (
-                    <code className="rounded bg-slate-100 px-0.5">books_needs[0]</code>,{' '}
-                    <code className="rounded bg-slate-100 px-0.5">books_needs[1]</code>).
+                    Một mức tiền (VND/kỳ). Sau khi duyệt, hệ thống áp dụng cùng mức cho cả học kỳ 1 và học kỳ 2.
                   </span>
                   {needBooks && (
                     <GroupedNumericInput
@@ -719,7 +797,7 @@ export default function LeaderChildrenPage() {
             </div>
 
             <p className="mt-3 text-[11px] text-slate-400">
-              Cập nhật nhu cầu dùng mã trẻ và số tiền. Bước on-chain (nếu có) sẽ được xử lý khi bạn xác nhận giao dịch trong ví.
+              Cập nhật nhu cầu theo mã trẻ và số tiền đã nhập. Nếu cần ký giao dịch, bạn sẽ được nhắc trong ví.
             </p>
           </>
         )}
@@ -727,10 +805,18 @@ export default function LeaderChildrenPage() {
 
       <FormModal
         open={needsConfigChild !== null}
-        onClose={() => !configNeedsSubmitting && !executing && setNeedsConfigChild(null)}
+        onClose={() =>
+          !configNeedsSubmitting && !executing && !needsConfigLoading && setNeedsConfigChild(null)
+        }
         title="Cấu hình nhu cầu"
-        submitLabel={configNeedsSubmitting || executing ? 'Đang xử lý…' : 'Lưu nhu cầu'}
-        submitDisabled={configNeedsSubmitting || executing}
+        submitLabel={
+          needsConfigLoading
+            ? 'Đang tải…'
+            : configNeedsSubmitting || executing
+              ? 'Đang xử lý…'
+              : 'Lưu nhu cầu'
+        }
+        submitDisabled={configNeedsSubmitting || executing || needsConfigLoading}
         onSubmit={() => void submitNeedsConfig()}
         maxWidth="lg"
       >
@@ -743,11 +829,17 @@ export default function LeaderChildrenPage() {
               Mã trẻ: {needsConfigChild.id} · mã định danh: {needsConfigChild.identity_code || '—'}
             </p>
             <p className="mb-4 rounded-lg border border-blue-100 bg-blue-50/80 px-3 py-2 text-xs text-slate-700">
-              Chỉ cập nhật giá trị nhu cầu on-chain (không gọi duyệt upload).{' '}
-              <strong>Mỗi nhu cầu đã chọn phải &gt; {MIN_NEED_VND.toLocaleString('vi-VN')} ₫</strong>. Dùng khi bước trước duyệt xong nhưng cập nhật need bị lỗi, hoặc
+              Chỉ cập nhật giá trị nhu cầu (không gọi lại bước duyệt tải lên).{' '}
+              <strong>Mỗi nhu cầu đã chọn phải &gt; {MIN_NEED_VND.toLocaleString('vi-VN')} ₫</strong>. Dùng khi bước trước duyệt xong nhưng cập nhật nhu cầu bị lỗi, hoặc
               khi cần chỉnh lại mức tiền.
             </p>
 
+            {needsConfigLoading ? (
+              <div className="flex flex-col items-center justify-center gap-2 py-10 text-sm text-slate-500">
+                <div className="h-8 w-8 animate-spin rounded-full border-4 border-blue-800 border-t-transparent" />
+                Đang tải mức nhu cầu hiện tại…
+              </div>
+            ) : (
             <div className="space-y-4 text-sm">
               <label className="flex cursor-pointer items-start gap-3 rounded-lg border border-slate-200 p-3 hover:bg-slate-50/80">
                 <input
@@ -784,8 +876,7 @@ export default function LeaderChildrenPage() {
                 <span className="flex-1">
                   <span className="font-medium text-slate-900">Nhu cầu sách</span>
                   <span className="mt-0.5 block text-xs text-slate-500">
-                    Một mức (VND/kỳ) cho cả <code className="rounded bg-slate-100 px-0.5">books_needs[0]</code> và{' '}
-                    <code className="rounded bg-slate-100 px-0.5">books_needs[1]</code>.
+                    Một mức (VND/kỳ) cho cả học kỳ 1 và học kỳ 2.
                   </span>
                   {cfgNeedBooks && (
                     <GroupedNumericInput
@@ -824,6 +915,7 @@ export default function LeaderChildrenPage() {
                 </span>
               </label>
             </div>
+            )}
 
           </>
         )}
@@ -893,7 +985,7 @@ export default function LeaderChildrenPage() {
               <DetailField label="Cập nhật lúc" value={formatDate(c.updated_at)} />
               {gallery.length > 0 && (
                 <div className="border-t border-slate-100 pt-3">
-                  <div className="mb-2 text-xs font-medium text-slate-600">Thư viện ảnh (API)</div>
+                  <div className="mb-2 text-xs font-medium text-slate-600">Thư viện ảnh</div>
                   <div className="flex flex-wrap gap-4">
                     {gallery.map((blobId) => (
                       <EntityBlobThumb key={blobId} blobId={blobId} source="api" className="h-20 w-20 rounded-md border border-slate-200 object-cover" />

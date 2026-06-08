@@ -1,23 +1,22 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
-import { Building2, ClipboardList, MapPin, ShieldCheck, ThumbsDown, ThumbsUp } from 'lucide-react';
+import { Building2, ClipboardList, MapPin } from 'lucide-react';
 import { toast } from 'sonner';
 import PageHeader from '@/src/components/ui/PageHeader';
 import DataTable from '@/src/components/ui/DataTable';
 import StatusBadge from '@/src/components/ui/StatusBadge';
 import DetailModal from '@/src/components/ui/DetailModal';
 import DetailField from '@/src/components/ui/DetailField';
-import BlobImage from '@/src/components/ui/BlobImage';
+import EntityBlobThumb from '@/src/components/ui/EntityBlobThumb';
 import CopyableTruncated from '@/src/components/ui/CopyableTruncated';
+import { pickFirstBlobId } from '@/src/lib/blobFields';
 import TabBar from '@/src/components/ui/TabBar';
 import FilterToolbar from '@/src/components/ui/FilterToolbar';
-import FormModal from '@/src/components/ui/FormModal';
 import PageSection from '@/src/components/ui/PageSection';
 import { btnPrimary, btnTablePrimary, inputClass, selectClass } from '@/src/lib/uiClasses';
 import { formatDate, formatDateTimeSeconds, formatInteger, formatVND } from '@/src/lib/formatters';
 import { centerService } from '@/src/services/center.service';
-import { useExecuteTransaction } from '@/src/hooks/useExecuteTransaction';
 import type { CenterRequest, SupportCenter } from '@/src/types/api.types';
 
 const PAGE_SIZE = 20;
@@ -87,7 +86,6 @@ function isSupportCenter(row: SupportCenter | CenterRequest): row is SupportCent
 }
 
 export default function AdminCentersPage() {
-  const { execute } = useExecuteTransaction();
   const [tab, setTab] = useState<CentersTab>('centers');
 
   const [loading, setLoading] = useState(true);
@@ -104,11 +102,6 @@ export default function AdminCentersPage() {
   const [reqStatus, setReqStatus] = useState('');
   const [reqKeywordDraft, setReqKeywordDraft] = useState('');
   const [reqKeyword, setReqKeyword] = useState('');
-
-  const [voteBusyId, setVoteBusyId] = useState<string | null>(null);
-  const [confirmBusyId, setConfirmBusyId] = useState<string | null>(null);
-  const [refuseModal, setRefuseModal] = useState<{ id: string } | null>(null);
-  const [refuseReason, setRefuseReason] = useState('');
 
   const [detail, setDetail] = useState<
     { type: 'center'; row: SupportCenter } | { type: 'request'; row: CenterRequest } | null
@@ -193,65 +186,21 @@ export default function AdminCentersPage() {
     setDetailLoading(true);
     void centerService
       .getCenterRequestById(detail.row.id)
-      .then((res) => setDetailFetched(res.data))
+      .then((res) => {
+        const fromApi = res.data;
+        const listRow = detail.row;
+        setDetailFetched({
+          ...listRow,
+          ...fromApi,
+          image_blob_id:
+            (typeof fromApi.image_blob_id === 'string' && fromApi.image_blob_id.trim()) ||
+            listRow.image_blob_id?.trim() ||
+            '',
+        });
+      })
       .catch(() => setDetailFetched(detail.row))
       .finally(() => setDetailLoading(false));
   }, [detail]);
-
-  async function handleVote(id: string, isYes: boolean) {
-    if (!isYes) {
-      setRefuseModal({ id });
-      setRefuseReason('');
-      return;
-    }
-    setVoteBusyId(id);
-    try {
-      await centerService.voteCenterRequest(id, { is_vote_yes: true });
-      toast.success('Đã ghi nhận phiếu');
-      await loadCenterRequests();
-    } catch (e: unknown) {
-      const msg =
-        e && typeof e === 'object' && 'response' in e
-          ? String((e as { response?: { data?: { message?: string } } }).response?.data?.message ?? '')
-          : '';
-      toast.error(msg || 'Bỏ phiếu thất bại');
-    } finally {
-      setVoteBusyId(null);
-    }
-  }
-
-  async function submitRefuseVote() {
-    if (!refuseModal) return;
-    const { id } = refuseModal;
-    setVoteBusyId(id);
-    try {
-      await centerService.voteCenterRequest(id, {
-        is_vote_yes: false,
-        refuse_reason: refuseReason || undefined,
-      });
-      toast.success('Đã ghi nhận từ chối');
-      setRefuseModal(null);
-      await loadCenterRequests();
-    } catch (e: unknown) {
-      const msg =
-        e && typeof e === 'object' && 'response' in e
-          ? String((e as { response?: { data?: { message?: string } } }).response?.data?.message ?? '')
-          : '';
-      toast.error(msg || 'Bỏ phiếu thất bại');
-    } finally {
-      setVoteBusyId(null);
-    }
-  }
-
-  async function handleConfirm(id: string) {
-    setConfirmBusyId(id);
-    const ok = await execute(
-      () => centerService.confirmCenterRequest(id),
-      { successMessage: 'Đã xác nhận trung tâm và thực thi on-chain' },
-    );
-    if (ok) await loadCenterRequests();
-    setConfirmBusyId(null);
-  }
 
   const centerDetailsCol = {
     key: 'details' as const,
@@ -289,48 +238,7 @@ export default function AdminCentersPage() {
     ),
   };
 
-  const requestColumns = [
-    ...CENTER_REQUEST_COLUMNS,
-    requestDetailsCol,
-    {
-      key: 'actions',
-      label: 'Thao tác',
-      className: 'whitespace-nowrap',
-      render: (c: CenterRequest) => (
-        <div className="flex flex-wrap gap-1" onClick={(e) => e.stopPropagation()}>
-          <button
-            type="button"
-            disabled={voteBusyId === c.id}
-            onClick={() => handleVote(c.id, true)}
-            className={btnTablePrimary}
-            title="Phiếu đồng ý"
-          >
-            <ThumbsUp className="h-3.5 w-3.5" />
-          </button>
-          <button
-            type="button"
-            disabled={voteBusyId === c.id}
-            onClick={() => handleVote(c.id, false)}
-            className="inline-flex items-center gap-1 rounded-md border border-red-200 bg-red-50 px-2 py-1 text-xs font-medium text-red-800 hover:bg-red-100 disabled:opacity-50"
-            title="Phiếu từ chối"
-          >
-            <ThumbsDown className="h-3.5 w-3.5" />
-          </button>
-          {c.isAvailableToConfirm && (
-            <button
-              type="button"
-              disabled={confirmBusyId === c.id}
-              onClick={() => handleConfirm(c.id)}
-              className={btnTablePrimary}
-            >
-              <ShieldCheck className="h-3.5 w-3.5" />
-              Xác nhận
-            </button>
-          )}
-        </div>
-      ),
-    },
-  ];
+  const requestColumns = [...CENTER_REQUEST_COLUMNS, requestDetailsCol];
 
   const headerTotal = tab === 'centers' ? totalAmount : reqTotalAmount;
 
@@ -459,18 +367,25 @@ export default function AdminCentersPage() {
               </>
             ) : (
               <>
-                {detailFetched.image_blob_id && (
-                  <div className="border-b border-slate-100 py-2.5">
-                    <div className="text-xs font-medium text-slate-500">Hình ảnh</div>
-                    <div className="mt-1">
-                      <BlobImage
-                        blobId={detailFetched.image_blob_id}
-                        source="api"
-                        className="max-h-56 max-w-full rounded-lg border border-slate-200 object-contain"
-                      />
+                {(() => {
+                  const imageBlobId =
+                    pickFirstBlobId(detailFetched, ['image_blob_id']) ||
+                    (detail?.type === 'request'
+                      ? pickFirstBlobId(detail.row, ['image_blob_id'])
+                      : undefined);
+                  if (!imageBlobId) return null;
+                  return (
+                    <div className="border-b border-slate-100 py-2.5">
+                      <div className="text-xs font-medium text-slate-500">Hình ảnh</div>
+                      <div className="mt-1">
+                        <EntityBlobThumb
+                          blobId={imageBlobId}
+                          className="max-h-56 max-w-full rounded-lg border border-slate-200 object-contain"
+                        />
+                      </div>
                     </div>
-                  </div>
-                )}
+                  );
+                })()}
                 <DetailField label="Vùng" value={detailFetched.region} />
                 <DetailField label="Địa chỉ" value={detailFetched.address} />
                 <DetailField label="Điện thoại" value={detailFetched.phone_number} />
@@ -482,25 +397,6 @@ export default function AdminCentersPage() {
           </div>
         )}
       </DetailModal>
-
-      <FormModal
-        open={refuseModal !== null}
-        onClose={() => setRefuseModal(null)}
-        title="Từ chối yêu cầu trung tâm"
-        submitLabel="Gửi từ chối"
-        submitVariant="danger"
-        submitDisabled={refuseModal != null && voteBusyId === refuseModal.id}
-        onSubmit={() => void submitRefuseVote()}
-      >
-        <p className="mb-2 text-sm text-slate-600">Lý do từ chối (không bắt buộc).</p>
-        <textarea
-          value={refuseReason}
-          onChange={(e) => setRefuseReason(e.target.value)}
-          rows={3}
-          className={`${inputClass} resize-y`}
-          placeholder="Lý do…"
-        />
-      </FormModal>
 
       <span className="sr-only">{formatVND(0)}</span>
     </div>

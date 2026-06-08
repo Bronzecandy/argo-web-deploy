@@ -273,7 +273,7 @@ export default function LeaderWithdrawalsPage() {
 
               {withdrawMode === 'child_quick' && (
                 <div className="rounded-lg border border-emerald-100 bg-emerald-50/80 px-4 py-3 text-xs text-emerald-950">
-                  Gửi yêu cầu tạo đề xuất rút cho các nhu cầu trẻ trong vùng (API không cần payload). Sau khi gửi,
+                  Gửi yêu cầu tạo đề xuất rút cho các nhu cầu trẻ trong vùng. Sau khi gửi,
                   kiểm tra danh sách đề xuất bên dưới.
                 </div>
               )}

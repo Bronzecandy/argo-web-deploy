@@ -26,7 +26,7 @@ export default function VoteProgressBar({
         <span className="font-medium text-slate-700">Tiến độ đồng ý</span>
         <span className={met ? 'font-semibold text-blue-800' : 'text-slate-600'}>
           {approve}%
-          <span className="ml-1 font-normal text-slate-400">/ mục {threshold}%</span>
+          
         </span>
       </div>
       <div className="relative h-2.5 overflow-hidden rounded-full bg-slate-100">

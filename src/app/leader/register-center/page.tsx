@@ -141,11 +141,11 @@ export default function LeaderRegisterCenterPage() {
       />
 
       {centerStatus === 'loading' ? (
-        <ContextBanner title="Đang tải vùng">Từ GET /centers/leader…</ContextBanner>
+        <ContextBanner title="Đang tải vùng">Đang xác định vùng được giao…</ContextBanner>
       ) : !leaderRegion?.trim() ? (
-        <ContextBanner variant="warning" title="Thiếu vùng từ API">
-          Không có trường <code className="rounded bg-white px-1">region</code> từ GET /centers/leader — không kiểm tra
-          được điều kiện nhân sự theo vùng. Khi API trả về vùng được gán, trang sẽ tự cập nhật.
+        <ContextBanner variant="warning" title="Chưa xác định được vùng">
+          Không tải được tên vùng được giao — không kiểm tra được điều kiện nhân sự theo vùng. Vui lòng thử tải lại
+          trang hoặc liên hệ quản trị nếu lỗi kéo dài.
           {centerError ? <span className="mt-2 block text-xs opacity-90">{centerError}</span> : null}
         </ContextBanner>
       ) : null}
@@ -213,7 +213,7 @@ export default function LeaderRegisterCenterPage() {
       {canLoadCounts ? (
         <PageSection
           title="Đề xuất trung tâm trong vùng"
-          description={`Dữ liệu từ GET /center-reqs (lọc theo ${leaderRegion})`}
+          description={leaderRegion ? `Chỉ hiển thị đề xuất trong vùng ${leaderRegion}.` : undefined}
         >
           {centerReqLoading ? (
             <div className="flex justify-center py-8">

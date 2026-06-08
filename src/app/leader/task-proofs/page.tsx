@@ -20,6 +20,7 @@ import { selectClass } from '@/src/lib/uiClasses';
 import { toast } from 'sonner';
 import { useAppSelector } from '@/src/store/hooks';
 import { useLeaderCenter } from '@/src/contexts/LeaderCenterContext';
+import { fetchTaskProofsForRegion, loadTaskIdsForRegion } from '@/src/lib/taskProofRegionFilter';
 import { taskProofService } from '@/src/services/task-proof.service';
 import { blobService } from '@/src/services/blob.service';
 import WalrusFallbackImg from '@/src/components/ui/WalrusFallbackImg';
@@ -106,15 +107,19 @@ export default function LeaderTaskProofsPage() {
 
     setLoading(true);
     try {
-      const res = await taskProofService.list({
+      const taskIdsInRegion = await loadTaskIdsForRegion(effectiveRegion);
+      const result = await fetchTaskProofsForRegion({
+        taskIdsInRegion,
         page,
-        page_size: PAGE_SIZE,
-        sort_order: 'desc',
-        region: effectiveRegion,
+        pageSize: PAGE_SIZE,
         review_status: status || undefined,
       });
-      setRows(res.data.data ?? []);
-      setTotalPages(Math.max(1, res.data.total_pages ?? 1));
+      if (result.effectivePage !== page) {
+        setPage(result.effectivePage);
+        return;
+      }
+      setRows(result.rows);
+      setTotalPages(result.totalPages);
     } catch (e) {
       console.error(e);
       toast.error('Không tải được bằng chứng nhiệm vụ');

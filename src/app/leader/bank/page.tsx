@@ -146,41 +146,49 @@ export default function LeaderBankPage() {
 
       {bank && !editing ? (
         <PageSection>
-          <dl className="grid gap-4 sm:grid-cols-2">
-            <div>
+          <dl className="grid gap-x-4 gap-y-5 sm:grid-cols-2">
+            <div className="min-w-0">
               <dt className="text-xs font-medium uppercase tracking-wide text-slate-500">Tổ chức ngân hàng</dt>
               <dd className="mt-1 text-sm font-medium text-slate-900">{bank.bank_org}</dd>
             </div>
-            <div>
+            <div className="min-w-0">
               <dt className="text-xs font-medium uppercase tracking-wide text-slate-500">Mã ngân hàng</dt>
               <dd className="mt-1 text-sm font-medium text-slate-900">{bank.bank_code}</dd>
             </div>
-            <div className="sm:col-span-2">
+            <div className="min-w-0 sm:col-span-2">
               <dt className="text-xs font-medium uppercase tracking-wide text-slate-500">Chủ tài khoản</dt>
               <dd className="mt-1 text-sm font-medium text-slate-900">{bank.owner_name}</dd>
             </div>
-            <div>
-              <dt className="text-xs font-medium uppercase tracking-wide text-slate-500">Mã client PayOS</dt>
-              <dd className="mt-1 font-mono text-sm text-slate-700">{bank.payos_client_id || '—'}</dd>
-            </div>
-            <div>
-              <dt className="text-xs font-medium uppercase tracking-wide text-slate-500">Khóa API PayOS</dt>
-              <dd className="mt-1 font-mono text-sm text-slate-700">
-                {bank.payos_api_key ? '••••••••' : '—'}
-              </dd>
-            </div>
-            <div className="sm:col-span-2">
-              <dt className="text-xs font-medium uppercase tracking-wide text-slate-500">Khóa checksum PayOS</dt>
-              <dd className="mt-1 font-mono text-sm text-slate-700">
-                {bank.payos_check_sum_key ? '••••••••' : '—'}
-              </dd>
-            </div>
           </dl>
+
+          <div className="mt-6 border-t border-slate-100 pt-6">
+            <p className="mb-4 text-xs font-semibold uppercase tracking-wide text-slate-500">PayOS</p>
+            <dl className="grid gap-x-4 gap-y-5 sm:grid-cols-2">
+              <div className="min-w-0 sm:col-span-2">
+                <dt className="text-xs font-medium uppercase tracking-wide text-slate-500">Mã client PayOS</dt>
+                <dd className="mt-1 break-all font-mono text-sm text-slate-700">
+                  {bank.payos_client_id || '—'}
+                </dd>
+              </div>
+              <div className="min-w-0 sm:col-span-2">
+                <dt className="text-xs font-medium uppercase tracking-wide text-slate-500">Khóa API PayOS</dt>
+                <dd className="mt-1 font-mono text-sm text-slate-700">
+                  {bank.payos_api_key ? '••••••••' : '—'}
+                </dd>
+              </div>
+              <div className="min-w-0 sm:col-span-2">
+                <dt className="text-xs font-medium uppercase tracking-wide text-slate-500">Khóa checksum PayOS</dt>
+                <dd className="mt-1 font-mono text-sm text-slate-700">
+                  {bank.payos_check_sum_key ? '••••••••' : '—'}
+                </dd>
+              </div>
+            </dl>
+          </div>
         </PageSection>
       ) : (
         <form onSubmit={handleSubmit} className="space-y-5">
         <PageSection>
-          <div className="flex items-center justify-between">
+          <div className="mb-6 flex items-center justify-between">
             <h2 className="text-lg font-semibold text-slate-900">{bank ? 'Sửa hồ sơ ngân hàng' : 'Tạo hồ sơ ngân hàng'}</h2>
             {bank && editing ? (
               <button
@@ -205,7 +213,7 @@ export default function LeaderBankPage() {
           </div>
 
           <div className="grid gap-4 sm:grid-cols-2">
-            <div>
+            <div className="min-w-0">
               <label className="mb-1.5 block text-sm font-medium text-slate-700">Mã ngân hàng</label>
               <input
                 className={inputClass}
@@ -214,7 +222,7 @@ export default function LeaderBankPage() {
                 required
               />
             </div>
-            <div>
+            <div className="min-w-0">
               <label className="mb-1.5 block text-sm font-medium text-slate-700">Tổ chức / chi nhánh</label>
               <input
                 className={inputClass}
@@ -223,7 +231,7 @@ export default function LeaderBankPage() {
                 required
               />
             </div>
-            <div className="sm:col-span-2">
+            <div className="min-w-0 sm:col-span-2">
               <label className="mb-1.5 block text-sm font-medium text-slate-700">Tên chủ tài khoản</label>
               <input
                 className={inputClass}
@@ -232,16 +240,20 @@ export default function LeaderBankPage() {
                 required
               />
             </div>
-            <div>
-              <label className="mb-1.5 block text-sm font-medium text-slate-700">PayOS client ID (tùy chọn)</label>
+          </div>
+
+          <div className="mt-6 grid gap-4 border-t border-slate-100 pt-6 sm:grid-cols-2">
+            <p className="text-sm font-medium text-slate-700 sm:col-span-2">PayOS (tùy chọn)</p>
+            <div className="min-w-0 sm:col-span-2">
+              <label className="mb-1.5 block text-sm font-medium text-slate-700">PayOS client ID</label>
               <input
-                className={inputClass}
+                className={`${inputClass} font-mono text-sm`}
                 value={form.payos_client_id}
                 onChange={(ev) => updateField('payos_client_id', ev.target.value)}
               />
             </div>
-            <div>
-              <label className="mb-1.5 block text-sm font-medium text-slate-700">PayOS API key (tùy chọn)</label>
+            <div className="min-w-0 sm:col-span-2">
+              <label className="mb-1.5 block text-sm font-medium text-slate-700">PayOS API key</label>
               <input
                 type="password"
                 autoComplete="off"
@@ -250,8 +262,8 @@ export default function LeaderBankPage() {
                 onChange={(ev) => updateField('payos_api_key', ev.target.value)}
               />
             </div>
-            <div className="sm:col-span-2">
-              <label className="mb-1.5 block text-sm font-medium text-slate-700">PayOS checksum key (tùy chọn)</label>
+            <div className="min-w-0 sm:col-span-2">
+              <label className="mb-1.5 block text-sm font-medium text-slate-700">PayOS checksum key</label>
               <input
                 type="password"
                 autoComplete="off"
@@ -262,7 +274,7 @@ export default function LeaderBankPage() {
             </div>
           </div>
 
-          <button type="submit" disabled={saving} className={btnPrimary}>
+          <button type="submit" disabled={saving} className={`${btnPrimary} mt-6`}>
             {saving ? 'Đang lưu…' : bank ? 'Lưu thay đổi' : 'Tạo hồ sơ'}
           </button>
         </PageSection>

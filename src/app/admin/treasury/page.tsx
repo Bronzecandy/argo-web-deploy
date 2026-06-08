@@ -18,8 +18,11 @@ import DetailField from '@/src/components/ui/DetailField';
 import TabBar from '@/src/components/ui/TabBar';
 import FilterToolbar from '@/src/components/ui/FilterToolbar';
 import FormModal from '@/src/components/ui/FormModal';
+import EmptyState from '@/src/components/ui/EmptyState';
+import ListPagination from '@/src/components/ui/ListPagination';
 import PageSection from '@/src/components/ui/PageSection';
 import TableIconButton from '@/src/components/ui/TableIconButton';
+import WithdrawProposalCard from '@/src/components/leader/WithdrawProposalCard';
 import { btnPrimary, btnSecondary } from '@/src/lib/uiClasses';
 import {
   formatDate,
@@ -409,72 +412,6 @@ function TreasuryPageContent() {
     </TableIconButton>
   );
 
-  const proposalColumns = (showLocalBadge: boolean) =>
-    [
-      ...(showLocalBadge
-        ? [
-            {
-              key: 'local',
-              label: 'Nguồn',
-              render: (r: WithdrawProposal) =>
-                r.is_from_local_pool ? (
-                  <span className="rounded bg-amber-100 px-1.5 py-0.5 text-[10px] font-semibold text-amber-800">
-                    Leader địa phương
-                  </span>
-                ) : (
-                  <span className="text-xs text-slate-400">—</span>
-                ),
-            },
-          ]
-        : []),
-      {
-        key: 'creator',
-        label: 'Người tạo',
-        render: (r: WithdrawProposal) => <CopyableTruncated value={r.creator} chars={6} />,
-      },
-      {
-        key: 'description',
-        label: 'Mô tả',
-        render: (r: WithdrawProposal) => <span className="max-w-xs truncate">{r.description || '-'}</span>,
-      },
-      { key: 'pool_name', label: 'Quỹ' },
-      {
-        key: 'withdraw_amount',
-        label: 'Số tiền',
-        render: (r: WithdrawProposal) => formatVND(r.withdraw_amount),
-      },
-      { key: 'approve_weight', label: 'Tổng duyệt' },
-      { key: 'refuse_weight', label: 'Tổng từ chối' },
-      {
-        key: 'status_ui',
-        label: 'Trạng thái',
-        render: (r: WithdrawProposal) => (
-          <StatusBadge status={getWithdrawProposalUiStatus(r)} />
-        ),
-      },
-      {
-        key: 'closed_at',
-        label: 'Thời gian đóng',
-        render: (r: WithdrawProposal) => (
-          <span className="whitespace-nowrap text-xs text-slate-700">{formatDateTimeSeconds(r.closed_at)}</span>
-        ),
-      },
-      { key: 'created_at', label: 'Ngày tạo', render: (r: WithdrawProposal) => formatDate(r.created_at) },
-      {
-        key: 'actions',
-        label: 'Thao tác',
-        className: 'whitespace-nowrap',
-        render: (r: WithdrawProposal) => (
-          <div className="flex flex-wrap gap-1">
-            {actionBtn('Chi tiết', () =>
-              setWithdrawDetail({ open: true, id: r.id, row: r }),
-            )}
-            {!r.is_executed && actionBtn('Xác nhận', () => openWithdrawConfirmModal(r.id), 'muted')}
-          </div>
-        ),
-      },
-    ] as const;
-
   const wd = withdrawDetailData || withdrawDetail.row;
 
   return (
@@ -522,15 +459,38 @@ function TreasuryPageContent() {
       <div className="mt-4">
         {tab === 'proposals' && (
           <PageSection title="Đề xuất rút tiền" noPadding>
-          <DataTable<WithdrawProposal>
-            loading={loading}
-            data={proposals}
-            page={pageProposals}
-            totalPages={totalPagesProposals}
-            onPageChange={setPageProposals}
-            emptyMessage="Không có đề xuất rút phù hợp bộ lọc"
-            columns={proposalColumns(true) as any}
-          />
+            {loading ? (
+              <div className="grid gap-4 p-4 sm:grid-cols-2 sm:p-5 xl:grid-cols-3">
+                {Array.from({ length: 3 }).map((_, i) => (
+                  <div key={i} className="animate-pulse rounded-xl border border-slate-200 p-5">
+                    <div className="mb-3 h-6 w-24 rounded bg-slate-100" />
+                    <div className="mb-2 h-5 w-full rounded bg-slate-100" />
+                    <div className="mb-4 h-4 w-2/3 rounded bg-slate-100" />
+                    <div className="h-2.5 w-full rounded-full bg-slate-100" />
+                  </div>
+                ))}
+              </div>
+            ) : proposals.length === 0 ? (
+              <EmptyState message="Không có đề xuất rút phù hợp bộ lọc" />
+            ) : (
+              <div className="grid gap-4 p-4 sm:grid-cols-2 sm:p-5 xl:grid-cols-3">
+                {proposals.map((row) => (
+                  <WithdrawProposalCard
+                    key={row.id}
+                    proposal={row}
+                    showSourceBadge
+                    onDetail={() => setWithdrawDetail({ open: true, id: row.id, row })}
+                  />
+                ))}
+              </div>
+            )}
+            {!loading && proposals.length > 0 && (
+              <ListPagination
+                page={pageProposals}
+                totalPages={totalPagesProposals}
+                onPageChange={setPageProposals}
+              />
+            )}
           </PageSection>
         )}
 

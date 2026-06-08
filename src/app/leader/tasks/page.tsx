@@ -582,7 +582,7 @@ export default function LeaderTasksPage() {
                 </div>
               </div>
               <p className="text-[11px] text-slate-500">
-                Gửi API dạng <span className="font-medium">DD/MM/YYYY</span> (chuyển tự động từ ngày đã chọn).
+                Ngày gửi lên hệ thống theo định dạng ngày/tháng/năm (tự chuyển từ ô chọn ngày).
               </p>
         </div>
       </FormModal>
