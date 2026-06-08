@@ -31,8 +31,8 @@ export default function VoteProgressBar({
       </div>
       <div className="relative h-2.5 overflow-hidden rounded-full bg-slate-100">
         <div
-          className={`absolute inset-y-0 left-0 rounded-full transition-all ${met ? 'bg-blue-800' : 'bg-blue-500'}`}
-          style={{ width: `${approve}%` }}
+          className={`absolute inset-y-0 left-0 min-w-0 rounded-full transition-all ${met ? 'bg-blue-800' : 'bg-blue-500'}`}
+          style={{ width: approve > 0 ? `max(${approve}%, 6px)` : '0%' }}
         />
         {refuse > 0 && (
           <div

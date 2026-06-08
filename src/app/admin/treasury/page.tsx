@@ -23,14 +23,21 @@ import ListPagination from '@/src/components/ui/ListPagination';
 import PageSection from '@/src/components/ui/PageSection';
 import TableIconButton from '@/src/components/ui/TableIconButton';
 import WithdrawProposalCard from '@/src/components/leader/WithdrawProposalCard';
+import VoteProgressBar from '@/src/components/ui/VoteProgressBar';
 import { btnPrimary, btnSecondary } from '@/src/lib/uiClasses';
 import {
   formatDate,
   formatDateTimeSeconds,
   formatVND,
+  getWithdrawApprovalPercent,
   getWithdrawProposalUiStatus,
+  getWithdrawRefusePercent,
   parseDigitsToNumber,
 } from '@/src/lib/formatters';
+import {
+  canAdminConfirmWithdrawTransfer,
+  mergeWithdrawProposalDetail,
+} from '@/src/lib/withdrawProposalDisplay';
 import { withdrawService } from '@/src/services/withdraw.service';
 import { pendingWithdrawService } from '@/src/services/pending-withdraw.service';
 import { pendingSpecialNeedsService } from '@/src/services/pending-special-needs.service';
@@ -412,7 +419,7 @@ function TreasuryPageContent() {
     </TableIconButton>
   );
 
-  const wd = withdrawDetailData || withdrawDetail.row;
+  const wd = mergeWithdrawProposalDetail(withdrawDetail.row ?? null, withdrawDetailData);
 
   return (
     <div>
@@ -619,6 +626,16 @@ function TreasuryPageContent() {
               }
             />
             <DetailField label="Trạng thái" value={<StatusBadge status={getWithdrawProposalUiStatus(wd)} />} />
+            <div className="border-b border-slate-100 py-3">
+              <VoteProgressBar
+                approvePercent={getWithdrawApprovalPercent(wd)}
+                refusePercent={getWithdrawRefusePercent(wd)}
+              />
+            </div>
+            <DetailField
+              label="Trọng số"
+              value={`Đồng ý ${wd.approve_weight} · Từ chối ${wd.refuse_weight}`}
+            />
             <DetailField label="Thời gian đóng" value={formatDateTimeSeconds(wd.closed_at)} />
             <DetailField label="Ngày tạo" value={formatDate(wd.created_at)} />
             {wd.proof_blob_id && (
@@ -629,7 +646,7 @@ function TreasuryPageContent() {
                 </div>
               </div>
             )}
-            {!wd.is_executed && (
+            {canAdminConfirmWithdrawTransfer(wd) && (
               <div className="mt-4 space-y-3 border-t border-slate-100 pt-4">
                 <p className="text-xs font-medium text-slate-600">Xác nhận chuyển tiền</p>
                 <p className="text-xs text-slate-500">

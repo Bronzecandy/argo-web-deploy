@@ -25,6 +25,7 @@ import {
 } from '@/src/lib/formatters';
 import { useAppSelector } from '@/src/store/hooks';
 import { withdrawService } from '@/src/services/withdraw.service';
+import { mergeWithdrawProposalDetail } from '@/src/lib/withdrawProposalDisplay';
 import { useExecuteTransaction } from '@/src/hooks/useExecuteTransaction';
 import FileUploadInput from '@/src/components/ui/FileUploadInput';
 import { Plus } from 'lucide-react';
@@ -65,7 +66,8 @@ export default function LeaderWithdrawalsPage() {
 
   const [proposalDetailOpen, setProposalDetailOpen] = useState(false);
   const [proposalDetailId, setProposalDetailId] = useState<string | null>(null);
-  const [proposalDetail, setProposalDetail] = useState<WithdrawProposal | null>(null);
+  const [proposalDetailRow, setProposalDetailRow] = useState<WithdrawProposal | null>(null);
+  const [proposalDetailFetched, setProposalDetailFetched] = useState<WithdrawProposal | null>(null);
   const [proposalDetailLoading, setProposalDetailLoading] = useState(false);
 
   const loadProposals = useCallback(async () => {
@@ -99,14 +101,14 @@ export default function LeaderWithdrawalsPage() {
 
   useEffect(() => {
     if (!proposalDetailOpen || !proposalDetailId) {
-      setProposalDetail(null);
+      setProposalDetailFetched(null);
       return;
     }
     setProposalDetailLoading(true);
     void withdrawService
       .getById(proposalDetailId)
-      .then((res) => setProposalDetail(res.data))
-      .catch(() => setProposalDetail(null))
+      .then((res) => setProposalDetailFetched(res.data ?? null))
+      .catch(() => setProposalDetailFetched(null))
       .finally(() => setProposalDetailLoading(false));
   }, [proposalDetailOpen, proposalDetailId]);
 
@@ -159,10 +161,14 @@ export default function LeaderWithdrawalsPage() {
     setSubmitting(false);
   }
 
-  const openProposalDetail = (id: string) => {
-    setProposalDetailId(id);
+  const openProposalDetail = (row: WithdrawProposal) => {
+    setProposalDetailRow(row);
+    setProposalDetailFetched(null);
+    setProposalDetailId(row.id);
     setProposalDetailOpen(true);
   };
+
+  const proposalDetail = mergeWithdrawProposalDetail(proposalDetailRow, proposalDetailFetched);
 
   const regionBlocked = !canUseRegion;
   const poolFieldsDisabled = regionBlocked || !poolId?.trim();
@@ -211,7 +217,7 @@ export default function LeaderWithdrawalsPage() {
                 <WithdrawProposalCard
                   key={row.id}
                   proposal={row}
-                  onDetail={() => openProposalDetail(row.id)}
+                  onDetail={() => openProposalDetail(row)}
                 />
               ))}
             </div>
@@ -334,6 +340,8 @@ export default function LeaderWithdrawalsPage() {
         onClose={() => {
           setProposalDetailOpen(false);
           setProposalDetailId(null);
+          setProposalDetailRow(null);
+          setProposalDetailFetched(null);
         }}
         loading={proposalDetailLoading}
         wide
@@ -345,7 +353,7 @@ export default function LeaderWithdrawalsPage() {
             <DetailField label="Số tiền" value={formatVND(proposalDetail.withdraw_amount)} />
             <DetailField label="Trạng thái" value={<StatusBadge status={getWithdrawProposalUiStatus(proposalDetail)} />} />
             <DetailField label="Mô tả" value={proposalDetail.description} />
-            <div className="border-b border-slate-100 py-2.5">
+            <div className="border-b border-slate-100 py-3">
               <VoteProgressBar
                 approvePercent={getWithdrawApprovalPercent(proposalDetail)}
                 refusePercent={getWithdrawRefusePercent(proposalDetail)}
