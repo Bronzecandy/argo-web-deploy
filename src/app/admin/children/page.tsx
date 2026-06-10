@@ -5,16 +5,14 @@ import { toast } from 'sonner';
 import PageHeader from '@/src/components/ui/PageHeader';
 import DataTable from '@/src/components/ui/DataTable';
 import DetailModal from '@/src/components/ui/DetailModal';
-import DetailField from '@/src/components/ui/DetailField';
 import CopyableTruncated from '@/src/components/ui/CopyableTruncated';
-import WalrusFallbackImg from '@/src/components/ui/WalrusFallbackImg';
-import ExpandableImage from '@/src/components/ui/ExpandableImage';
+import ChildProfileDetailContent from '@/src/components/child/ChildProfileDetailContent';
 import FilterToolbar from '@/src/components/ui/FilterToolbar';
 import PageSection from '@/src/components/ui/PageSection';
 import TableIconButton from '@/src/components/ui/TableIconButton';
 import ContextBanner from '@/src/components/ui/ContextBanner';
 import { inputClass, selectClass } from '@/src/lib/uiClasses';
-import { BLOB_URL } from '@/src/lib/constants';
+import { mergeChildProfileDetail } from '@/src/lib/childDisplay';
 import { formatDate } from '@/src/lib/formatters';
 import { childrenService } from '@/src/services/children.service';
 import type { Child } from '@/src/types/api.types';
@@ -28,23 +26,6 @@ const GENDER_OPTIONS = [
   { value: 'other', label: 'Khác' },
 ];
 
-function ChildDetailWalrusImage({
-  label,
-  blobId,
-}: {
-  label: string;
-  blobId: string | null | undefined;
-}) {
-  const bid = blobId?.trim();
-  if (!bid) return null;
-  return (
-    <div>
-      <p className="mb-1 text-xs font-medium text-slate-500">{label}</p>
-      <WalrusFallbackImg blobId={bid} alt={label} className="h-24 w-24 rounded-lg border border-slate-200 object-cover" />
-    </div>
-  );
-}
-
 export default function AdminChildrenPage() {
   const [childLoading, setChildLoading] = useState(true);
   const [children, setChildren] = useState<Child[]>([]);
@@ -55,6 +36,7 @@ export default function AdminChildrenPage() {
 
   const [detailOpen, setDetailOpen] = useState(false);
   const [detailId, setDetailId] = useState<string | null>(null);
+  const [detailListRow, setDetailListRow] = useState<Child | null>(null);
   const [detailLoading, setDetailLoading] = useState(false);
   const [detailChild, setDetailChild] = useState<Child | null>(null);
   const [detailErr, setDetailErr] = useState<string | null>(null);
@@ -95,6 +77,7 @@ export default function AdminChildrenPage() {
     }
     setDetailLoading(true);
     setDetailErr(null);
+    setDetailChild(null);
     void childrenService
       .getById(detailId)
       .then((res) => setDetailChild(res.data ?? null))
@@ -108,8 +91,9 @@ export default function AdminChildrenPage() {
       .finally(() => setDetailLoading(false));
   }, [detailOpen, detailId]);
 
-  function openDetail(id: string) {
-    setDetailId(id);
+  function openDetail(row: Child) {
+    setDetailListRow(row);
+    setDetailId(row.id);
     setDetailOpen(true);
   }
 
@@ -189,7 +173,7 @@ export default function AdminChildrenPage() {
                   variant="primary"
                   onClick={(e) => {
                     e.stopPropagation();
-                    openDetail(c.id);
+                    openDetail(c);
                   }}
                 >
                   Chi tiết
@@ -212,55 +196,19 @@ export default function AdminChildrenPage() {
         onClose={() => {
           setDetailOpen(false);
           setDetailId(null);
+          setDetailListRow(null);
         }}
         loading={detailLoading}
         error={detailErr}
-        wide
+        extraWide
       >
-        {detailChild && (
-          <div className="space-y-4">
-            <div className="flex flex-wrap gap-4">
-              <ChildDetailWalrusImage label="Ảnh đại diện" blobId={detailChild.avatar_blob_id} />
-              <ChildDetailWalrusImage label="Ảnh nhà ở" blobId={detailChild.home_blob_id} />
-              <ChildDetailWalrusImage label="Giấy khai sinh" blobId={detailChild.birth_certificate_blob_id} />
-              <ChildDetailWalrusImage
-                label="CMND/CCCD người giám hộ"
-                blobId={detailChild.first_guardian?.identity_card_blob_id}
-              />
-              <ChildDetailWalrusImage
-                label="CMND/CCCD người giám hộ thứ hai"
-                blobId={detailChild.second_guardian?.identity_card_blob_id}
-              />
-            </div>
-            <DetailField
-              label="Họ tên"
-              value={
-                <span className="font-medium">
-                  {detailChild.first_name} {detailChild.last_name}
-                </span>
-              }
-            />
-            <DetailField label="Mã" value={<CopyableTruncated value={detailChild.id} chars={8} />} />
-            <DetailField label="Vùng" value={detailChild.region} />
-            <DetailField label="Ngày sinh" value={formatDate(detailChild.date_of_birth)} />
-            <DetailField label="Địa chỉ nhà" value={detailChild.home_address || '—'} />
-            {detailChild.image_blob_ids && detailChild.image_blob_ids.length > 0 && (
-              <div className="border-b border-slate-100 py-2.5 last:border-0">
-                <div className="text-xs font-medium text-slate-500">Thư viện ảnh</div>
-                <div className="mt-2 flex flex-wrap gap-2">
-                  {detailChild.image_blob_ids.map((bid) => (
-                    <ExpandableImage
-                      key={bid}
-                      src={BLOB_URL(bid)}
-                      alt=""
-                      className="h-20 w-20 rounded-md border border-slate-200 object-cover"
-                    />
-                  ))}
-                </div>
-              </div>
-            )}
-          </div>
-        )}
+        {(() => {
+          const listRow = detailListRow;
+          const detail = detailChild;
+          if (!listRow && !detail) return null;
+          const c = mergeChildProfileDetail(listRow ?? detail!, detail);
+          return <ChildProfileDetailContent child={c} />;
+        })()}
       </DetailModal>
     </div>
   );

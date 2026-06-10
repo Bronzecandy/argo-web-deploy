@@ -1,3 +1,4 @@
+import { unwrapEntityFromGetById } from '@/src/lib/paginationUnwrap';
 import { apiService } from './api.service';
 import type {
   PaginationResponse,
@@ -14,7 +15,8 @@ class ChildUploadService {
   }
 
   async getById(id: string) {
-    return apiService.get<PaginationResponse>(`/child-upload-reqs/${id}`);
+    const res = await apiService.get<unknown>(`/child-upload-reqs/${id}`);
+    return { ...res, data: unwrapEntityFromGetById<UploadChildRequestEntity>(res.data) };
   }
 
   async getByWallet(walletAddress: string, page?: number) {

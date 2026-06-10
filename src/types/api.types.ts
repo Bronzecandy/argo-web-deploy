@@ -156,10 +156,14 @@ export interface CreateCenterRequest {
 
 // ─── Child Upload ────────────────────────────────────────
 export interface ChildGuardianProfile {
-  full_name: string;
-  phone_number: string;
-  relation: string;
-  identity_card_blob_id: string;
+  full_name?: string;
+  phone_number?: string;
+  relation?: string;
+  identity_card_blob_id?: string;
+  identity_card_img_url?: string;
+  guardian_full_name?: string;
+  guardian_phone_number?: string;
+  guardian_relation?: string;
 }
 
 export interface UploadChildRequestEntity {
@@ -167,7 +171,9 @@ export interface UploadChildRequestEntity {
   profile_id: string;
   identity_code: string;
   avatar_blob_id: string;
+  avatar_img_url?: string;
   birth_certificate_blob_id?: string;
+  birth_certificate_img_url?: string;
   region: string;
   first_name: string;
   last_name: string;
@@ -175,6 +181,7 @@ export interface UploadChildRequestEntity {
   date_of_birth: string;
   home_address?: string;
   home_blob_id?: string;
+  home_img_url?: string;
   first_guardian_profile?: ChildGuardianProfile;
   second_guardian_profile?: ChildGuardianProfile;
   ai_evaluation?: string;
@@ -211,6 +218,7 @@ export interface GuardianInput {
   guardian_phone_number: string;
   guardian_relation: string;
   identity_card_blob_id: string;
+  identity_card_img_url?: string;
 }
 
 // ─── Children (on-chain) ────────────────────────────────
@@ -224,8 +232,11 @@ export interface Child {
   home_address: string;
   identity_code: string;
   avatar_blob_id: string;
+  avatar_img_url?: string;
   home_blob_id: string;
+  home_img_url?: string;
   birth_certificate_blob_id?: string;
+  birth_certificate_img_url?: string;
   first_guardian?: GuardianInput;
   second_guardian?: GuardianInput;
   meal_need: string;

@@ -6,7 +6,8 @@ import { toast } from 'sonner';
 import PageHeader from '@/src/components/ui/PageHeader';
 import DataTable from '@/src/components/ui/DataTable';
 import DetailModal from '@/src/components/ui/DetailModal';
-import DetailField from '@/src/components/ui/DetailField';
+import ChildProfileDetailContent from '@/src/components/child/ChildProfileDetailContent';
+import UploadChildRequestDetailContent from '@/src/components/child/UploadChildRequestDetailContent';
 import ContextBanner from '@/src/components/ui/ContextBanner';
 import FilterToolbar from '@/src/components/ui/FilterToolbar';
 import FormModal from '@/src/components/ui/FormModal';
@@ -14,14 +15,11 @@ import PageSection from '@/src/components/ui/PageSection';
 import TabBar from '@/src/components/ui/TabBar';
 import TableIconButton from '@/src/components/ui/TableIconButton';
 import { inputClass, selectClass } from '@/src/lib/uiClasses';
-import EntityBlobThumb from '@/src/components/ui/EntityBlobThumb';
 import GroupedNumericInput from '@/src/components/ui/GroupedNumericInput';
 import StatusBadge from '@/src/components/ui/StatusBadge';
 import CopyableTruncated from '@/src/components/ui/CopyableTruncated';
-import AiInsightPanel from '@/src/components/ui/AiInsightPanel';
-import AiEvaluationBadge from '@/src/components/ui/AiEvaluationBadge';
-import { collectBlobIdEntries, blobFieldDisplayLabel } from '@/src/lib/blobFields';
-import { formatDate, formatDateTimeSeconds } from '@/src/lib/formatters';
+import { mergeChildProfileDetail, mergeUploadChildDetail } from '@/src/lib/childDisplay';
+import { formatDate } from '@/src/lib/formatters';
 import { childNeedsService } from '@/src/services/child-needs.service';
 import { childUploadService } from '@/src/services/child-upload.service';
 import { childrenService } from '@/src/services/children.service';
@@ -92,21 +90,6 @@ function validateNeedAmounts(
   return null;
 }
 
-function uploadBlobEntries(u: UploadChildRequestEntity): { key: string; blobId: string }[] {
-  const parts: { key: string; blobId: string }[] = [...collectBlobIdEntries(u)];
-  if (u.first_guardian_profile) {
-    for (const e of collectBlobIdEntries(u.first_guardian_profile)) {
-      parts.push({ key: `first_guardian.${e.key}`, blobId: e.blobId });
-    }
-  }
-  if (u.second_guardian_profile) {
-    for (const e of collectBlobIdEntries(u.second_guardian_profile)) {
-      parts.push({ key: `second_guardian.${e.key}`, blobId: e.blobId });
-    }
-  }
-  return parts;
-}
-
 export default function LeaderChildrenPage() {
   const { user } = useAppSelector((state) => state.auth);
   const { execute, executing } = useExecuteTransaction();
@@ -137,7 +120,10 @@ export default function LeaderChildrenPage() {
   const [childDetailLoading, setChildDetailLoading] = useState(false);
 
   const [uploadDetailOpen, setUploadDetailOpen] = useState(false);
+  const [uploadDetailId, setUploadDetailId] = useState<string | null>(null);
   const [uploadDetailRow, setUploadDetailRow] = useState<UploadChildRequestEntity | null>(null);
+  const [uploadDetailData, setUploadDetailData] = useState<UploadChildRequestEntity | null>(null);
+  const [uploadDetailLoading, setUploadDetailLoading] = useState(false);
 
   /** Approve path: optional review, then update child needs on-chain. */
   const [approveModal, setApproveModal] = useState<UploadChildRequestEntity | null>(null);
@@ -232,6 +218,20 @@ export default function LeaderChildrenPage() {
       .catch(() => setChildDetailData(null))
       .finally(() => setChildDetailLoading(false));
   }, [childDetailOpen, childDetailId]);
+
+  useEffect(() => {
+    if (!uploadDetailOpen || !uploadDetailId) {
+      setUploadDetailData(null);
+      return;
+    }
+    setUploadDetailLoading(true);
+    setUploadDetailData(null);
+    void childUploadService
+      .getById(uploadDetailId)
+      .then((res) => setUploadDetailData(res.data))
+      .catch(() => setUploadDetailData(null))
+      .finally(() => setUploadDetailLoading(false));
+  }, [uploadDetailOpen, uploadDetailId]);
 
   const applyNeedUpdatesToChild = useCallback(
     async (
@@ -618,11 +618,6 @@ export default function LeaderChildrenPage() {
               { key: 'gender', label: 'Giới tính', render: (u) => <span className="capitalize">{u.gender}</span> },
               { key: 'region', label: 'Vùng' },
               { key: 'status', label: 'Trạng thái', render: (u) => <StatusBadge status={u.status} /> },
-              {
-                key: 'ai_evaluation',
-                label: 'AI',
-                render: (u) => <AiEvaluationBadge record={u} />,
-              },
               { key: 'created_at', label: 'Ngày tạo', render: (u) => formatDate(u.created_at) },
               {
                 key: 'actions',
@@ -636,6 +631,7 @@ export default function LeaderChildrenPage() {
                     <TableIconButton
                       onClick={() => {
                         setUploadDetailRow(u);
+                        setUploadDetailId(u.id);
                         setUploadDetailOpen(true);
                       }}
                     >
@@ -948,66 +944,14 @@ export default function LeaderChildrenPage() {
           setChildDetailRow(null);
         }}
         loading={childDetailLoading}
-        wide
+        extraWide
       >
         {(() => {
-          const c = childDetailData ?? childDetailRow;
-          if (!c) return null;
-          const blobs = collectBlobIdEntries(c);
-          const gallery = (c.image_blob_ids ?? []).filter((id) => typeof id === 'string' && id.trim());
-          return (
-            <div>
-              <DetailField label="Mã" value={<CopyableTruncated value={c.id} chars={8} />} />
-              <DetailField label="Tên" value={`${c.first_name} ${c.last_name}`} />
-              <DetailField label="Giới tính" value={<span className="capitalize">{c.gender}</span>} />
-              <DetailField label="Vùng" value={c.region} />
-              <DetailField label="Ngày sinh" value={formatDate(c.date_of_birth)} />
-              <DetailField label="Mã định danh" value={<CopyableTruncated value={c.identity_code} />} />
-              <DetailField label="Địa chỉ nhà" value={c.home_address || '—'} />
-              <DetailField label="Nhu cầu bữa ăn" value={c.meal_need ? <CopyableTruncated value={c.meal_need} /> : '—'} />
-              <DetailField label="Nhu cầu bảo hiểm y tế" value={c.health_insurance_need ? <CopyableTruncated value={c.health_insurance_need} /> : '—'} />
-              <DetailField
-                label="Nhu cầu sách"
-                value={
-                  c.books_needs?.length ? (
-                    <div className="flex flex-wrap gap-2">
-                      {c.books_needs.map((bid) => (
-                        <CopyableTruncated key={bid} value={bid} />
-                      ))}
-                    </div>
-                  ) : (
-                    '—'
-                  )
-                }
-              />
-              <DetailField label="Người tải lên" value={c.uploaded_by ? <CopyableTruncated value={c.uploaded_by} /> : '—'} />
-              <DetailField label="Ngày tải lên" value={formatDate(c.uploaded_at)} />
-              <DetailField label="Cập nhật lúc" value={formatDate(c.updated_at)} />
-              {gallery.length > 0 && (
-                <div className="border-t border-slate-100 pt-3">
-                  <div className="mb-2 text-xs font-medium text-slate-600">Thư viện ảnh</div>
-                  <div className="flex flex-wrap gap-4">
-                    {gallery.map((blobId) => (
-                      <EntityBlobThumb key={blobId} blobId={blobId} source="api" className="h-20 w-20 rounded-md border border-slate-200 object-cover" />
-                    ))}
-                  </div>
-                </div>
-              )}
-              {blobs.length > 0 && (
-                <div className="border-t border-slate-100 pt-3">
-                  <div className="mb-2 text-xs font-medium text-slate-600">Hình ảnh</div>
-                  <div className="flex flex-wrap gap-4">
-                    {blobs.map(({ key, blobId }) => (
-                      <div key={key} className="text-center">
-                        <EntityBlobThumb blobId={blobId} source="walrus" className="h-20 w-20 rounded-md border border-slate-200 object-cover" />
-                        <div className="mt-1 text-[10px] text-slate-500">{blobFieldDisplayLabel(key)}</div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </div>
-          );
+          const listRow = childDetailRow;
+          const detail = childDetailData;
+          if (!listRow && !detail) return null;
+          const c = mergeChildProfileDetail(listRow ?? detail!, detail);
+          return <ChildProfileDetailContent child={c} />;
         })()}
       </DetailModal>
 
@@ -1016,69 +960,19 @@ export default function LeaderChildrenPage() {
         open={uploadDetailOpen}
         onClose={() => {
           setUploadDetailOpen(false);
+          setUploadDetailId(null);
           setUploadDetailRow(null);
         }}
-        wide
+        loading={uploadDetailLoading}
+        extraWide
       >
-        {uploadDetailRow &&
-          (() => {
-            const u = uploadDetailRow;
-            const blobs = uploadBlobEntries(u);
-            return (
-              <div>
-                <DetailField label="Mã" value={<CopyableTruncated value={u.id} chars={8} />} />
-                <DetailField label="Mã hồ sơ" value={<CopyableTruncated value={u.profile_id} chars={8} />} />
-                <DetailField label="Tên" value={`${u.first_name} ${u.last_name}`} />
-                <DetailField label="Giới tính" value={<span className="capitalize">{u.gender}</span>} />
-                <DetailField label="Vùng" value={u.region} />
-                <DetailField label="Mã định danh" value={<CopyableTruncated value={u.identity_code} />} />
-                <DetailField label="Ngày sinh" value={formatDate(u.date_of_birth)} />
-                <DetailField label="Địa chỉ nhà" value={u.home_address ?? '—'} />
-                <DetailField label="Trạng thái" value={<StatusBadge status={u.status} />} />
-                <DetailField label="Trạng thái duyệt" value={u.review_status ? <StatusBadge status={u.review_status} /> : <span className="text-slate-400">—</span>} />
-                <DetailField label="Người duyệt" value={u.reviewed_by ? <CopyableTruncated value={u.reviewed_by} /> : '—'} />
-                <DetailField label="Người tạo" value={<CopyableTruncated value={u.created_by} />} />
-                <DetailField label="Ngày tạo" value={formatDate(u.created_at)} />
-                <DetailField label="Cập nhật lúc" value={formatDate(u.updated_at)} />
-                <DetailField label="Thời gian đóng" value={formatDateTimeSeconds(u.closed_at)} />
-                <DetailField label="Xác nhận tải lên" value={u.is_confirm_upload ? 'Có' : 'Không'} />
-                <AiInsightPanel record={u} className="my-4" />
-                {u.first_guardian_profile && (
-                  <div className="border-t border-slate-100 py-2">
-                    <div className="text-xs font-medium text-slate-500">Người giám hộ thứ nhất</div>
-                    <div className="mt-1 text-sm text-slate-800">
-                      {u.first_guardian_profile.full_name} · {u.first_guardian_profile.relation} · {u.first_guardian_profile.phone_number}
-                    </div>
-                  </div>
-                )}
-                {u.second_guardian_profile && (
-                  <div className="border-t border-slate-100 py-2">
-                    <div className="text-xs font-medium text-slate-500">Người giám hộ thứ hai</div>
-                    <div className="mt-1 text-sm text-slate-800">
-                      {u.second_guardian_profile.full_name} · {u.second_guardian_profile.relation} · {u.second_guardian_profile.phone_number}
-                    </div>
-                  </div>
-                )}
-                {blobs.length > 0 && (
-                  <div className="border-t border-slate-100 pt-3">
-                    <div className="mb-2 text-xs font-medium text-slate-600">Hình ảnh</div>
-                    <div className="flex flex-wrap gap-4">
-                      {blobs.map(({ key, blobId }) => (
-                        <div key={key} className="text-center">
-                          <EntityBlobThumb
-                            blobId={blobId}
-                            source="walrus"
-                            className="h-20 w-20 rounded-md border border-slate-200 object-cover"
-                          />
-                          <div className="mt-1 text-[10px] text-slate-500">{blobFieldDisplayLabel(key)}</div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-              </div>
-            );
-          })()}
+        {(() => {
+          const listRow = uploadDetailRow;
+          const detail = uploadDetailData;
+          if (!listRow && !detail) return null;
+          const u = mergeUploadChildDetail(listRow ?? detail!, detail);
+          return <UploadChildRequestDetailContent record={u} />;
+        })()}
       </DetailModal>
     </div>
   );
