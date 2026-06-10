@@ -461,6 +461,8 @@ export interface BankProfile {
   payos_client_id?: string;
   payos_api_key?: string;
   payos_check_sum_key?: string;
+  /** BE chỉ trả cờ đã lưu thông tin PayOS — không trả key ra client. */
+  is_upload_info?: boolean;
   created_at: string;
   updated_at: string;
 }

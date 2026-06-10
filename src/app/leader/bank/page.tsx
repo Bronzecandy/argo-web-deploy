@@ -9,7 +9,13 @@ import { bankService } from '@/src/services/bank.service';
 import type { BankProfile, CreateBankProfileRequest, UpdateBankProfileRequest } from '@/src/types/api.types';
 import PageSection from '@/src/components/ui/PageSection';
 import ContextBanner from '@/src/components/ui/ContextBanner';
-import { btnPrimary, btnSecondary, inputClass } from '@/src/lib/uiClasses';
+import { btnPrimary, inputClass } from '@/src/lib/uiClasses';
+
+const EMPTY_PAYOS_FORM = {
+  payos_client_id: '',
+  payos_api_key: '',
+  payos_check_sum_key: '',
+} as const;
 
 function getErrorMessage(e: unknown, fallback: string) {
   if (e && typeof e === 'object' && 'response' in e) {
@@ -17,6 +23,20 @@ function getErrorMessage(e: unknown, fallback: string) {
     if (msg) return String(msg);
   }
   return fallback;
+}
+
+function PayosLinkTag({ linked }: { linked: boolean }) {
+  return (
+    <span
+      className={
+        linked
+          ? 'inline-flex items-center rounded-full bg-emerald-100 px-2.5 py-1 text-xs font-semibold text-emerald-800'
+          : 'inline-flex items-center rounded-full bg-slate-100 px-2.5 py-1 text-xs font-semibold text-slate-600'
+      }
+    >
+      {linked ? 'Đã liên kết PayOS' : 'Chưa liên kết PayOS'}
+    </span>
+  );
 }
 
 export default function LeaderBankPage() {
@@ -51,9 +71,7 @@ export default function LeaderBankPage() {
           bank_code: profile.bank_code ?? '',
           bank_org: profile.bank_org ?? '',
           owner_name: profile.owner_name ?? '',
-          payos_client_id: profile.payos_client_id ?? '',
-          payos_api_key: profile.payos_api_key ?? '',
-          payos_check_sum_key: profile.payos_check_sum_key ?? '',
+          ...EMPTY_PAYOS_FORM,
         });
         setEditing(false);
       } else {
@@ -62,9 +80,7 @@ export default function LeaderBankPage() {
           bank_code: '',
           bank_org: '',
           owner_name: '',
-          payos_client_id: '',
-          payos_api_key: '',
-          payos_check_sum_key: '',
+          ...EMPTY_PAYOS_FORM,
         });
       }
     } catch (e: unknown) {
@@ -168,27 +184,11 @@ export default function LeaderBankPage() {
           </dl>
 
           <div className="mt-6 border-t border-slate-100 pt-6">
-            <p className="mb-4 text-xs font-semibold uppercase tracking-wide text-slate-500">PayOS</p>
-            <dl className="grid gap-x-4 gap-y-5 sm:grid-cols-2">
-              <div className="min-w-0 sm:col-span-2">
-                <dt className="text-xs font-medium uppercase tracking-wide text-slate-500">Mã client PayOS</dt>
-                <dd className="mt-1 break-all font-mono text-sm text-slate-700">
-                  {bank.payos_client_id || '—'}
-                </dd>
-              </div>
-              <div className="min-w-0 sm:col-span-2">
-                <dt className="text-xs font-medium uppercase tracking-wide text-slate-500">Khóa API PayOS</dt>
-                <dd className="mt-1 font-mono text-sm text-slate-700">
-                  {bank.payos_api_key ? '••••••••' : '—'}
-                </dd>
-              </div>
-              <div className="min-w-0 sm:col-span-2">
-                <dt className="text-xs font-medium uppercase tracking-wide text-slate-500">Khóa checksum PayOS</dt>
-                <dd className="mt-1 font-mono text-sm text-slate-700">
-                  {bank.payos_check_sum_key ? '••••••••' : '—'}
-                </dd>
-              </div>
-            </dl>
+            <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-slate-500">PayOS (tùy chọn)</p>
+            <PayosLinkTag linked={bank.is_upload_info === true} />
+            <p className="mt-2 text-xs text-slate-500">
+              Thông tin khóa PayOS không hiển thị vì lý do bảo mật. Bấm <strong>Sửa</strong> nếu bạn muốn liên kết hoặc cập nhật PayOS.
+            </p>
           </div>
         </PageSection>
       ) : (
@@ -205,9 +205,7 @@ export default function LeaderBankPage() {
                     bank_code: bank.bank_code ?? '',
                     bank_org: bank.bank_org ?? '',
                     owner_name: bank.owner_name ?? '',
-                    payos_client_id: bank.payos_client_id ?? '',
-                    payos_api_key: bank.payos_api_key ?? '',
-                    payos_check_sum_key: bank.payos_check_sum_key ?? '',
+                    ...EMPTY_PAYOS_FORM,
                   });
                 }}
                 className="inline-flex items-center gap-1 text-sm text-slate-600 hover:text-slate-900"
@@ -249,7 +247,12 @@ export default function LeaderBankPage() {
           </div>
 
           <div className="mt-6 grid gap-4 border-t border-slate-100 pt-6 sm:grid-cols-2">
-            <p className="text-sm font-medium text-slate-700 sm:col-span-2">PayOS (tùy chọn)</p>
+            <div className="sm:col-span-2">
+              <p className="text-sm font-medium text-slate-700">PayOS (tùy chọn)</p>
+              <p className="mt-1 text-xs text-slate-500">
+                Chỉ điền khi muốn liên kết PayOS lần đầu hoặc thay đổi thông tin. Để trống nếu giữ nguyên cấu hình hiện tại.
+              </p>
+            </div>
             <div className="min-w-0 sm:col-span-2">
               <label className="mb-1.5 block text-sm font-medium text-slate-700">PayOS client ID</label>
               <input
