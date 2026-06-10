@@ -5,7 +5,6 @@ import StatusBadge from '@/src/components/ui/StatusBadge';
 import CopyableTruncated from '@/src/components/ui/CopyableTruncated';
 import AiInsightPanel from '@/src/components/ui/AiInsightPanel';
 import DetailMediaTile from '@/src/components/registration/DetailMediaTile';
-import RegistrationVoteSummary from '@/src/components/registration/RegistrationVoteSummary';
 import GuardianDetailCard from '@/src/components/child/GuardianDetailCard';
 import { formatGenderVi, normalizeGuardian } from '@/src/lib/childDisplay';
 import { formatDate, formatDateTimeSeconds } from '@/src/lib/formatters';
@@ -47,8 +46,6 @@ export default function UploadChildRequestDetailContent({ record: u }: UploadChi
           Giới tính: <span className="font-medium text-slate-800">{formatGenderVi(u.gender)}</span>
         </p>
       </div>
-
-      <RegistrationVoteSummary record={u} />
 
       <div className="grid gap-x-6 sm:grid-cols-2">
         <DetailField label="Mã yêu cầu" value={<CopyableTruncated value={u.id} chars={10} />} />
