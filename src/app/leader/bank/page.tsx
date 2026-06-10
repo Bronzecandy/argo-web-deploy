@@ -8,6 +8,7 @@ import { useAppSelector } from '@/src/store/hooks';
 import { bankService } from '@/src/services/bank.service';
 import type { BankProfile, CreateBankProfileRequest, UpdateBankProfileRequest } from '@/src/types/api.types';
 import PageSection from '@/src/components/ui/PageSection';
+import ContextBanner from '@/src/components/ui/ContextBanner';
 import { btnPrimary, btnSecondary, inputClass } from '@/src/lib/uiClasses';
 
 function getErrorMessage(e: unknown, fallback: string) {
@@ -43,20 +44,19 @@ export default function LeaderBankPage() {
     }
     setLoading(true);
     try {
-      const res = await bankService.getByWallet(addr);
-      setBank(res.data);
-      setForm({
-        bank_code: res.data.bank_code ?? '',
-        bank_org: res.data.bank_org ?? '',
-        owner_name: res.data.owner_name ?? '',
-        payos_client_id: res.data.payos_client_id ?? '',
-        payos_api_key: res.data.payos_api_key ?? '',
-        payos_check_sum_key: res.data.payos_check_sum_key ?? '',
-      });
-      setEditing(false);
-    } catch (e: unknown) {
-      const status = (e as { response?: { status?: number } }).response?.status;
-      if (status === 404) {
+      const profile = await bankService.getByWalletOrNull(addr);
+      if (profile) {
+        setBank(profile);
+        setForm({
+          bank_code: profile.bank_code ?? '',
+          bank_org: profile.bank_org ?? '',
+          owner_name: profile.owner_name ?? '',
+          payos_client_id: profile.payos_client_id ?? '',
+          payos_api_key: profile.payos_api_key ?? '',
+          payos_check_sum_key: profile.payos_check_sum_key ?? '',
+        });
+        setEditing(false);
+      } else {
         setBank(null);
         setForm({
           bank_code: '',
@@ -66,10 +66,10 @@ export default function LeaderBankPage() {
           payos_api_key: '',
           payos_check_sum_key: '',
         });
-      } else {
-        toast.error(getErrorMessage(e, 'Không tải được hồ sơ ngân hàng'));
-        setBank(null);
       }
+    } catch (e: unknown) {
+      toast.error(getErrorMessage(e, 'Không tải được hồ sơ ngân hàng'));
+      setBank(null);
     } finally {
       setLoading(false);
     }
@@ -143,6 +143,12 @@ export default function LeaderBankPage() {
           ) : null
         }
       />
+
+      {!bank && !editing ? (
+        <ContextBanner>
+          Bạn chưa có hồ sơ ngân hàng. Điền thông tin bên dưới và bấm <strong>Tạo hồ sơ</strong> để thiết lập tài khoản nhận thanh toán.
+        </ContextBanner>
+      ) : null}
 
       {bank && !editing ? (
         <PageSection>
