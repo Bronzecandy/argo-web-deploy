@@ -11,7 +11,6 @@ import DetailField from '@/src/components/ui/DetailField';
 import CopyableTruncated from '@/src/components/ui/CopyableTruncated';
 import EntityBlobThumb from '@/src/components/ui/EntityBlobThumb';
 import AiInsightPanel from '@/src/components/ui/AiInsightPanel';
-import AiEvaluationBadge from '@/src/components/ui/AiEvaluationBadge';
 import TabBar from '@/src/components/ui/TabBar';
 import FilterToolbar from '@/src/components/ui/FilterToolbar';
 import FormModal from '@/src/components/ui/FormModal';
@@ -332,11 +331,6 @@ export default function AdminAccountsPage() {
               { key: 'register_role', label: 'Vai trò', render: (r) => <span className="capitalize">{r.register_role}</span> },
               { key: 'region', label: 'Vùng' },
               { key: 'status', label: 'Trạng thái', render: (r) => <StatusBadge status={r.status} /> },
-              {
-                key: 'ai_evaluation',
-                label: 'AI',
-                render: (r) => <AiEvaluationBadge record={r} />,
-              },
               { key: 'created_at', label: 'Ngày tạo', render: (r) => formatDate(r.created_at) },
               {
                 key: 'closed_at',
