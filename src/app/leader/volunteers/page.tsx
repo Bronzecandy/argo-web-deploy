@@ -8,19 +8,13 @@ import DetailModal from '@/src/components/ui/DetailModal';
 import EmptyState from '@/src/components/ui/EmptyState';
 import ListPagination from '@/src/components/ui/ListPagination';
 import RegistrationRequestCard from '@/src/components/registration/RegistrationRequestCard';
-import RegistrationVoteSummary from '@/src/components/registration/RegistrationVoteSummary';
-import DetailField from '@/src/components/ui/DetailField';
-import EntityBlobThumb from '@/src/components/ui/EntityBlobThumb';
-import StatusBadge from '@/src/components/ui/StatusBadge';
+import RegistrationDetailContent from '@/src/components/registration/RegistrationDetailContent';
 import CopyableTruncated from '@/src/components/ui/CopyableTruncated';
-import AiInsightPanel from '@/src/components/ui/AiInsightPanel';
 import ContextBanner from '@/src/components/ui/ContextBanner';
 import FilterToolbar from '@/src/components/ui/FilterToolbar';
 import FormModal from '@/src/components/ui/FormModal';
 import PageSection from '@/src/components/ui/PageSection';
-import { collectBlobIdEntries, blobFieldDisplayLabel } from '@/src/lib/blobFields';
-import { formatRegisterRoleVi } from '@/src/lib/registrationDisplay';
-import { formatDate, formatDateTimeSeconds } from '@/src/lib/formatters';
+import { mergeRegistrationDetail } from '@/src/lib/registrationDisplay';
 import { btnPrimary, inputClass, selectClass } from '@/src/lib/uiClasses';
 import { hasUserCastVote, isVoteActionsLocked } from '@/src/lib/voteFields';
 import { registrationService } from '@/src/services/registration.service';
@@ -29,11 +23,6 @@ import { useLeaderCenter } from '@/src/contexts/LeaderCenterContext';
 import type { RegistrationRequest } from '@/src/types/api.types';
 
 const PAGE_SIZE = 20;
-
-function isRegistrationApproved(status?: string) {
-  const s = (status || '').toLowerCase().replace(/\s+/g, '_');
-  return s === 'approved';
-}
 
 const REG_STATUS_OPTIONS = [
   { value: '', label: 'Tất cả trạng thái' },
@@ -309,45 +298,14 @@ export default function LeaderVolunteersPage() {
           setRegDetailListRow(null);
         }}
         loading={regDetailLoading}
-        wide
+        extraWide
       >
         {(() => {
-          const r = regDetailData ?? regDetailListRow;
-          if (!r) return null;
-          const blobs = collectBlobIdEntries(r);
-          return (
-            <div>
-              <DetailField label="Mã" value={<CopyableTruncated value={r.id} chars={8} />} />
-              <DetailField label="Tên" value={`${r.first_name} ${r.last_name}`} />
-              <DetailField label="Vai trò" value={formatRegisterRoleVi(r.register_role)} />
-              <DetailField label="Vùng" value={r.region} />
-              <DetailField label="Trạng thái" value={<StatusBadge status={r.status} />} />
-              <RegistrationVoteSummary record={r} className="my-4" />
-              <DetailField label="Mã định danh" value={r.identity_code} />
-              <DetailField label="Email" value={r.email} />
-              <DetailField label="Điện thoại" value={r.phone_number} />
-              <DetailField label="Giới tính" value={r.gender} />
-              <DetailField label="Ngày sinh" value={formatDate(r.date_of_birth)} />
-              <DetailField label="Người tạo" value={<CopyableTruncated value={r.created_by} />} />
-              <DetailField label="Ngày tạo" value={formatDate(r.created_at)} />
-              <DetailField label="Cập nhật lúc" value={formatDate(r.updated_at)} />
-              <DetailField label="Thời gian đóng" value={formatDateTimeSeconds(r.closed_at)} />
-              <AiInsightPanel record={r} className="mt-4" />
-              {blobs.length > 0 && (
-                <div className="border-t border-slate-100 pt-3">
-                  <div className="mb-2 text-xs font-medium text-slate-600">Ảnh (Walrus)</div>
-                  <div className="flex flex-wrap gap-4">
-                    {blobs.map(({ key, blobId }) => (
-                      <div key={key} className="text-center">
-                        <EntityBlobThumb blobId={blobId} />
-                        <div className="mt-1 text-[10px] text-slate-500">{blobFieldDisplayLabel(key)}</div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </div>
-          );
+          const listRow = regDetailListRow;
+          const detail = regDetailData;
+          if (!listRow && !detail) return null;
+          const r = mergeRegistrationDetail(listRow ?? detail!, detail);
+          return <RegistrationDetailContent record={r} />;
         })()}
       </DetailModal>
     </div>

@@ -316,7 +316,7 @@ export default function AdminAccountsPage() {
               Tìm
             </button>
             <p className="w-full text-xs text-slate-500 sm:ml-auto sm:w-auto sm:self-end">
-              Tổng bản ghi khớp: {regTotalAmount.toLocaleString('vi-VN')}
+              Kết quả: {regTotalAmount.toLocaleString('vi-VN')}
             </p>
           </FilterToolbar>
 
