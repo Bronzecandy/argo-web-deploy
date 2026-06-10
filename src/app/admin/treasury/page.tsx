@@ -4,7 +4,6 @@ import { Suspense, useCallback, useEffect, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { toast } from 'sonner';
 import PageHeader from '@/src/components/ui/PageHeader';
-import DataTable from '@/src/components/ui/DataTable';
 import StatusBadge from '@/src/components/ui/StatusBadge';
 import DetailModal from '@/src/components/ui/DetailModal';
 import BlobImage from '@/src/components/ui/BlobImage';
@@ -12,16 +11,12 @@ import FileUploadInput from '@/src/components/ui/FileUploadInput';
 import GroupedNumericInput from '@/src/components/ui/GroupedNumericInput';
 import PayOSPaymentDialog from '@/src/components/ui/PayOSPaymentDialog';
 import CopyableTruncated from '@/src/components/ui/CopyableTruncated';
-import AiInsightPanel from '@/src/components/ui/AiInsightPanel';
-import AiEvaluationBadge from '@/src/components/ui/AiEvaluationBadge';
 import DetailField from '@/src/components/ui/DetailField';
-import TabBar from '@/src/components/ui/TabBar';
 import FilterToolbar from '@/src/components/ui/FilterToolbar';
 import FormModal from '@/src/components/ui/FormModal';
 import EmptyState from '@/src/components/ui/EmptyState';
 import ListPagination from '@/src/components/ui/ListPagination';
 import PageSection from '@/src/components/ui/PageSection';
-import TableIconButton from '@/src/components/ui/TableIconButton';
 import WithdrawProposalCard from '@/src/components/leader/WithdrawProposalCard';
 import VoteProgressBar from '@/src/components/ui/VoteProgressBar';
 import { btnPrimary, btnSecondary } from '@/src/lib/uiClasses';
@@ -39,16 +34,8 @@ import {
   mergeWithdrawProposalDetail,
 } from '@/src/lib/withdrawProposalDisplay';
 import { withdrawService } from '@/src/services/withdraw.service';
-import { pendingWithdrawService } from '@/src/services/pending-withdraw.service';
-import { pendingSpecialNeedsService } from '@/src/services/pending-special-needs.service';
-import { useExecuteTransaction } from '@/src/hooks/useExecuteTransaction';
 import { useWithdrawProposalConfirm } from '@/src/hooks/useWithdrawProposalConfirm';
-import type {
-  PendingSpecialNeedProposal,
-  PendingWithdrawProposal,
-  WithdrawProposal,
-  ManualBankTransferConfirmResponse,
-} from '@/src/types/api.types';
+import type { WithdrawProposal, ManualBankTransferConfirmResponse } from '@/src/types/api.types';
 import {
   clearWithdrawConfirmPayloads,
   clearWithdrawManualPayload,
@@ -61,11 +48,8 @@ import {
 
 const PAGE_SIZE = 20;
 
-type TabId = 'proposals' | 'pending' | 'special';
-
 function TreasuryPageContent() {
   const searchParams = useSearchParams();
-  const { execute } = useExecuteTransaction();
   const {
     busy,
     payOS,
@@ -78,23 +62,16 @@ function TreasuryPageContent() {
 
   const [manualBankInfo, setManualBankInfo] = useState<ManualBankTransferConfirmResponse | null>(null);
 
-  const [tab, setTab] = useState<TabId>('proposals');
   const [minInput, setMinInput] = useState('');
   const [maxInput, setMaxInput] = useState('');
   const [minAmount, setMinAmount] = useState<number | undefined>();
   const [maxAmount, setMaxAmount] = useState<number | undefined>();
 
   const [pageProposals, setPageProposals] = useState(0);
-  const [pagePending, setPagePending] = useState(0);
-  const [pageSpecial, setPageSpecial] = useState(0);
 
   const [proposals, setProposals] = useState<WithdrawProposal[]>([]);
-  const [pendingList, setPendingList] = useState<PendingWithdrawProposal[]>([]);
-  const [specialList, setSpecialList] = useState<PendingSpecialNeedProposal[]>([]);
 
   const [totalPagesProposals, setTotalPagesProposals] = useState(1);
-  const [totalPagesPending, setTotalPagesPending] = useState(1);
-  const [totalPagesSpecial, setTotalPagesSpecial] = useState(1);
 
   const [loading, setLoading] = useState(true);
 
@@ -113,28 +90,11 @@ function TreasuryPageContent() {
   const [withdrawConfirmProofBlob, setWithdrawConfirmProofBlob] = useState('');
   const [mainPoolBlobId, setMainPoolBlobId] = useState('');
 
-  const [pendingDetail, setPendingDetail] = useState<{
-    open: boolean;
-    id: string | null;
-  }>({ open: false, id: null });
-  const [pendingDetailLoading, setPendingDetailLoading] = useState(false);
-  const [pendingDetailData, setPendingDetailData] = useState<PendingWithdrawProposal | null>(null);
-  const [pendingDetailErr, setPendingDetailErr] = useState<string | null>(null);
-
-  const [specialDetail, setSpecialDetail] = useState<{
-    open: boolean;
-    id: string | null;
-  }>({ open: false, id: null });
-  const [specialDetailLoading, setSpecialDetailLoading] = useState(false);
-  const [specialDetailData, setSpecialDetailData] = useState<PendingSpecialNeedProposal | null>(null);
-  const [specialDetailErr, setSpecialDetailErr] = useState<string | null>(null);
-
   useEffect(() => {
     const q = searchParams.get('tab');
-    if (q === 'local-withdrawals' || q === 'local' || q === 'proposals' || q === 'withdraw') {
-      setTab('proposals');
-    } else if (q === 'pending') setTab('pending');
-    else if (q === 'special') setTab('special');
+    if (q === 'pending' || q === 'special') {
+      toast.message('Mục này đã được gỡ — chỉ còn đề xuất rút tiền.');
+    }
   }, [searchParams]);
 
   const applyAmountFilter = () => {
@@ -151,51 +111,27 @@ function TreasuryPageContent() {
     setMinAmount(min === null ? undefined : min);
     setMaxAmount(max === null ? undefined : max);
     setPageProposals(0);
-    setPagePending(0);
-    setPageSpecial(0);
   };
 
   const load = useCallback(async () => {
     setLoading(true);
     try {
-      if (tab === 'proposals') {
-        const res = await withdrawService.list({
-          page: pageProposals,
-          page_size: PAGE_SIZE,
-          min_amount: minAmount,
-          max_amount: maxAmount,
-        });
-        setProposals(res.data.data ?? []);
-        setTotalPagesProposals(Math.max(1, res.data.total_pages ?? 1));
-      } else if (tab === 'pending') {
-        const res = await pendingWithdrawService.list({
-          page: pagePending,
-          page_size: PAGE_SIZE,
-          min_amount: minAmount,
-          max_amount: maxAmount,
-        });
-        setPendingList(res.data.data ?? []);
-        setTotalPagesPending(Math.max(1, res.data.total_pages ?? 1));
-      } else {
-        const res = await pendingSpecialNeedsService.list({
-          page: pageSpecial,
-          page_size: PAGE_SIZE,
-          min_amount: minAmount,
-          max_amount: maxAmount,
-        });
-        setSpecialList(res.data.data ?? []);
-        setTotalPagesSpecial(Math.max(1, res.data.total_pages ?? 1));
-      }
+      const res = await withdrawService.list({
+        page: pageProposals,
+        page_size: PAGE_SIZE,
+        min_amount: minAmount,
+        max_amount: maxAmount,
+      });
+      setProposals(res.data.data ?? []);
+      setTotalPagesProposals(Math.max(1, res.data.total_pages ?? 1));
     } catch (e) {
       console.error(e);
       toast.error('Tải dữ liệu đề xuất rút tiền thất bại');
-      if (tab === 'proposals') setProposals([]);
-      if (tab === 'pending') setPendingList([]);
-      if (tab === 'special') setSpecialList([]);
+      setProposals([]);
     } finally {
       setLoading(false);
     }
-  }, [tab, pageProposals, pagePending, pageSpecial, minAmount, maxAmount]);
+  }, [pageProposals, minAmount, maxAmount]);
 
   useEffect(() => {
     void load();
@@ -227,52 +163,6 @@ function TreasuryPageContent() {
       })
       .finally(() => setWithdrawDetailLoading(false));
   }, [withdrawDetail.open, withdrawDetail.id, withdrawDetail.row]);
-
-  useEffect(() => {
-    if (!pendingDetail.open || !pendingDetail.id) {
-      setPendingDetailData(null);
-      setPendingDetailErr(null);
-      return;
-    }
-    const id = pendingDetail.id;
-    setPendingDetailLoading(true);
-    setPendingDetailErr(null);
-    void pendingWithdrawService
-      .getById(id)
-      .then((res) => setPendingDetailData(res.data))
-      .catch((e: unknown) => {
-        const msg =
-          e && typeof e === 'object' && 'response' in e
-            ? String((e as { response?: { data?: { message?: string } } }).response?.data?.message ?? '')
-            : 'Tải thất bại';
-        setPendingDetailErr(msg);
-        setPendingDetailData(null);
-      })
-      .finally(() => setPendingDetailLoading(false));
-  }, [pendingDetail.open, pendingDetail.id]);
-
-  useEffect(() => {
-    if (!specialDetail.open || !specialDetail.id) {
-      setSpecialDetailData(null);
-      setSpecialDetailErr(null);
-      return;
-    }
-    const id = specialDetail.id;
-    setSpecialDetailLoading(true);
-    setSpecialDetailErr(null);
-    void pendingSpecialNeedsService
-      .getById(id)
-      .then((res) => setSpecialDetailData(res.data))
-      .catch((e: unknown) => {
-        const msg =
-          e && typeof e === 'object' && 'response' in e
-            ? String((e as { response?: { data?: { message?: string } } }).response?.data?.message ?? '')
-            : 'Tải thất bại';
-        setSpecialDetailErr(msg);
-        setSpecialDetailData(null);
-      })
-      .finally(() => setSpecialDetailLoading(false));
-  }, [specialDetail.open, specialDetail.id]);
 
   const openWithdrawConfirmModal = (id: string) => {
     setWithdrawConfirmProofBlob('');
@@ -375,68 +265,13 @@ function TreasuryPageContent() {
     }
   };
 
-  const handlePendingApprove = async (id: string) => {
-    const ok = await execute(
-      () => pendingWithdrawService.approve(id),
-      { successMessage: 'Đã duyệt và thực hiện yêu cầu rút chờ xử lý' },
-    );
-    if (ok) refresh();
-  };
-
-  const handlePendingRefuse = async (id: string) => {
-    const ok = await execute(
-      () => pendingWithdrawService.refuse(id),
-      { successMessage: 'Đã từ chối yêu cầu rút chờ xử lý' },
-    );
-    if (ok) refresh();
-  };
-
-  const handleSpecialApprove = async (id: string) => {
-    const ok = await execute(
-      () => pendingSpecialNeedsService.approve(id),
-      { successMessage: 'Đã duyệt và thực hiện đề xuất nhu cầu đặc biệt' },
-    );
-    if (ok) refresh();
-  };
-
-  const handleSpecialRefuse = async (id: string) => {
-    const ok = await execute(
-      () => pendingSpecialNeedsService.refuse(id),
-      { successMessage: 'Đã từ chối đề xuất nhu cầu đặc biệt' },
-    );
-    if (ok) refresh();
-  };
-
-  const actionBtn = (label: string, onClick: () => void, variant: 'primary' | 'danger' | 'muted' = 'primary') => (
-    <TableIconButton
-      variant={variant === 'danger' ? 'danger' : variant === 'primary' ? 'primary' : 'default'}
-      onClick={(e) => {
-        e.stopPropagation();
-        onClick();
-      }}
-    >
-      {label}
-    </TableIconButton>
-  );
-
   const wd = mergeWithdrawProposalDetail(withdrawDetail.row ?? null, withdrawDetailData);
 
   return (
     <div>
       <PageHeader
         title="Rút tiền"
-        description="Đề xuất rút tiền, yêu cầu rút chờ xử lý, nhu cầu đặc biệt chờ duyệt"
-      />
-
-      <TabBar<TabId>
-        className="mb-4"
-        value={tab}
-        onChange={setTab}
-        items={[
-          { id: 'proposals', label: 'Đề xuất rút' },
-          { id: 'pending', label: 'Rút tiền chờ duyệt' },
-          { id: 'special', label: 'Nhu cầu đặc biệt' },
-        ]}
+        description="Quản lý đề xuất rút tiền trên các quỹ"
       />
 
       <FilterToolbar>
@@ -464,7 +299,6 @@ function TreasuryPageContent() {
       </FilterToolbar>
 
       <div className="mt-4">
-        {tab === 'proposals' && (
           <PageSection title="Đề xuất rút tiền" noPadding>
             {loading ? (
               <div className="grid gap-4 p-4 sm:grid-cols-2 sm:p-5 xl:grid-cols-3">
@@ -499,99 +333,6 @@ function TreasuryPageContent() {
               />
             )}
           </PageSection>
-        )}
-
-        {tab === 'pending' && (
-          <PageSection title="Rút tiền chờ duyệt" noPadding>
-          <DataTable<PendingWithdrawProposal>
-            loading={loading}
-            data={pendingList}
-            page={pagePending}
-            totalPages={totalPagesPending}
-            onPageChange={setPagePending}
-            emptyMessage="Không có yêu cầu rút chờ duyệt phù hợp bộ lọc"
-            columns={[
-              { key: 'poolName', label: 'Quỹ' },
-              { key: 'creator', label: 'Người tạo', render: (r) => <CopyableTruncated value={r.creator} chars={6} /> },
-              {
-                key: 'description',
-                label: 'Mô tả',
-                render: (r) => <span className="max-w-xs truncate">{r.description || '-'}</span>,
-              },
-              {
-                key: 'withdrawAmount',
-                label: 'Số tiền',
-                render: (r) => formatVND(r.withdrawAmount),
-              },
-              { key: 'status', label: 'Trạng thái', render: (r) => <StatusBadge status={r.status} /> },
-              {
-                key: 'ai',
-                label: 'AI',
-                render: (r) => <AiEvaluationBadge record={r} />,
-              },
-              { key: 'createdAt', label: 'Ngày tạo', render: (r) => formatDate(r.createdAt) },
-              {
-                key: 'actions',
-                label: 'Thao tác',
-                className: 'whitespace-nowrap',
-                render: (r) => (
-                  <div className="flex flex-wrap gap-1">
-                    {actionBtn('Chi tiết', () => setPendingDetail({ open: true, id: r.id }))}
-                    {actionBtn('Duyệt', () => void handlePendingApprove(r.id))}
-                    {actionBtn('Từ chối', () => void handlePendingRefuse(r.id), 'danger')}
-                  </div>
-                ),
-              },
-            ]}
-          />
-          </PageSection>
-        )}
-
-        {tab === 'special' && (
-          <PageSection title="Nhu cầu đặc biệt" noPadding>
-          <DataTable<PendingSpecialNeedProposal>
-            loading={loading}
-            data={specialList}
-            page={pageSpecial}
-            totalPages={totalPagesSpecial}
-            onPageChange={setPageSpecial}
-            emptyMessage="Không có nhu cầu đặc biệt chờ duyệt phù hợp bộ lọc"
-            columns={[
-              { key: 'child_id', label: 'Trẻ', render: (r) => <CopyableTruncated value={r.child_id} chars={4} /> },
-              {
-                key: 'description',
-                label: 'Mô tả',
-                render: (r) => <span className="max-w-xs truncate">{r.description || '-'}</span>,
-              },
-              { key: 'target', label: 'Mục tiêu', render: (r) => formatVND(r.target) },
-              { key: 'region', label: 'Vùng' },
-              {
-                key: 'review_status',
-                label: 'Duyệt',
-                render: (r) => <StatusBadge status={r.review_status} />,
-              },
-              {
-                key: 'ai_evaluation',
-                label: 'AI',
-                render: (r) => <AiEvaluationBadge record={r} />,
-              },
-              { key: 'created_at', label: 'Ngày tạo', render: (r) => formatDate(r.created_at) },
-              {
-                key: 'actions',
-                label: 'Thao tác',
-                className: 'whitespace-nowrap',
-                render: (r) => (
-                  <div className="flex flex-wrap gap-1">
-                    {actionBtn('Chi tiết', () => setSpecialDetail({ open: true, id: r.id }))}
-                    {actionBtn('Duyệt', () => void handleSpecialApprove(r.id))}
-                    {actionBtn('Từ chối', () => void handleSpecialRefuse(r.id), 'danger')}
-                  </div>
-                ),
-              },
-            ]}
-          />
-          </PageSection>
-        )}
       </div>
 
       <DetailModal
@@ -681,72 +422,6 @@ function TreasuryPageContent() {
                 </div>
               </div>
             )}
-          </div>
-        )}
-      </DetailModal>
-
-      <DetailModal
-        title="Rút tiền chờ duyệt"
-        open={pendingDetail.open}
-        onClose={() => setPendingDetail({ open: false, id: null })}
-        loading={pendingDetailLoading}
-        error={pendingDetailErr}
-        wide
-      >
-        {pendingDetailData && (
-          <div>
-            <DetailField label="ID" value={<span className="font-mono text-xs break-all">{pendingDetailData.id}</span>} />
-            <DetailField label="Quỹ" value={pendingDetailData.poolName} />
-            <DetailField label="Người tạo" value={<CopyableTruncated value={pendingDetailData.creator} chars={6} />} />
-            <DetailField label="Mô tả" value={pendingDetailData.description || '—'} />
-            <DetailField label="Số tiền" value={formatVND(pendingDetailData.withdrawAmount)} />
-            <DetailField label="Trạng thái" value={pendingDetailData.status} />
-            {pendingDetailData.proofBlobID && (
-              <div className="border-b border-slate-100 py-2.5 last:border-0">
-                <div className="text-xs font-medium text-slate-500">Chứng từ</div>
-                <div className="mt-1">
-                  <BlobImage
-                    blobId={pendingDetailData.proofBlobID}
-                    className="max-h-64 rounded-lg border border-slate-200 object-contain"
-                  />
-                </div>
-              </div>
-            )}
-            <AiInsightPanel record={pendingDetailData} className="mt-4" />
-            <DetailField label="Ngày tạo" value={formatDate(pendingDetailData.createdAt)} />
-          </div>
-        )}
-      </DetailModal>
-
-      <DetailModal
-        title="Nhu cầu đặc biệt chờ duyệt"
-        open={specialDetail.open}
-        onClose={() => setSpecialDetail({ open: false, id: null })}
-        loading={specialDetailLoading}
-        error={specialDetailErr}
-        wide
-      >
-        {specialDetailData && (
-          <div>
-            <DetailField label="ID" value={<span className="font-mono text-xs break-all">{specialDetailData.id}</span>} />
-            <DetailField label="Trẻ" value={<CopyableTruncated value={specialDetailData.child_id} chars={4} />} />
-            <DetailField label="Vùng" value={specialDetailData.region} />
-            <DetailField label="Mô tả" value={specialDetailData.description || '—'} />
-            <DetailField label="Mục tiêu" value={formatVND(specialDetailData.target)} />
-            <DetailField label="Duyệt" value={specialDetailData.review_status} />
-            <AiInsightPanel record={specialDetailData} className="my-4" />
-            {specialDetailData.proof_blob_id && (
-              <div className="border-b border-slate-100 py-2.5 last:border-0">
-                <div className="text-xs font-medium text-slate-500">Chứng từ</div>
-                <div className="mt-1">
-                  <BlobImage
-                    blobId={specialDetailData.proof_blob_id}
-                    className="max-h-64 rounded-lg border border-slate-200 object-contain"
-                  />
-                </div>
-              </div>
-            )}
-            <DetailField label="Ngày tạo" value={formatDate(specialDetailData.created_at)} />
           </div>
         )}
       </DetailModal>
