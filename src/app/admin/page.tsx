@@ -3,7 +3,7 @@
 import { useEffect, useState, useMemo } from 'react';
 import {
   Users, Baby, Building2, Wallet, HandCoins, UserCheck,
-  ArrowUpRight, TrendingUp, TrendingDown,
+  ArrowUpRight, TrendingUp, TrendingDown, Landmark,
 } from 'lucide-react';
 import Link from 'next/link';
 import StatsCard from '@/src/components/ui/StatsCard';
@@ -31,6 +31,11 @@ import {
 } from 'recharts';
 
 const COLORS = ['#059669', '#0ea5e9', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#14b8a6', '#f97316'];
+const STAFF_COUNT_PAGE_SIZE = 10;
+
+function isDonateTransaction(tx: TransactionRecord): boolean {
+  return (tx.action_type ?? '').toLowerCase().includes('donate');
+}
 
 function groupByDate(records: TransactionRecord[]) {
   const map: Record<string, { date: string; amount: number; count: number }> = {};
@@ -76,10 +81,11 @@ export default function AdminDashboard() {
 
   const [stats, setStats] = useState({
     registrations: 0, children: 0, centers: 0,
-    withdrawals: 0, staff: 0, donors: 0, transactions: 0,
+    withdrawals: 0, staff: 0, donors: 0, donateCount: 0,
   });
 
   const [allTx, setAllTx] = useState<TransactionRecord[]>([]);
+  const [donateTx, setDonateTx] = useState<TransactionRecord[]>([]);
   const [withdrawals, setWithdrawals] = useState<WithdrawProposal[]>([]);
   const [registrations, setRegistrations] = useState<RegistrationRequest[]>([]);
   const [childrenList, setChildrenList] = useState<Child[]>([]);
@@ -92,30 +98,44 @@ export default function AdminDashboard() {
       const PAGE = 100;
       const [
         regRes, childRes, centerRes, withdrawRes, staffRes,
-        txRes, donorRes, uploadRes, taskRes,
+        txRes, donateTxRes, donorRes, uploadRes, taskRes,
       ] = await Promise.allSettled([
         registrationService.list({ page: 0, page_size: PAGE, sort_order: 'desc' }),
         childrenService.list({ page: 0, page_size: PAGE }),
         centerService.list({ page: 0, page_size: PAGE, sort_order: 'desc' }),
         withdrawService.list({ page: 0, page_size: PAGE, sort_order: 'desc' }),
-        staffService.list({ page: 0, page_size: 1 }),
+        staffService.list({ page: 0, page_size: STAFF_COUNT_PAGE_SIZE }),
         transactionService.list({ page: 0, page_size: PAGE, sort_order: 'desc' }),
+        transactionService.list({ page: 0, page_size: PAGE, action_type: 'donate', sort_order: 'desc' }),
         donorService.list({ page: 0, page_size: 1 }),
         childUploadService.list({ page: 0, page_size: PAGE, sort_order: 'desc' }),
         taskService.list({ page: 0, page_size: PAGE, sort_order: 'desc' }),
       ]);
+
+      const staffBody = staffRes.status === 'fulfilled' ? staffRes.value.data : null;
+      const staffTotal =
+        typeof staffBody?.amount === 'number'
+          ? staffBody.amount
+          : Array.isArray(staffBody?.data)
+            ? staffBody.data.length
+            : 0;
 
       setStats({
         registrations: regRes.status === 'fulfilled' ? regRes.value.data.amount || 0 : 0,
         children: childRes.status === 'fulfilled' ? childRes.value.data.amount || 0 : 0,
         centers: centerRes.status === 'fulfilled' ? centerRes.value.data.amount || 0 : 0,
         withdrawals: withdrawRes.status === 'fulfilled' ? withdrawRes.value.data.amount || 0 : 0,
-        staff: staffRes.status === 'fulfilled' ? staffRes.value.data.amount || 0 : 0,
+        staff: staffTotal,
         donors: donorRes.status === 'fulfilled' ? donorRes.value.data.amount || 0 : 0,
-        transactions: txRes.status === 'fulfilled' ? txRes.value.data.amount || 0 : 0,
+        donateCount: donateTxRes.status === 'fulfilled' ? donateTxRes.value.data.amount || 0 : 0,
       });
 
       if (txRes.status === 'fulfilled') setAllTx(txRes.value.data.data || []);
+      if (donateTxRes.status === 'fulfilled') {
+        setDonateTx(donateTxRes.value.data.data || []);
+      } else {
+        setDonateTx([]);
+      }
       if (withdrawRes.status === 'fulfilled') setWithdrawals(withdrawRes.value.data.data || []);
       if (regRes.status === 'fulfilled') setRegistrations(regRes.value.data.data || []);
       if (childRes.status === 'fulfilled') setChildrenList(childRes.value.data.data || []);
@@ -128,7 +148,11 @@ export default function AdminDashboard() {
     load();
   }, []);
 
-  const txByDate = useMemo(() => groupByDate(allTx), [allTx]);
+  const donateTxFiltered = useMemo(
+    () => (donateTx.length > 0 ? donateTx : allTx.filter(isDonateTransaction)),
+    [donateTx, allTx],
+  );
+  const txByDate = useMemo(() => groupByDate(donateTxFiltered), [donateTxFiltered]);
   const txByType = useMemo(() => groupByField(allTx, 'action_type'), [allTx]);
   const withdrawByStatus = useMemo(() => {
     const exec = withdrawals.filter((w) => w.is_executed).length;
@@ -144,15 +168,19 @@ export default function AdminDashboard() {
   const uploadsByStatus = useMemo(() => statusSummary(childUploads), [childUploads]);
   const tasksByStatus = useMemo(() => statusSummary(tasks), [tasks]);
 
-  const totalTxAmount = useMemo(() => allTx.reduce((s, t) => s + (t.amount || 0), 0), [allTx]);
+  const totalDonateAmount = useMemo(
+    () => donateTxFiltered.reduce((s, t) => s + (t.amount || 0), 0),
+    [donateTxFiltered],
+  );
   const totalWithdrawAmount = useMemo(() => withdrawals.reduce((s, w) => s + (w.withdraw_amount || 0), 0), [withdrawals]);
+  const systemBalance = totalDonateAmount - totalWithdrawAmount;
 
   if (loading) {
     return (
       <div className="space-y-6">
         <div className="h-10 w-64 animate-pulse rounded-lg bg-slate-200" />
-        <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
-          {Array.from({ length: 4 }).map((_, i) => (
+        <div className="grid grid-cols-2 gap-4 lg:grid-cols-5">
+          {Array.from({ length: 5 }).map((_, i) => (
             <div key={i} className="h-24 animate-pulse rounded-xl border border-slate-200 bg-slate-100" />
           ))}
         </div>
@@ -193,10 +221,11 @@ export default function AdminDashboard() {
       </div>
 
       {/* Stats Row 1 */}
-      <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
-        <StatsCard label="Tổng giao dịch" value={stats.transactions} icon={HandCoins} />
-        <StatsCard label="Khối lượng giao dịch" value={formatVND(totalTxAmount)} icon={TrendingUp} />
+      <div className="grid grid-cols-2 gap-4 lg:grid-cols-5">
+        <StatsCard label="Tổng lượt donate" value={stats.donateCount} icon={HandCoins} />
+        <StatsCard label="Tổng tiền quyên góp" value={formatVND(totalDonateAmount)} icon={TrendingUp} />
         <StatsCard label="Khối lượng rút" value={formatVND(totalWithdrawAmount)} icon={TrendingDown} />
+        <StatsCard label="Số dư hệ thống" value={formatVND(systemBalance)} icon={Landmark} />
         <StatsCard label="Trẻ em" value={stats.children} icon={Baby} />
       </div>
 
@@ -210,11 +239,11 @@ export default function AdminDashboard() {
       </div>
 
       <PageSection
-        title="Khối lượng giao dịch theo thời gian"
-        description="Tổng số tiền giao dịch theo ngày"
+        title="Tiền quyên góp theo thời gian"
+        description="Tổng số tiền donate theo ngày"
       >
         {txByDate.length === 0 ? (
-          <p className="py-8 text-center text-sm text-slate-400">Chưa có dữ liệu giao dịch</p>
+          <p className="py-8 text-center text-sm text-slate-400">Chưa có dữ liệu quyên góp</p>
         ) : (
           <ResponsiveContainer width="100%" height={300}>
             <AreaChart data={txByDate}>
@@ -234,9 +263,9 @@ export default function AdminDashboard() {
         )}
       </PageSection>
 
-      <PageSection title="Số lượng giao dịch theo ngày" description="Số giao dịch mỗi ngày">
+      <PageSection title="Số lượt donate theo ngày" description="Số lượt quyên góp mỗi ngày">
         {txByDate.length === 0 ? (
-          <p className="py-8 text-center text-sm text-slate-400">Chưa có dữ liệu giao dịch</p>
+          <p className="py-8 text-center text-sm text-slate-400">Chưa có dữ liệu quyên góp</p>
         ) : (
           <ResponsiveContainer width="100%" height={260}>
             <BarChart data={txByDate}>
