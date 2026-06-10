@@ -13,14 +13,15 @@ import TableIconButton from '@/src/components/ui/TableIconButton';
 import { btnPrimary, inputClass, selectClass } from '@/src/lib/uiClasses';
 import { formatDate, formatVND } from '@/src/lib/formatters';
 import { transactionService } from '@/src/services/transaction.service';
+import { TX_ACTION_DONATE, TX_ACTION_WITHDRAW } from '@/src/lib/txActionTypes';
 import type { TransactionRecord } from '@/src/types/api.types';
 
 const PAGE_SIZE = 20;
 
 const ACTION_TYPE_OPTIONS = [
   { value: '', label: 'Tất cả loại' },
-  { value: 'donate', label: 'Quyên góp' },
-  { value: 'withdraw', label: 'Rút tiền' },
+  { value: TX_ACTION_DONATE, label: 'Quyên góp (Donate)' },
+  { value: TX_ACTION_WITHDRAW, label: 'Rút tiền (Withdraw)' },
   { value: 'transfer', label: 'Chuyển' },
   { value: 'vote', label: 'Bỏ phiếu' },
   { value: 'approve', label: 'Phê duyệt' },

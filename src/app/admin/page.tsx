@@ -20,6 +20,12 @@ import { donorService } from '@/src/services/donor.service';
 import { childUploadService } from '@/src/services/child-upload.service';
 import { taskService } from '@/src/services/task.service';
 import { formatVND, formatDate } from '@/src/lib/formatters';
+import {
+  isDonateTransaction,
+  isWithdrawTransaction,
+  TX_ACTION_DONATE,
+  TX_ACTION_WITHDRAW,
+} from '@/src/lib/txActionTypes';
 import type {
   TransactionRecord, WithdrawProposal, RegistrationRequest,
   Child, SupportCenter, UploadChildRequestEntity, Task,
@@ -32,10 +38,6 @@ import {
 
 const COLORS = ['#059669', '#0ea5e9', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#14b8a6', '#f97316'];
 const STAFF_COUNT_PAGE_SIZE = 10;
-
-function isDonateTransaction(tx: TransactionRecord): boolean {
-  return (tx.action_type ?? '').toLowerCase().includes('donate');
-}
 
 function groupByDate(records: TransactionRecord[]) {
   const map: Record<string, { date: string; amount: number; count: number }> = {};
@@ -86,6 +88,7 @@ export default function AdminDashboard() {
 
   const [allTx, setAllTx] = useState<TransactionRecord[]>([]);
   const [donateTx, setDonateTx] = useState<TransactionRecord[]>([]);
+  const [withdrawTx, setWithdrawTx] = useState<TransactionRecord[]>([]);
   const [withdrawals, setWithdrawals] = useState<WithdrawProposal[]>([]);
   const [registrations, setRegistrations] = useState<RegistrationRequest[]>([]);
   const [childrenList, setChildrenList] = useState<Child[]>([]);
@@ -98,7 +101,7 @@ export default function AdminDashboard() {
       const PAGE = 100;
       const [
         regRes, childRes, centerRes, withdrawRes, staffRes,
-        txRes, donateTxRes, donorRes, uploadRes, taskRes,
+        txRes, donateTxRes, withdrawTxRes, donorRes, uploadRes, taskRes,
       ] = await Promise.allSettled([
         registrationService.list({ page: 0, page_size: PAGE, sort_order: 'desc' }),
         childrenService.list({ page: 0, page_size: PAGE }),
@@ -106,7 +109,8 @@ export default function AdminDashboard() {
         withdrawService.list({ page: 0, page_size: PAGE, sort_order: 'desc' }),
         staffService.list({ page: 0, page_size: STAFF_COUNT_PAGE_SIZE }),
         transactionService.list({ page: 0, page_size: PAGE, sort_order: 'desc' }),
-        transactionService.list({ page: 0, page_size: PAGE, action_type: 'donate', sort_order: 'desc' }),
+        transactionService.list({ page: 0, page_size: PAGE, action_type: TX_ACTION_DONATE, sort_order: 'desc' }),
+        transactionService.list({ page: 0, page_size: PAGE, action_type: TX_ACTION_WITHDRAW, sort_order: 'desc' }),
         donorService.list({ page: 0, page_size: 1 }),
         childUploadService.list({ page: 0, page_size: PAGE, sort_order: 'desc' }),
         taskService.list({ page: 0, page_size: PAGE, sort_order: 'desc' }),
@@ -136,6 +140,11 @@ export default function AdminDashboard() {
       } else {
         setDonateTx([]);
       }
+      if (withdrawTxRes.status === 'fulfilled') {
+        setWithdrawTx(withdrawTxRes.value.data.data || []);
+      } else {
+        setWithdrawTx([]);
+      }
       if (withdrawRes.status === 'fulfilled') setWithdrawals(withdrawRes.value.data.data || []);
       if (regRes.status === 'fulfilled') setRegistrations(regRes.value.data.data || []);
       if (childRes.status === 'fulfilled') setChildrenList(childRes.value.data.data || []);
@@ -151,6 +160,10 @@ export default function AdminDashboard() {
   const donateTxFiltered = useMemo(
     () => (donateTx.length > 0 ? donateTx : allTx.filter(isDonateTransaction)),
     [donateTx, allTx],
+  );
+  const withdrawTxFiltered = useMemo(
+    () => (withdrawTx.length > 0 ? withdrawTx : allTx.filter(isWithdrawTransaction)),
+    [withdrawTx, allTx],
   );
   const txByDate = useMemo(() => groupByDate(donateTxFiltered), [donateTxFiltered]);
   const txByType = useMemo(() => groupByField(allTx, 'action_type'), [allTx]);
@@ -172,7 +185,10 @@ export default function AdminDashboard() {
     () => donateTxFiltered.reduce((s, t) => s + (t.amount || 0), 0),
     [donateTxFiltered],
   );
-  const totalWithdrawAmount = useMemo(() => withdrawals.reduce((s, w) => s + (w.withdraw_amount || 0), 0), [withdrawals]);
+  const totalWithdrawAmount = useMemo(
+    () => withdrawTxFiltered.reduce((s, t) => s + (t.amount || 0), 0),
+    [withdrawTxFiltered],
+  );
   const systemBalance = totalDonateAmount - totalWithdrawAmount;
 
   if (loading) {
