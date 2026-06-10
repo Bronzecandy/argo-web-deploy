@@ -1,23 +1,25 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
-import { Search, ThumbsDown, ThumbsUp } from 'lucide-react';
+import { Search } from 'lucide-react';
 import { toast } from 'sonner';
 import PageHeader from '@/src/components/ui/PageHeader';
-import DataTable from '@/src/components/ui/DataTable';
 import DetailModal from '@/src/components/ui/DetailModal';
+import EmptyState from '@/src/components/ui/EmptyState';
+import ListPagination from '@/src/components/ui/ListPagination';
+import RegistrationRequestCard from '@/src/components/registration/RegistrationRequestCard';
+import RegistrationVoteSummary from '@/src/components/registration/RegistrationVoteSummary';
 import DetailField from '@/src/components/ui/DetailField';
 import EntityBlobThumb from '@/src/components/ui/EntityBlobThumb';
 import StatusBadge from '@/src/components/ui/StatusBadge';
 import CopyableTruncated from '@/src/components/ui/CopyableTruncated';
 import AiInsightPanel from '@/src/components/ui/AiInsightPanel';
-import AiEvaluationBadge from '@/src/components/ui/AiEvaluationBadge';
 import ContextBanner from '@/src/components/ui/ContextBanner';
 import FilterToolbar from '@/src/components/ui/FilterToolbar';
 import FormModal from '@/src/components/ui/FormModal';
 import PageSection from '@/src/components/ui/PageSection';
-import TableIconButton from '@/src/components/ui/TableIconButton';
 import { collectBlobIdEntries, blobFieldDisplayLabel } from '@/src/lib/blobFields';
+import { formatRegisterRoleVi } from '@/src/lib/registrationDisplay';
 import { formatDate, formatDateTimeSeconds } from '@/src/lib/formatters';
 import { btnPrimary, inputClass, selectClass } from '@/src/lib/uiClasses';
 import { hasUserCastVote, isVoteActionsLocked } from '@/src/lib/voteFields';
@@ -234,88 +236,49 @@ export default function LeaderVolunteersPage() {
       </FilterToolbar>
 
       <PageSection title="Danh sách đăng ký" noPadding>
-        <DataTable<RegistrationRequest>
-          columns={[
-            {
-              key: 'name',
-              label: 'Tên',
-              render: (r) => (
-                <span>
-                  {r.first_name} {r.last_name}
-                </span>
-              ),
-            },
-            { key: 'register_role', label: 'Vai trò', render: (r) => <span className="capitalize">{r.register_role}</span> },
-            { key: 'region', label: 'Vùng' },
-            { key: 'status', label: 'Trạng thái', render: (r) => <StatusBadge status={r.status} /> },
-            {
-              key: 'ai_evaluation',
-              label: 'AI',
-              render: (r) => <AiEvaluationBadge record={r} />,
-            },
-            { key: 'created_at', label: 'Ngày tạo', render: (r) => formatDate(r.created_at) },
-            {
-              key: 'closed_at',
-              label: 'Thời gian đóng',
-              render: (r) => (
-                <span className="whitespace-nowrap text-xs text-slate-700">{formatDateTimeSeconds(r.closed_at)}</span>
-              ),
-            },
-            {
-              key: 'actions',
-              label: 'Thao tác',
-              className: 'whitespace-nowrap',
-              render: (r) => {
-                const voteLocked = isVoteActionsLocked(r, user, r.status);
-                const userVoted = hasUserCastVote(r, user);
-                return (
-                  <div className="flex flex-wrap gap-1" onClick={(e) => e.stopPropagation()}>
-                    <TableIconButton
-                      onClick={() => {
-                        setRegDetailListRow(r);
-                        setRegDetailId(r.id);
-                        setRegDetailOpen(true);
-                      }}
-                    >
-                      Chi tiết
-                    </TableIconButton>
-                    <div
-                      className={`flex flex-wrap gap-1 ${voteLocked ? 'pointer-events-none opacity-40' : ''}`}
-                      title={userVoted ? 'Bạn đã bỏ phiếu' : undefined}
-                    >
-                      <TableIconButton
-                        variant="primary"
-                        disabled={voteLocked || voteBusyId === r.id || !canLoad}
-                        onClick={() => handleVote(r.id, true)}
-                        title="Phiếu duyệt"
-                      >
-                        <ThumbsUp className="h-3.5 w-3.5" />
-                      </TableIconButton>
-                      <TableIconButton
-                        variant="danger"
-                        disabled={voteLocked || voteBusyId === r.id || !canLoad}
-                        onClick={() => handleVote(r.id, false)}
-                        title="Phiếu từ chối"
-                      >
-                        <ThumbsDown className="h-3.5 w-3.5" />
-                      </TableIconButton>
-                    </div>
-                  </div>
-                );
-              },
-            },
-          ]}
-          data={registrations}
-          loading={regLoading || centerStatus === 'loading'}
-          page={regPage}
-          totalPages={regTotalPages}
-          onPageChange={(p) => setRegPage(p)}
-          emptyMessage={
-            canLoad
-              ? 'Không có yêu cầu đăng ký TNV phù hợp bộ lọc.'
-              : 'Hãy tải trung tâm trưởng vùng (vùng) để xem đăng ký TNV trong vùng.'
-          }
-        />
+        {regLoading || centerStatus === 'loading' ? (
+          <div className="grid gap-4 p-4 sm:grid-cols-2 sm:p-5 xl:grid-cols-3">
+            {Array.from({ length: 3 }).map((_, i) => (
+              <div key={i} className="animate-pulse rounded-xl border border-slate-200 p-5">
+                <div className="mb-3 h-6 w-24 rounded bg-slate-100" />
+                <div className="mb-2 h-5 w-full rounded bg-slate-100" />
+                <div className="mb-4 h-4 w-2/3 rounded bg-slate-100" />
+                <div className="h-2.5 w-full rounded-full bg-slate-100" />
+              </div>
+            ))}
+          </div>
+        ) : registrations.length === 0 ? (
+          <EmptyState
+            message={
+              canLoad
+                ? 'Không có yêu cầu đăng ký TNV phù hợp bộ lọc.'
+                : 'Hãy tải trung tâm trưởng vùng (vùng) để xem đăng ký TNV trong vùng.'
+            }
+          />
+        ) : (
+          <div className="grid gap-4 p-4 sm:grid-cols-2 sm:p-5 xl:grid-cols-3">
+            {registrations.map((r) => (
+              <RegistrationRequestCard
+                key={r.id}
+                registration={r}
+                voteLocked={isVoteActionsLocked(r, user, r.status)}
+                userVoted={hasUserCastVote(r, user)}
+                voteBusy={voteBusyId === r.id}
+                actionsDisabled={!canLoad}
+                onDetail={() => {
+                  setRegDetailListRow(r);
+                  setRegDetailId(r.id);
+                  setRegDetailOpen(true);
+                }}
+                onVoteYes={() => void handleVote(r.id, true)}
+                onVoteNo={() => void handleVote(r.id, false)}
+              />
+            ))}
+          </div>
+        )}
+        {!regLoading && centerStatus !== 'loading' && registrations.length > 0 && (
+          <ListPagination page={regPage} totalPages={regTotalPages} onPageChange={setRegPage} />
+        )}
       </PageSection>
 
       <FormModal
@@ -356,9 +319,10 @@ export default function LeaderVolunteersPage() {
             <div>
               <DetailField label="Mã" value={<CopyableTruncated value={r.id} chars={8} />} />
               <DetailField label="Tên" value={`${r.first_name} ${r.last_name}`} />
-              <DetailField label="Vai trò" value={<span className="capitalize">{r.register_role}</span>} />
+              <DetailField label="Vai trò" value={formatRegisterRoleVi(r.register_role)} />
               <DetailField label="Vùng" value={r.region} />
               <DetailField label="Trạng thái" value={<StatusBadge status={r.status} />} />
+              <RegistrationVoteSummary record={r} className="my-4" />
               <DetailField label="Mã định danh" value={r.identity_code} />
               <DetailField label="Email" value={r.email} />
               <DetailField label="Điện thoại" value={r.phone_number} />

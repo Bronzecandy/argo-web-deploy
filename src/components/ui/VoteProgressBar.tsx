@@ -6,6 +6,8 @@ type VoteProgressBarProps = {
   approvePercent: number;
   refusePercent?: number;
   threshold?: number;
+  /** When false, hides the approval threshold marker (e.g. simple head-count votes). */
+  showThreshold?: boolean;
   className?: string;
 };
 
@@ -14,6 +16,7 @@ export default function VoteProgressBar({
   approvePercent,
   refusePercent = 0,
   threshold = WITHDRAW_APPROVAL_THRESHOLD * 100,
+  showThreshold = true,
   className = '',
 }: VoteProgressBarProps) {
   const approve = Math.max(0, Math.min(100, approvePercent));
@@ -41,14 +44,18 @@ export default function VoteProgressBar({
             title={`Từ chối: ${refuse}%`}
           />
         )}
-        <div
-          className="absolute inset-y-0 w-0.5 bg-amber-500/80"
-          style={{ left: `${threshold}%` }}
-          title={`Ngưỡng ${threshold}%`}
-        />
+        {showThreshold ? (
+          <div
+            className="absolute inset-y-0 w-0.5 bg-amber-500/80"
+            style={{ left: `${threshold}%` }}
+            title={`Ngưỡng ${threshold}%`}
+          />
+        ) : null}
       </div>
       {refuse > 0 && (
-        <p className="mt-1 text-[11px] text-slate-500">Từ chối: {refuse}% trọng số</p>
+        <p className="mt-1 text-[11px] text-slate-500">
+          {showThreshold ? `Từ chối: ${refuse}% trọng số` : `Không đồng ý: ${refuse}%`}
+        </p>
       )}
     </div>
   );

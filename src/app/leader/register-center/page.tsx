@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Building2, CheckCircle2, Circle, Check } from 'lucide-react';
+import { Building2, CheckCircle2, Circle, Check, ThumbsDown, ThumbsUp } from 'lucide-react';
 import { toast } from 'sonner';
 import PageHeader from '@/src/components/ui/PageHeader';
 import PageSection from '@/src/components/ui/PageSection';
@@ -19,7 +19,13 @@ import { useAppSelector } from '@/src/store/hooks';
 import { userHasAnyRole } from '@/src/services/auth.service';
 import { ROLES } from '@/src/lib/constants';
 import { useExecuteTransaction } from '@/src/hooks/useExecuteTransaction';
+import VoteProgressBar from '@/src/components/ui/VoteProgressBar';
 import { formatDateTime } from '@/src/lib/formatters';
+import {
+  getRosterApprovePercent,
+  getRosterRefusePercent,
+  getRosterVoteCounts,
+} from '@/src/lib/voteFields';
 import { blobService } from '@/src/services/blob.service';
 import type { CenterRequest } from '@/src/types/api.types';
 
@@ -225,6 +231,9 @@ export default function LeaderRegisterCenterPage() {
             <ul className="space-y-4">
               {centerReqRows.map((req) => {
                 const imgUrl = blobService.getUrl(req.image_blob_id);
+                const voteCounts = getRosterVoteCounts(req);
+                const approvePct = getRosterApprovePercent(req);
+                const refusePct = getRosterRefusePercent(req);
                 return (
                   <li
                     key={req.id}
@@ -280,6 +289,22 @@ export default function LeaderRegisterCenterPage() {
                         <p className="font-mono text-[10px] text-slate-400">
                           ID đề xuất: <CopyableTruncated value={req.id} chars={6} />
                         </p>
+                        <div className="flex flex-wrap items-center gap-4 text-xs">
+                          <span className="inline-flex items-center gap-1.5 font-medium text-blue-800">
+                            <ThumbsUp className="h-3.5 w-3.5 shrink-0" aria-hidden />
+                            Đồng ý: {voteCounts.approve}
+                          </span>
+                          <span className="inline-flex items-center gap-1.5 font-medium text-red-700">
+                            <ThumbsDown className="h-3.5 w-3.5 shrink-0" aria-hidden />
+                            Không đồng ý: {voteCounts.refuse}
+                          </span>
+                        </div>
+                        <VoteProgressBar
+                          approvePercent={approvePct}
+                          refusePercent={refusePct}
+                          showThreshold={false}
+                          className="max-w-md"
+                        />
                         {req.isAvailableToConfirm ? (
                           <button
                             type="button"

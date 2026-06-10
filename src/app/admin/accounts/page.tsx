@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
-import { Search, ThumbsDown, ThumbsUp, Users, UserPlus } from 'lucide-react';
+import { Search, Users, UserPlus } from 'lucide-react';
 import { toast } from 'sonner';
 import PageHeader from '@/src/components/ui/PageHeader';
 import DataTable from '@/src/components/ui/DataTable';
@@ -10,13 +10,17 @@ import DetailModal from '@/src/components/ui/DetailModal';
 import DetailField from '@/src/components/ui/DetailField';
 import CopyableTruncated from '@/src/components/ui/CopyableTruncated';
 import EntityBlobThumb from '@/src/components/ui/EntityBlobThumb';
-import AiInsightPanel from '@/src/components/ui/AiInsightPanel';
 import TabBar from '@/src/components/ui/TabBar';
 import FilterToolbar from '@/src/components/ui/FilterToolbar';
 import FormModal from '@/src/components/ui/FormModal';
 import PageSection from '@/src/components/ui/PageSection';
 import TableIconButton from '@/src/components/ui/TableIconButton';
+import EmptyState from '@/src/components/ui/EmptyState';
+import ListPagination from '@/src/components/ui/ListPagination';
+import RegistrationRequestCard from '@/src/components/registration/RegistrationRequestCard';
+import RegistrationDetailContent from '@/src/components/registration/RegistrationDetailContent';
 import { btnPrimary, inputClass, selectClass } from '@/src/lib/uiClasses';
+import { mergeRegistrationDetail } from '@/src/lib/registrationDisplay';
 import { collectBlobIdEntries, blobFieldDisplayLabel } from '@/src/lib/blobFields';
 import { formatDate, formatDateTimeSeconds, formatVND } from '@/src/lib/formatters';
 import { hasUserCastVote, isVoteActionsLocked } from '@/src/lib/voteFields';
@@ -317,79 +321,42 @@ export default function AdminAccountsPage() {
           </FilterToolbar>
 
           <PageSection title="Yêu cầu đăng ký" noPadding>
-          <DataTable<RegistrationRequest>
-            columns={[
-              {
-                key: 'name',
-                label: 'Tên',
-                render: (r) => (
-                  <span>
-                    {r.first_name} {r.last_name}
-                  </span>
-                ),
-              },
-              { key: 'register_role', label: 'Vai trò', render: (r) => <span className="capitalize">{r.register_role}</span> },
-              { key: 'region', label: 'Vùng' },
-              { key: 'status', label: 'Trạng thái', render: (r) => <StatusBadge status={r.status} /> },
-              { key: 'created_at', label: 'Ngày tạo', render: (r) => formatDate(r.created_at) },
-              {
-                key: 'closed_at',
-                label: 'Thời gian đóng',
-                render: (r) => (
-                  <span className="whitespace-nowrap text-xs text-slate-700">{formatDateTimeSeconds(r.closed_at)}</span>
-                ),
-              },
-              {
-                key: 'actions',
-                label: 'Thao tác',
-                className: 'whitespace-nowrap',
-                render: (r) => {
-                  const voteLocked = isVoteActionsLocked(r, user, r.status);
-                  const userVoted = hasUserCastVote(r, user);
-                  return (
-                    <div className="flex flex-wrap gap-1" onClick={(e) => e.stopPropagation()}>
-                      <TableIconButton
-                        onClick={() => {
-                          setRegDetailListRow(r);
-                          setRegDetailId(r.id);
-                          setRegDetailOpen(true);
-                        }}
-                      >
-                        Chi tiết
-                      </TableIconButton>
-                      <div
-                        className={`flex flex-wrap gap-1 ${voteLocked ? 'pointer-events-none opacity-40' : ''}`}
-                        title={userVoted ? 'Bạn đã bỏ phiếu' : undefined}
-                      >
-                        <TableIconButton
-                          variant="primary"
-                          disabled={voteLocked || voteBusyId === r.id}
-                          onClick={() => handleVote(r.id, true)}
-                          title="Phiếu duyệt"
-                        >
-                          <ThumbsUp className="h-3.5 w-3.5" />
-                        </TableIconButton>
-                        <TableIconButton
-                          variant="danger"
-                          disabled={voteLocked || voteBusyId === r.id}
-                          onClick={() => handleVote(r.id, false)}
-                          title="Phiếu từ chối"
-                        >
-                          <ThumbsDown className="h-3.5 w-3.5" />
-                        </TableIconButton>
-                      </div>
-                    </div>
-                  );
-                },
-              },
-            ]}
-            data={registrations}
-            loading={regLoading}
-            page={regPage}
-            totalPages={regTotalPages}
-            onPageChange={(p) => setRegPage(p)}
-            emptyMessage="Không có yêu cầu đăng ký phù hợp bộ lọc."
-          />
+            {regLoading ? (
+              <div className="grid gap-4 p-4 sm:grid-cols-2 sm:p-5 xl:grid-cols-3">
+                {Array.from({ length: 3 }).map((_, i) => (
+                  <div key={i} className="animate-pulse rounded-xl border border-slate-200 p-5">
+                    <div className="mb-3 h-6 w-24 rounded bg-slate-100" />
+                    <div className="mb-2 h-5 w-full rounded bg-slate-100" />
+                    <div className="mb-4 h-4 w-2/3 rounded bg-slate-100" />
+                    <div className="h-2.5 w-full rounded-full bg-slate-100" />
+                  </div>
+                ))}
+              </div>
+            ) : registrations.length === 0 ? (
+              <EmptyState message="Không có yêu cầu đăng ký phù hợp bộ lọc." />
+            ) : (
+              <div className="grid gap-4 p-4 sm:grid-cols-2 sm:p-5 xl:grid-cols-3">
+                {registrations.map((r) => (
+                  <RegistrationRequestCard
+                    key={r.id}
+                    registration={r}
+                    voteLocked={isVoteActionsLocked(r, user, r.status)}
+                    userVoted={hasUserCastVote(r, user)}
+                    voteBusy={voteBusyId === r.id}
+                    onDetail={() => {
+                      setRegDetailListRow(r);
+                      setRegDetailId(r.id);
+                      setRegDetailOpen(true);
+                    }}
+                    onVoteYes={() => void handleVote(r.id, true)}
+                    onVoteNo={() => void handleVote(r.id, false)}
+                  />
+                ))}
+              </div>
+            )}
+            {!regLoading && registrations.length > 0 && (
+              <ListPagination page={regPage} totalPages={regTotalPages} onPageChange={setRegPage} />
+            )}
           </PageSection>
         </div>
       )}
@@ -537,44 +504,14 @@ export default function AdminAccountsPage() {
           setRegDetailListRow(null);
         }}
         loading={regDetailLoading}
-        wide
+        extraWide
       >
         {(() => {
-          const r = regDetailData ?? regDetailListRow;
-          if (!r) return null;
-          const blobs = collectBlobIdEntries(r);
-          return (
-            <div>
-              <DetailField label="ID" value={<CopyableTruncated value={r.id} chars={8} />} />
-              <DetailField label="Tên" value={`${r.first_name} ${r.last_name}`} />
-              <DetailField label="Vai trò" value={<span className="capitalize">{r.register_role}</span>} />
-              <DetailField label="Vùng" value={r.region} />
-              <DetailField label="Trạng thái" value={<StatusBadge status={r.status} />} />
-              <DetailField label="Mã định danh" value={r.identity_code} />
-              <DetailField label="Email" value={r.email} />
-              <DetailField label="Điện thoại" value={r.phone_number} />
-              <DetailField label="Giới tính" value={r.gender} />
-              <DetailField label="Ngày sinh" value={formatDate(r.date_of_birth)} />
-              <DetailField label="Người tạo" value={<CopyableTruncated value={r.created_by} chars={8} />} />
-              <DetailField label="Ngày tạo" value={formatDate(r.created_at)} />
-              <DetailField label="Cập nhật" value={formatDate(r.updated_at)} />
-              <DetailField label="Thời gian đóng" value={formatDateTimeSeconds(r.closed_at)} />
-              <AiInsightPanel record={r} className="mt-4" />
-              {blobs.length > 0 && (
-                <div className="border-t border-slate-100 pt-3">
-                  <div className="mb-2 text-xs font-medium text-slate-600">Ảnh (Walrus)</div>
-                  <div className="flex flex-wrap gap-4">
-                    {blobs.map(({ key, blobId }) => (
-                      <div key={key} className="text-center">
-                        <EntityBlobThumb blobId={blobId} />
-                        <div className="mt-1 text-[10px] text-slate-500">{blobFieldDisplayLabel(key)}</div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </div>
-          );
+          const listRow = regDetailListRow;
+          const detail = regDetailData;
+          if (!listRow && !detail) return null;
+          const r = mergeRegistrationDetail(listRow ?? detail!, detail);
+          return <RegistrationDetailContent record={r} />;
         })()}
       </DetailModal>
 

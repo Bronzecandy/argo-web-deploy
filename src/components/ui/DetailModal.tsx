@@ -12,6 +12,8 @@ type Props = {
   error?: string | null;
   children: ReactNode;
   wide?: boolean;
+  /** Modal rộng hơn `wide` — dùng cho chi tiết có ảnh lớn. */
+  extraWide?: boolean;
   footer?: ReactNode;
 };
 
@@ -23,6 +25,7 @@ export default function DetailModal({
   error,
   children,
   wide,
+  extraWide,
   footer,
 }: Props) {
   if (!open) return null;
@@ -37,7 +40,7 @@ export default function DetailModal({
     >
       <div
         className={`flex max-h-[min(90vh,900px)] w-full flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-2xl ${
-          wide ? 'max-w-3xl' : 'max-w-lg'
+          extraWide ? 'max-w-4xl' : wide ? 'max-w-3xl' : 'max-w-lg'
         }`}
         onClick={(e) => e.stopPropagation()}
       >

@@ -60,3 +60,25 @@ export function isVoteActionsLocked(
 ): boolean {
   return isVoteSessionClosed(status) || hasUserCastVote(record, user);
 }
+
+export function getRosterVoteCounts(record: VoteRosterRecord): { approve: number; refuse: number } {
+  return {
+    approve: record.approvers?.length ?? 0,
+    refuse: record.refusers?.length ?? 0,
+  };
+}
+
+function rosterVotePercent(part: number, total: number): number {
+  if (total <= 0) return 0;
+  return Math.round((part / total) * 100);
+}
+
+export function getRosterApprovePercent(record: VoteRosterRecord): number {
+  const { approve, refuse } = getRosterVoteCounts(record);
+  return rosterVotePercent(approve, approve + refuse);
+}
+
+export function getRosterRefusePercent(record: VoteRosterRecord): number {
+  const { approve, refuse } = getRosterVoteCounts(record);
+  return rosterVotePercent(refuse, approve + refuse);
+}

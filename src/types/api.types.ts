@@ -84,7 +84,11 @@ export interface RegistrationRequest {
   register_role: string;
   identity_code: string;
   identity_card_blob_id: string;
+  /** URL ảnh CCCD từ API (ưu tiên hiển thị hơn blob). */
+  identity_card_img_url?: string;
   avatar_blob_id: string;
+  /** URL ảnh đại diện từ API (ưu tiên hiển thị hơn blob). */
+  avatar_img_url?: string;
   region: string;
   first_name: string;
   last_name: string;
