@@ -75,7 +75,9 @@ export function isWithdrawEpochClosedAt(closed_at?: string | null): boolean {
 export function getWithdrawApprovalPercent(r: {
   approve_weight: number;
   withdraw_amount: number;
+  closed_at?: string | null;
 }): number {
+  if (isWithdrawEpochClosedAt(r.closed_at)) return 100;
   if (!(r.withdraw_amount > 0)) return 0;
   return Math.min(100, Math.round((r.approve_weight / r.withdraw_amount) * 100));
 }
@@ -83,7 +85,9 @@ export function getWithdrawApprovalPercent(r: {
 export function getWithdrawRefusePercent(r: {
   refuse_weight: number;
   withdraw_amount: number;
+  closed_at?: string | null;
 }): number {
+  if (isWithdrawEpochClosedAt(r.closed_at)) return 0;
   if (!(r.withdraw_amount > 0)) return 0;
   return Math.min(100, Math.round((r.refuse_weight / r.withdraw_amount) * 100));
 }
