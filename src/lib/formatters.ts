@@ -64,6 +64,14 @@ export const WITHDRAW_APPROVAL_THRESHOLD = 0.7;
 
 export type WithdrawProposalUiStatusLabel = 'Đang bỏ phiếu' | 'Chờ nhận tiền' | 'Từ chối' | 'đã nhận tiền';
 
+/** BE dùng epoch khi phiên chưa đóng theo thời gian — không coi là đã hết hạn / từ chối. */
+export function isWithdrawEpochClosedAt(closed_at?: string | null): boolean {
+  const closed = closed_at?.trim();
+  if (!closed) return false;
+  const end = new Date(closed).getTime();
+  return !Number.isNaN(end) && end <= 0;
+}
+
 export function getWithdrawApprovalPercent(r: {
   approve_weight: number;
   withdraw_amount: number;
@@ -87,6 +95,7 @@ export function getWithdrawProposalUiStatus(r: {
   withdraw_amount: number;
 }): WithdrawProposalUiStatusLabel {
   if (r.is_executed) return 'đã nhận tiền';
+  if (isWithdrawEpochClosedAt(r.closed_at)) return 'Chờ nhận tiền';
   const closed = r.closed_at?.trim();
   if (!closed) return 'Đang bỏ phiếu';
   const end = new Date(closed).getTime();

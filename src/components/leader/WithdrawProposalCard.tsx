@@ -11,6 +11,7 @@ import {
   getWithdrawApprovalPercent,
   getWithdrawProposalUiStatus,
   getWithdrawRefusePercent,
+  isWithdrawEpochClosedAt,
 } from '@/src/lib/formatters';
 import type { WithdrawProposal } from '@/src/types/api.types';
 
@@ -61,7 +62,7 @@ export default function WithdrawProposalCard({
 
       <div className="mt-4">
         <VoteProgressBar approvePercent={approvePct} refusePercent={refusePct} />
-        {isVoting && proposal.closed_at && (
+        {isVoting && proposal.closed_at && !isWithdrawEpochClosedAt(proposal.closed_at) && (
           <p className="mt-2 flex items-center gap-1.5 text-xs text-amber-800">
             <Clock className="h-3.5 w-3.5 shrink-0" aria-hidden />
             Đóng phiên: {formatDateTimeSeconds(proposal.closed_at)}
@@ -74,7 +75,7 @@ export default function WithdrawProposalCard({
           <Calendar className="h-3.5 w-3.5" aria-hidden />
           Tạo {formatDate(proposal.created_at)}
         </span>
-        {!isVoting && proposal.closed_at && (
+        {!isVoting && proposal.closed_at && !isWithdrawEpochClosedAt(proposal.closed_at) && (
           <span>Đóng {formatDateTimeSeconds(proposal.closed_at)}</span>
         )}
       </div>

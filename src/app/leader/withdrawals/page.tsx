@@ -22,6 +22,7 @@ import {
   getWithdrawApprovalPercent,
   getWithdrawProposalUiStatus,
   getWithdrawRefusePercent,
+  isWithdrawEpochClosedAt,
 } from '@/src/lib/formatters';
 import { useAppSelector } from '@/src/store/hooks';
 import { withdrawService } from '@/src/services/withdraw.service';
@@ -363,7 +364,14 @@ export default function LeaderWithdrawalsPage() {
               label="Trọng số"
               value={`Đồng ý ${proposalDetail.approve_weight} · Từ chối ${proposalDetail.refuse_weight}`}
             />
-            <DetailField label="Thời gian đóng" value={formatDateTimeSeconds(proposalDetail.closed_at)} />
+            <DetailField
+              label="Thời gian đóng"
+              value={
+                isWithdrawEpochClosedAt(proposalDetail.closed_at)
+                  ? '—'
+                  : formatDateTimeSeconds(proposalDetail.closed_at)
+              }
+            />
             <DetailField label="Ngày tạo" value={formatDate(proposalDetail.created_at)} />
             {proposalDetail.proof_blob_id && (
               <BlobImage blobId={proposalDetail.proof_blob_id} className="mt-3 max-h-56 rounded-lg border object-contain" />

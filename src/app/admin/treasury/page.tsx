@@ -27,6 +27,7 @@ import {
   getWithdrawApprovalPercent,
   getWithdrawProposalUiStatus,
   getWithdrawRefusePercent,
+  isWithdrawEpochClosedAt,
   parseDigitsToNumber,
 } from '@/src/lib/formatters';
 import {
@@ -377,7 +378,12 @@ function TreasuryPageContent() {
               label="Trọng số"
               value={`Đồng ý ${wd.approve_weight} · Từ chối ${wd.refuse_weight}`}
             />
-            <DetailField label="Thời gian đóng" value={formatDateTimeSeconds(wd.closed_at)} />
+            <DetailField
+              label="Thời gian đóng"
+              value={
+                isWithdrawEpochClosedAt(wd.closed_at) ? '—' : formatDateTimeSeconds(wd.closed_at)
+              }
+            />
             <DetailField label="Ngày tạo" value={formatDate(wd.created_at)} />
             {wd.proof_blob_id && (
               <div className="border-b border-slate-100 py-2.5 last:border-0">
